@@ -70,23 +70,18 @@ export default function BottomNav() {
               key={tab.href}
               href={tab.href}
               className={
-                "flex flex-col items-center gap-0.5 px-3 py-1 rounded-2xl transition-all duration-200 min-w-[4rem] " +
-                (active
-                  ? "text-coral"
-                  : "text-muted hover:text-ink")
+                "relative flex flex-col items-center gap-0.5 px-3 py-1 rounded-2xl transition-all duration-200 min-w-[4rem] " +
+                (active ? "text-coral" : "text-muted hover:text-ink")
               }
             >
-              <span className={
-                "transition-transform duration-200 " +
-                (active ? "scale-110" : "")
-              }>
+              <span className={"transition-transform duration-200 " + (active ? "scale-110" : "")}>
                 {tab.icon(active)}
               </span>
               <span className={"text-[11px] font-bold " + (active ? "text-coral" : "text-muted")}>
                 {tab.label}
               </span>
               {active && (
-                <span className="absolute -bottom-0 w-1 h-1 rounded-full bg-coral" />
+                <span className="absolute -top-0 left-3 right-3 h-0.5 rounded-full bg-gradient-to-r from-coral to-[#FF8F6B]" />
               )}
             </Link>
           );

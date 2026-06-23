@@ -48,7 +48,7 @@ export default function Header() {
                   className={
                     "px-4 py-2 text-sm font-semibold rounded-full transition-all duration-200 " +
                     (isActive(link.href)
-                      ? "bg-coralSoft text-coral"
+                      ? "text-coral font-extrabold relative after:absolute after:bottom-0 after:left-2 after:right-2 after:h-0.5 after:rounded-full after:bg-gradient-to-r after:from-coral after:to-[#FF8F6B]"
                       : "text-muted hover:text-ink hover:bg-surface2")
                   }
                 >
