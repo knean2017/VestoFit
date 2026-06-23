@@ -112,9 +112,7 @@ function StylistHome() {
       <div className="container-app py-6 space-y-6 max-w-2xl mx-auto">
         {/* Greeting */}
         <div className="animate-rise">
-          <h1 className="heading-lg">
-            Hey there <span className="inline-block animate-bounce2">👋</span>
-          </h1>
+          <h1 className="heading-lg">Hey there</h1>
           <p className="text-muted font-medium mt-1">
             {hasWardrobe ? "Here's today's outfit pick" : "Let's build your wardrobe first"}
           </p>
@@ -124,7 +122,7 @@ function StylistHome() {
         {!hasWardrobe && (
           <div className="card p-8 text-center animate-rise" style={{ animationDelay: "0.1s" }}>
             <div className="w-16 h-16 rounded-full bg-coralSoft grid place-items-center mx-auto mb-4">
-              <span className="text-2xl">👗</span>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF6B5E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 5h18v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"/><path d="M12 5v16"/><path d="M3 5a2 2 0 012-2h14a2 2 0 012 2"/></svg>
             </div>
             <h3 className="heading-md">Your closet awaits</h3>
             <p className="text-sm text-muted mt-2 max-w-xs mx-auto">
@@ -174,7 +172,7 @@ function StylistHome() {
                 )}
                 <div className="flex gap-2 mt-3">
                   <button onClick={handleShuffle} disabled={shuffling} className="btn-soft text-xs px-3 py-1.5 flex-1">
-                    {shuffling ? "Shuffling..." : "Shuffle ✦"}
+                    {shuffling ? "Shuffling..." : "Shuffle"}
                   </button>
                   <Link href="/studio" className="btn-primary text-xs px-3 py-1.5 flex-1 text-center">
                     Try on
@@ -353,9 +351,25 @@ const STEPS = [
   },
 ];
 
-const FEATURES = [
-  { icon: "✨", t: "AI Stylist", d: "Knows your wardrobe and suggests outfits for any occasion." },
-  { icon: "🛍️", t: "Shop smart", d: "Find clothes from real stores within your budget." },
-  { icon: "👤", t: "Virtual try-on", d: "Photorealistic rendering on your actual body." },
-  { icon: "🔒", t: "Private", d: "Your photos stay private. Your data stays yours." },
+const FEATURES: { icon: React.ReactNode; t: string; d: string }[] = [
+  {
+    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.5 5.5H19l-4.5 3.5 1.5 5.5L12 14l-4.5 3.5 1.5-5.5L4.5 8.5H10z"/></svg>,
+    t: "AI Stylist",
+    d: "Knows your wardrobe and suggests outfits for any occasion.",
+  },
+  {
+    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>,
+    t: "Shop smart",
+    d: "Find clothes from real stores within your budget.",
+  },
+  {
+    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+    t: "Virtual try-on",
+    d: "Photorealistic rendering on your actual body.",
+  },
+  {
+    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>,
+    t: "Private",
+    d: "Your photos stay private. Your data stays yours.",
+  },
 ];

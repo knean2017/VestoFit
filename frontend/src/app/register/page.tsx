@@ -35,8 +35,8 @@ export default function RegisterPage() {
       <section className="flex-1 grid place-items-center px-5 py-12">
         <div className="w-full max-w-sm animate-rise">
           <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-teal text-white grid place-items-center text-2xl font-extrabold mx-auto mb-4">
-              ✦
+            <div className="w-14 h-14 rounded-2xl bg-teal text-white grid place-items-center shadow-glow mx-auto mb-4">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.5 5.5H19l-4.5 3.5 1.5 5.5L12 14l-4.5 3.5 1.5-5.5L4.5 8.5H10z"/></svg>
             </div>
             <h1 className="heading-lg">Let's get started</h1>
             <p className="mt-2 text-sm text-muted font-medium">
