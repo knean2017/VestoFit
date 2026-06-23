@@ -102,6 +102,18 @@ export type ShoppingHistoryItem = {
   created_at: string;
 };
 
+export type SubscriptionStatus = {
+  is_active: boolean;
+  plan: string | null;
+  status: string | null;
+  card_brand: string | null;
+  card_last_four: string | null;
+  renews_at: string | null;
+  ends_at: string | null;
+  update_payment_url: string | null;
+  customer_portal_url: string | null;
+};
+
 async function request<T>(
   path: string,
   opts: RequestInit = {},
@@ -287,5 +299,14 @@ export const api = {
   },
   shoppingHistory() {
     return request<ShoppingHistoryItem[]>("/shopping/history");
+  },
+  billingCheckout(variant_id: string) {
+    return request<{ checkout_url: string }>("/billing/checkout", {
+      method: "POST",
+      body: JSON.stringify({ variant_id }),
+    });
+  },
+  billingSubscription() {
+    return request<SubscriptionStatus>("/billing/subscription");
   },
 };

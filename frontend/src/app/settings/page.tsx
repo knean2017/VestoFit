@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/components/Toast";
-import { api, type AvatarResponse } from "@/lib/api";
+import { api, type AvatarResponse, type SubscriptionStatus } from "@/lib/api";
 import { clearToken, getToken } from "@/lib/auth";
 
 export default function SettingsPage() {
@@ -14,11 +14,13 @@ export default function SettingsPage() {
 
   const [avatar, setAvatar] = useState<AvatarResponse | null>(null);
   const [email, setEmail] = useState("");
+  const [sub, setSub] = useState<SubscriptionStatus | null>(null);
 
   useEffect(() => {
     if (!getToken()) { router.replace("/login"); return; }
     api.me().then((u) => setEmail(u.email)).catch(() => {});
     api.myAvatar().then(setAvatar).catch(() => {});
+    api.billingSubscription().then(setSub).catch(() => {});
   }, [router]);
 
   return (
@@ -42,6 +44,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
+          <SubscriptionSection sub={sub} />
           <AvatarSection avatar={avatar} setAvatar={setAvatar} />
           <PasswordSection />
           <HistorySection />
@@ -60,6 +63,43 @@ function SectionCard({ title, children }: { title: string; children: React.React
       <div className="divider" />
       {children}
     </div>
+  );
+}
+
+function SubscriptionSection({ sub }: { sub: SubscriptionStatus | null }) {
+  if (!sub) return null;
+  return (
+    <SectionCard title="Subscription">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted font-medium">Plan</span>
+          <span className="font-semibold text-ink">{sub.plan ?? "Free"}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted font-medium">Status</span>
+          <span className={`font-semibold ${sub.is_active ? "text-green-600" : "text-muted"}`}>
+            {sub.is_active ? "Active" : (sub.status ?? "Inactive")}
+          </span>
+        </div>
+        {sub.card_brand && sub.card_last_four && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted font-medium">Payment</span>
+            <span className="text-sm text-ink">{sub.card_brand} ending {sub.card_last_four}</span>
+          </div>
+        )}
+        {sub.renews_at && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted font-medium">Renews</span>
+            <span className="text-sm text-ink">{new Date(sub.renews_at).toLocaleDateString()}</span>
+          </div>
+        )}
+        {sub.customer_portal_url && (
+          <a href={sub.customer_portal_url} target="_blank" rel="noopener noreferrer" className="btn-soft inline-block mt-2">
+            Manage subscription
+          </a>
+        )}
+      </div>
+    </SectionCard>
   );
 }
 
