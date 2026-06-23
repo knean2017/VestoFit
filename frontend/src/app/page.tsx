@@ -342,62 +342,63 @@ function StylistHome() {
 /* ─── Unauthenticated: Landing page ─── */
 
 function LandingPage() {
+  const reduce = useReducedMotion();
+  const reveal = (i = 0) => ({
+    initial: reduce ? { opacity: 0 } : { opacity: 0, y: 16 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: "-60px" },
+    transition: reduce
+      ? { duration: 0.01 }
+      : { type: "spring", stiffness: 260, damping: 24, delay: i * 0.08 },
+  });
+
   return (
     <main className="min-h-screen flex flex-col bg-bg">
       <Header />
 
       <section className="container-app pt-16 sm:pt-24 pb-16">
         <div className="max-w-3xl">
-          <span className="chip-coral mb-6 animate-rise">
+          <motion.span className="chip-coral mb-6 inline-flex" {...reveal(0)}>
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-coral" />
             Your personal stylist
-          </span>
+          </motion.span>
 
-          <h1 className="font-extrabold tracking-tightest text-4xl sm:text-5xl md:text-6xl leading-[1.05] animate-rise">
-            Your closet,{" "}
-            <span className="text-coral">smarter.</span>
-          </h1>
+          <motion.h1
+            className="font-extrabold tracking-tightest text-4xl sm:text-5xl md:text-6xl leading-[1.05]"
+            {...reveal(0)}
+          >
+            Your closet, <span className="text-coral">smarter.</span>
+          </motion.h1>
 
-          <p
-            className="mt-6 text-lg text-muted max-w-xl leading-relaxed font-medium animate-rise"
-            style={{ animationDelay: "0.1s" }}
+          <motion.p
+            className="mt-6 text-lg text-muted max-w-xl leading-relaxed font-medium"
+            {...reveal(1)}
           >
             FitMe knows your wardrobe, suggests daily outfits, and lets you try on
             any clothes virtually — all powered by AI that actually understands your style.
-          </p>
+          </motion.p>
 
-          <div
-            className="mt-8 flex flex-wrap items-center gap-3 animate-rise"
-            style={{ animationDelay: "0.2s" }}
-          >
+          <motion.div className="mt-8 flex flex-wrap items-center gap-3" {...reveal(2)}>
             <Link href="/register" className="btn-primary btn-lg">
               Get started free
             </Link>
             <Link href="/login" className="btn-ghost btn-lg">
               Sign in
             </Link>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       <section className="container-app pb-24">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {STEPS.map((s, i) => (
-            <article
-              key={s.title}
-              className="card p-6 animate-rise"
-              style={{ animationDelay: `${0.3 + i * 0.08}s` }}
-            >
+            <motion.article key={s.title} className="card p-6" {...reveal(i)}>
               <span className={"w-8 h-8 rounded-full grid place-items-center text-sm font-bold text-white " + s.color}>
                 {i + 1}
               </span>
-              <h3 className="mt-4 text-lg font-bold tracking-tight">
-                {s.title}
-              </h3>
-              <p className="mt-2 text-sm text-muted leading-relaxed">
-                {s.body}
-              </p>
-            </article>
+              <h3 className="mt-4 text-lg font-bold tracking-tight">{s.title}</h3>
+              <p className="mt-2 text-sm text-muted leading-relaxed">{s.body}</p>
+            </motion.article>
           ))}
         </div>
       </section>
@@ -406,8 +407,8 @@ function LandingPage() {
         <div className="card p-8 sm:p-10">
           <h2 className="heading-lg text-center mb-8">Why FitMe?</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {FEATURES.map((f) => (
-              <div key={f.t} className="flex gap-3">
+            {FEATURES.map((f, i) => (
+              <motion.div key={f.t} className="flex gap-3" {...reveal(i)}>
                 <span className="w-10 h-10 rounded-xl bg-coralSoft text-coral grid place-items-center text-lg shrink-0">
                   {f.icon}
                 </span>
@@ -415,7 +416,7 @@ function LandingPage() {
                   <p className="font-bold">{f.t}</p>
                   <p className="text-sm text-muted leading-relaxed mt-0.5">{f.d}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
