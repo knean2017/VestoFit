@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     openai_api_key: str = ""
 
+    serpapi_key: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:
