@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { Category, WardrobeItem } from "@/lib/api";
 
 type SilhouetteItem = Pick<
@@ -71,6 +72,7 @@ export default function SilhouettePreview({
   className?: string;
 }) {
   const ordered = orderForPreview(items);
+  const reduce = useReducedMotion();
 
   return (
     <div
@@ -96,31 +98,47 @@ export default function SilhouettePreview({
         />
       </svg>
 
-      {ordered.map((item, idx) => {
-        const key = layerKey(item, idx, ordered);
-        const style = LAYER_STYLE[key];
-        const img = item.clean_image_url || item.image_url;
-        return (
-          <div
-            key={item.id}
-            className="absolute pointer-events-none"
-            style={{
-              top: style.top,
-              left: style.left,
-              width: style.width,
-              height: style.height,
-              zIndex: style.zIndex,
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={img}
-              alt=""
-              className="h-full w-full object-contain drop-shadow-sm"
-            />
-          </div>
-        );
-      })}
+      <AnimatePresence>
+        {ordered.map((item, idx) => {
+          const key = layerKey(item, idx, ordered);
+          const style = LAYER_STYLE[key];
+          const img = item.clean_image_url || item.image_url;
+          const fromY = reduce ? 0 : key === "bottoms" ? 20 : -20;
+          return (
+            <motion.div
+              key={item.id}
+              className="absolute pointer-events-none"
+              style={{
+                top: style.top,
+                left: style.left,
+                width: style.width,
+                height: style.height,
+                zIndex: style.zIndex,
+              }}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, y: fromY, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.85 }}
+              transition={
+                reduce
+                  ? { duration: 0.01 }
+                  : {
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 25,
+                      delay: idx * 0.15,
+                    }
+              }
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={img}
+                alt=""
+                className="h-full w-full object-contain drop-shadow-sm"
+              />
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
 
       {ordered.length === 0 && (
         <div className="absolute inset-0 grid place-items-center px-6 text-center">
