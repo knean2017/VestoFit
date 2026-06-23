@@ -1,0 +1,24 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e4]:
+      - link "F FitMe" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]: F
+        - generic [ref=e7]: FitMe
+      - navigation [ref=e8]:
+        - link "Sign in" [ref=e9] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=e10] [cursor=pointer]:
+          - /url: /register
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - img [ref=e15]
+        - heading "Upload your photo" [level=1] [ref=e18]
+        - paragraph [ref=e19]: One clear frontal photo — face the camera, decent lighting. This powers every virtual try-on.
+      - generic [ref=e20]:
+        - generic [ref=e21] [cursor=pointer]:
+          - img [ref=e23]
+          - paragraph [ref=e24]: Drop a photo here or tap to browse
+          - paragraph [ref=e25]: JPG, PNG, WEBP
+        - button "Save avatar" [disabled] [ref=e27]
+  - alert [ref=e28]

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ToastProvider } from "@/components/Toast";
+import PageTransition from "@/components/PageTransition";
 
 export const metadata: Metadata = {
   title: "FitMe — your personal stylist",
@@ -24,7 +25,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          <PageTransition>{children}</PageTransition>
+        </ToastProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `

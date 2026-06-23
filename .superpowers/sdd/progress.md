@@ -1,10 +1,1 @@
-# SDD Progress Ledger
-Task 1: complete (commits 9d522e4..058a7ad, build clean)
-Task 2: complete (commits 058a7ad..64787ec, build clean)
-Task 3: complete (commits 64787ec..e318a0e, build clean)
-Task 4: complete (commits e318a0e..74faf0f, build clean)
-Task 5: complete (commits 74faf0f..a56f34f, build clean)
-Task 6: complete (shopping model + schema + config, build clean)
-Task 7: complete (shopping service + router + main.py registration, build clean)
-Task 8: complete (api client + /shop page + nav tabs, build clean)
-Task 9: complete (visual verification — landing, login, register pages verified, build clean)
+# SDD Progress Ledger — Home Page Redesign
