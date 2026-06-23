@@ -121,6 +121,10 @@
     @apply text-sm font-semibold text-coral hover:text-ink transition-colors;
   }
 
+  .btn-lg {
+    @apply px-7 py-3.5 text-base;
+  }
+
   /* ---------- chips / tags ---------- */
   .chip {
     @apply inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-full bg-surface2 text-muted;

@@ -1,9 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import SilhouettePreview from "@/components/SilhouettePreview";
+import FloatingCard from "@/components/FloatingCard";
+import QuickReplyChips, { type Chip } from "@/components/QuickReplyChips";
+import ChatSheet from "@/components/ChatSheet";
 import { useToast } from "@/components/Toast";
 import { getToken } from "@/lib/auth";
 import { api, WardrobeItem, StylistMessage } from "@/lib/api";
@@ -24,6 +30,9 @@ export default function HomePage() {
 
 function StylistHome() {
   const toast = useToast();
+  const router = useRouter();
+  const reduce = useReducedMotion();
+
   const [wardrobe, setWardrobe] = useState<WardrobeItem[]>([]);
   const [suggestion, setSuggestion] = useState<WardrobeItem[]>([]);
   const [reasoning, setReasoning] = useState("");
@@ -31,9 +40,40 @@ function StylistHome() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [shuffling, setShuffling] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [cardVisible, setCardVisible] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [flowStage, setFlowStage] = useState<"opener" | "narrowing" | "final">("opener");
+  const [tags, setTags] = useState<string[]>([]);
+
+  const hasWardrobe = wardrobe.length >= 2;
+
+  function pickRandom(items: WardrobeItem[]) {
+    const tops = items.filter((i) => i.category === "tops");
+    const bottoms = items.filter((i) => i.category === "bottoms");
+    const dresses = items.filter((i) => i.category === "dresses");
+
+    let picked: WardrobeItem[] = [];
+    let why = "";
+    if (dresses.length > 0 && Math.random() > 0.5) {
+      picked = [dresses[Math.floor(Math.random() * dresses.length)]];
+      why = "A simple one-piece look for today";
+    } else if (tops.length > 0 && bottoms.length > 0) {
+      const t = tops[Math.floor(Math.random() * tops.length)];
+      const b = bottoms[Math.floor(Math.random() * bottoms.length)];
+      picked = [t, b];
+      why = `${t.name || "A top"} paired with ${b.name || "bottoms"} — effortless`;
+    } else if (items.length > 0) {
+      picked = [items[Math.floor(Math.random() * items.length)]];
+      why = "Here's something from your closet";
+    }
+    setSuggestion(picked);
+    setReasoning(why);
+    return { picked, why };
+  }
 
   const loadData = useCallback(async () => {
+    setLoading(true);
     try {
       const [items, msgs] = await Promise.all([
         api.listWardrobe(),
@@ -43,60 +83,67 @@ function StylistHome() {
       setMessages(msgs);
       if (items.length >= 2) {
         pickRandom(items);
+        if (msgs.length === 0) {
+          setReasoning("Going anywhere special today? Tap a vibe and I'll style it.");
+          setCardVisible(true);
+        }
       }
     } catch {
-      // silently handle — user may have empty wardrobe
+      // user may have an empty wardrobe — leave state empty
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
-
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    loadData();
+  }, [loadData]);
 
-  function pickRandom(items: WardrobeItem[]) {
-    const tops = items.filter((i) => i.category === "tops");
-    const bottoms = items.filter((i) => i.category === "bottoms");
-    const dresses = items.filter((i) => i.category === "dresses");
+  const currentItemIds = suggestion.map((i) => i.id);
 
-    let picked: WardrobeItem[] = [];
-    if (dresses.length > 0 && Math.random() > 0.5) {
-      picked = [dresses[Math.floor(Math.random() * dresses.length)]];
-      setReasoning("A simple one-piece look for today");
-    } else if (tops.length > 0 && bottoms.length > 0) {
-      const t = tops[Math.floor(Math.random() * tops.length)];
-      const b = bottoms[Math.floor(Math.random() * bottoms.length)];
-      picked = [t, b];
-      setReasoning(`${t.name || "A top"} paired with ${b.name || "bottoms"} — effortless`);
-    } else if (items.length > 0) {
-      picked = [items[Math.floor(Math.random() * items.length)]];
-      setReasoning("Here's something from your closet");
-    }
-    setSuggestion(picked);
-  }
-
-  async function handleShuffle() {
-    if (wardrobe.length < 2) return;
+  function handleShuffle() {
+    if (!hasWardrobe || shuffling) return;
+    setCardVisible(false);
     setShuffling(true);
-    await new Promise((r) => setTimeout(r, 300));
-    pickRandom(wardrobe);
-    setShuffling(false);
+    const { why } = pickRandom(wardrobe);
+    setReasoning(why);
+    setCardVisible(true);
+    setTimeout(() => setShuffling(false), 500);
   }
 
-  async function handleSend(e: React.FormEvent) {
-    e.preventDefault();
-    if (!input.trim() || sending) return;
-    const msg = input.trim();
-    setInput("");
+  function handleTryOn() {
+    if (currentItemIds.length === 0) return;
+    router.push(`/studio?items=${currentItemIds.join(",")}`);
+  }
+
+  async function sendPrompt(promptText: string, displayText?: string) {
+    if (!hasWardrobe || sending) return;
+    setCardVisible(false);
     setSending(true);
+    pickRandom(wardrobe);
+    const userText = displayText ?? promptText;
+    const userMsg: StylistMessage = {
+      id: Date.now().toString(),
+      role: "user",
+      content: userText,
+      outfit_id: null,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMsg]);
     try {
-      const { reply } = await api.stylistAsk(msg);
+      const { reply } = await api.stylistAsk(promptText, currentItemIds);
       setMessages((prev) => [
         ...prev,
-        { id: Date.now().toString(), role: "user", content: msg, outfit_id: null, created_at: new Date().toISOString() },
-        { id: (Date.now() + 1).toString(), role: "assistant", content: reply, outfit_id: null, created_at: new Date().toISOString() },
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: reply,
+          outfit_id: null,
+          created_at: new Date().toISOString(),
+        },
       ]);
+      setReasoning(reply);
+      setCardVisible(true);
     } catch (e: unknown) {
       toast("error", e instanceof Error ? e.message : "Failed to send");
     } finally {
@@ -104,138 +151,164 @@ function StylistHome() {
     }
   }
 
-  const hasWardrobe = wardrobe.length >= 2;
+  async function handleSend(e: React.FormEvent) {
+    e.preventDefault();
+    const msg = input.trim();
+    if (!msg || sending) return;
+    setInput("");
+    await sendPrompt(msg);
+  }
 
-  return (
-    <main className="min-h-screen bg-bg pb-nav md:pb-0">
-      <Header />
-      <div className="container-app py-6 space-y-6 max-w-2xl mx-auto">
-        {/* Greeting */}
-        <div className="animate-rise">
-          <h1 className="heading-lg">Hey there</h1>
-          <p className="text-muted font-medium mt-1">
-            {hasWardrobe ? "Here's today's outfit pick" : "Let's build your wardrobe first"}
-          </p>
-        </div>
+  const OPENER_CHIPS: Chip[] = [
+    { label: "Work", value: "work" },
+    { label: "Date night", value: "date night" },
+    { label: "Casual day", value: "casual day" },
+    { label: "Going out", value: "going out" },
+  ];
 
-        {/* Empty wardrobe CTA */}
-        {!hasWardrobe && (
-          <div className="card p-8 text-center animate-rise" style={{ animationDelay: "0.1s" }}>
-            <div className="w-16 h-16 rounded-full bg-coralSoft grid place-items-center mx-auto mb-4">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF6B5E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 5h18v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"/><path d="M12 5v16"/><path d="M3 5a2 2 0 012-2h14a2 2 0 012 2"/></svg>
-            </div>
-            <h3 className="heading-md">Your closet awaits</h3>
-            <p className="text-sm text-muted mt-2 max-w-xs mx-auto">
-              Add at least 2 items to your wardrobe and your stylist will start suggesting outfits
-            </p>
-            <Link href="/wardrobe" className="btn-primary mt-5 inline-flex">
-              Add clothes
-            </Link>
-          </div>
-        )}
+  async function handleChip(value: string) {
+    setTags((prev) => [...prev, value]);
+    setFlowStage("final");
+    await sendPrompt(
+      `Suggest an outfit for ${value} from my wardrobe.`,
+      value.charAt(0).toUpperCase() + value.slice(1),
+    );
+  }
 
-        {/* Chat section with Today's Pick embedded */}
-        <div className="card animate-rise" style={{ animationDelay: "0.2s" }}>
-          <div className="p-4 border-b border-line">
-            <h2 className="font-bold text-ink">Chat with your stylist</h2>
-            <p className="text-xs text-muted mt-0.5">Ask about outfits, styling tips, or what to wear</p>
-          </div>
+  const showChips =
+    hasWardrobe && flowStage !== "final" && cardVisible && messages.length === 0;
 
-          {/* Messages */}
-          <div className="p-4 space-y-3 max-h-[28rem] overflow-y-auto">
-            {/* Today's Pick — inside chat, hidden once conversation starts */}
-            {hasWardrobe && suggestion.length > 0 && messages.length === 0 && (
-              <div className="rounded-xl3 bg-surface2 p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="chip-coral text-xs">Today's pick</span>
-                </div>
-                <div className={
-                  "flex gap-3 overflow-x-auto pb-1 " +
-                  (shuffling ? "opacity-50 scale-95 transition-all duration-200" : "transition-all duration-200")
-                }>
-                  {suggestion.map((item) => (
-                    <div key={item.id} className="flex-shrink-0 w-24">
-                      <div className="aspect-[3/4] rounded-xl overflow-hidden bg-bg">
-                        <img
-                          src={item.clean_image_url || item.image_url}
-                          alt={item.name || item.category}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <p className="text-xs font-semibold mt-1.5 truncate">{item.name || item.category}</p>
-                      {item.color && <p className="text-[10px] text-muted">{item.color}</p>}
-                    </div>
-                  ))}
-                </div>
-                {reasoning && (
-                  <p className="text-xs text-muted mt-2 italic">{reasoning}</p>
-                )}
-                <div className="flex gap-2 mt-3">
-                  <button onClick={handleShuffle} disabled={shuffling} className="btn-soft text-xs px-3 py-1.5 flex-1">
-                    {shuffling ? "Shuffling..." : "Shuffle"}
-                  </button>
-                  <Link href="/studio" className="btn-primary text-xs px-3 py-1.5 flex-1 text-center">
-                    Try on
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {messages.length === 0 && !hasWardrobe && (
-              <div className="text-center py-8">
-                <p className="text-sm text-muted">
-                  Add some clothes first, then ask your stylist anything
-                </p>
-              </div>
-            )}
-            {messages.length === 0 && hasWardrobe && suggestion.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-sm text-muted">
-                  Try &quot;What should I wear for a date night?&quot;
-                </p>
-              </div>
-            )}
-            {messages.map((m) => (
-              <div
-                key={m.id}
-                className={
-                  "flex " + (m.role === "user" ? "justify-end" : "justify-start")
-                }
-              >
-                <div
-                  className={
-                    "max-w-[80%] rounded-xl3 px-4 py-2.5 text-sm " +
-                    (m.role === "user"
-                      ? "bg-coral text-white rounded-br-lg"
-                      : "bg-surface2 text-ink rounded-bl-lg")
-                  }
-                >
-                  {m.content}
-                </div>
-              </div>
-            ))}
-            <div ref={chatEndRef} />
-          </div>
-
-          {/* Composer */}
-          <form onSubmit={handleSend} className="p-3 border-t border-line flex gap-2">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={hasWardrobe ? "Ask your stylist..." : "Add wardrobe items first"}
-              disabled={!hasWardrobe || sending}
-              className="field-sm flex-1"
-            />
-            <button
-              type="submit"
-              disabled={!input.trim() || sending || !hasWardrobe}
-              className="btn-primary px-4 py-2 text-sm"
+  /* ---------- Empty state ---------- */
+  if (!loading && !hasWardrobe) {
+    return (
+      <main className="min-h-screen bg-bg pb-nav md:pb-0 flex flex-col">
+        <Header />
+        <div className="flex-1 flex flex-col items-center justify-center px-6 max-w-2xl mx-auto w-full">
+          <SilhouettePreview items={[]} className="opacity-80" />
+          <motion.div
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 24 }}
+            className="mt-6"
+          >
+            <Link
+              href="/wardrobe"
+              className="btn-primary btn-lg animate-pulse2 inline-flex"
             >
-              {sending ? "..." : "Send"}
-            </button>
-          </form>
+              Add your first clothes
+            </Link>
+          </motion.div>
         </div>
+        <BottomNav />
+      </main>
+    );
+  }
+
+  /* ---------- Loading skeleton ---------- */
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-bg pb-nav md:pb-0 flex flex-col">
+        <Header />
+        <div className="flex-1 flex flex-col items-center justify-center px-6 max-w-2xl mx-auto w-full">
+          <div className="aspect-[3/5] w-full max-w-[280px] skeleton" />
+          <div className="mt-6 h-10 w-40 skeleton" />
+        </div>
+        <BottomNav />
+      </main>
+    );
+  }
+
+  /* ---------- Proactive / Active state ---------- */
+  return (
+    <main className="min-h-screen bg-bg pb-nav md:pb-0 flex flex-col">
+      <Header />
+
+      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-5">
+        {/* Silhouette zone — ~60vh, relative for overlays */}
+        <div className="relative flex-1 min-h-[55vh] flex items-center justify-center pt-4">
+          <SilhouettePreview items={suggestion} />
+
+          {/* Floating AI card overlapping the silhouette's bottom edge */}
+          <div className="absolute inset-x-0 bottom-2 px-4 z-20 pointer-events-none">
+            <FloatingCard
+              open={cardVisible}
+              text={reasoning}
+              onDismiss={() => setCardVisible(false)}
+            >
+              {showChips && (
+                <QuickReplyChips chips={OPENER_CHIPS} onSelect={handleChip} />
+              )}
+            </FloatingCard>
+          </div>
+        </div>
+
+        {/* Action buttons row */}
+        <div className="flex items-center justify-center gap-3 py-4">
+          <motion.button
+            type="button"
+            onClick={handleShuffle}
+            disabled={!hasWardrobe || shuffling}
+            aria-label="Shuffle outfit"
+            className="w-12 h-12 rounded-full bg-coralSoft text-coral grid place-items-center shadow-soft disabled:opacity-40"
+            animate={shuffling && !reduce ? { rotate: 360 } : { rotate: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 18 }}
+            whileTap={reduce ? undefined : { scale: 0.92 }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 3h5v5" />
+              <path d="M4 20L21 3" />
+              <path d="M21 16v5h-5" />
+              <path d="M15 15l6 6" />
+              <path d="M4 4l5 5" />
+            </svg>
+          </motion.button>
+
+          <motion.button
+            type="button"
+            onClick={handleTryOn}
+            disabled={currentItemIds.length === 0}
+            className="btn-primary px-6"
+            whileTap={reduce ? undefined : { scale: 0.96 }}
+          >
+            Try On
+          </motion.button>
+
+          {messages.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setSheetOpen(true)}
+              className="text-sm font-semibold text-muted hover:text-coral transition-colors px-2 py-2"
+            >
+              History
+            </button>
+          )}
+        </div>
+
+        {/* Chat input bar — pinned above BottomNav, safe-area aware */}
+        <form
+          onSubmit={handleSend}
+          className="flex gap-2 pb-3"
+          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
+        >
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask your stylist..."
+            disabled={sending}
+            className="field-sm flex-1"
+          />
+          <motion.button
+            type="submit"
+            disabled={!input.trim() || sending}
+            className="btn-primary px-4 py-2 text-sm"
+            whileTap={reduce ? undefined : { scale: 0.96 }}
+          >
+            {sending ? "..." : "Send"}
+          </motion.button>
+        </form>
       </div>
+
+      <ChatSheet open={sheetOpen} messages={messages} onClose={() => setSheetOpen(false)} />
       <BottomNav />
     </main>
   );
