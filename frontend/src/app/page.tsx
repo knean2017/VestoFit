@@ -203,26 +203,31 @@ function StylistHome() {
     cardVisible &&
     messages.length === 0;
 
-  /* ---------- Empty state ---------- */
+  /* ---------- Empty state — proactive AI guides you ---------- */
   if (!loading && !hasWardrobe) {
     return (
       <main className="min-h-screen bg-bg pb-nav md:pb-0 flex flex-col">
         <Header />
-        <div className="flex-1 flex flex-col items-center justify-center px-6 max-w-2xl mx-auto w-full">
-          <SilhouettePreview items={[]} className="opacity-80" />
-          <motion.div
-            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 260, damping: 24 }}
-            className="mt-6"
-          >
-            <Link
-              href="/wardrobe"
-              className="btn-primary btn-lg animate-pulse2 inline-flex"
-            >
-              Add your first clothes
-            </Link>
-          </motion.div>
+        <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-5">
+          <div className="relative flex-1 min-h-[45vh] flex items-center justify-center pt-4">
+            <SilhouettePreview items={[]} className="opacity-60" />
+            <div className="absolute inset-x-0 bottom-2 px-4 z-20 pointer-events-none">
+              <FloatingCard
+                open={true}
+                text="Hey! I'm your stylist. Let's build your wardrobe — snap a photo or upload your clothes and I'll start putting looks together."
+                onDismiss={() => {}}
+              >
+                <div className="flex flex-wrap gap-2 pointer-events-auto">
+                  <Link href="/wardrobe" className="chip-coral text-xs px-3.5 py-2 inline-flex items-center gap-1">
+                    📸 Add clothes
+                  </Link>
+                  <Link href="/shop" className="chip-coral text-xs px-3.5 py-2 inline-flex items-center gap-1">
+                    🛍️ Browse shop
+                  </Link>
+                </div>
+              </FloatingCard>
+            </div>
+          </div>
         </div>
         <BottomNav />
       </main>
