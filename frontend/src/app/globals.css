@@ -1,0 +1,164 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+@layer base {
+  html,
+  body {
+    background: #fbf7f0;
+    color: #2a2522;
+    font-family: "Nunito", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: #ff6b5e;
+    color: #fff;
+  }
+
+  *:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(255, 107, 94, 0.2);
+    border-radius: 12px;
+  }
+}
+
+@layer components {
+  /* ---------- containers ---------- */
+  .container-app {
+    @apply max-w-6xl mx-auto px-5 sm:px-8;
+  }
+
+  .container-narrow {
+    @apply max-w-md mx-auto px-5;
+  }
+
+  /* ---------- cards ---------- */
+  .card {
+    @apply bg-surface rounded-xl3 shadow-soft;
+  }
+
+  .card-bordered {
+    @apply card border border-line;
+  }
+
+  .card-interactive {
+    @apply card transition-all duration-200 hover:shadow-lifted hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer;
+  }
+
+  /* ---------- typography ---------- */
+  .label {
+    @apply text-xs font-semibold text-muted uppercase tracking-[0.08em];
+  }
+
+  .heading-lg {
+    @apply text-2xl sm:text-3xl font-bold tracking-tightest text-ink;
+  }
+
+  .heading-md {
+    @apply text-xl font-bold tracking-tight text-ink;
+  }
+
+  /* ---------- fields ---------- */
+  .field {
+    @apply w-full bg-surface border border-line rounded-xl3 px-4 py-3 text-ink placeholder:text-muted/60 focus:border-coral focus:shadow-ring transition-all duration-200;
+  }
+
+  .field-sm {
+    @apply field text-sm px-3 py-2 rounded-xl;
+  }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed select-none;
+  }
+
+  .btn-primary {
+    @apply btn bg-coral text-white shadow-glow hover:brightness-110 active:scale-[0.97];
+  }
+
+  .btn-teal {
+    @apply btn bg-teal text-white hover:brightness-110 active:scale-[0.97];
+  }
+
+  .btn-soft {
+    @apply btn bg-coralSoft text-coral hover:bg-coral hover:text-white active:scale-[0.97];
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-ink border-2 border-line hover:border-ink/20 hover:bg-surface2 active:scale-[0.97];
+  }
+
+  .btn-link {
+    @apply text-sm font-semibold text-coral hover:text-ink transition-colors;
+  }
+
+  /* ---------- chips / tags ---------- */
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full bg-surface2 text-muted;
+  }
+
+  .chip-coral {
+    @apply chip bg-coralSoft text-coral;
+  }
+
+  .chip-teal {
+    @apply chip bg-tealSoft text-teal;
+  }
+
+  /* ---------- misc ---------- */
+  .divider {
+    @apply h-px bg-line w-full;
+  }
+
+  .avatar-ring {
+    @apply ring-4 ring-coral/20 rounded-full;
+  }
+}
+
+/* ---------- animations ---------- */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(42, 37, 34, 0.03) 0%,
+    rgba(255, 107, 94, 0.12) 50%,
+    rgba(42, 37, 34, 0.03) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmerBg 1.4s linear infinite;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(42, 37, 34, 0.04),
+    rgba(42, 37, 34, 0.08),
+    rgba(42, 37, 34, 0.04)
+  );
+  background-size: 200% 100%;
+  animation: shimmerBg 1.6s linear infinite;
+  border-radius: 12px;
+}
+
+/* safe area for mobile bottom nav */
+.pb-nav {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
