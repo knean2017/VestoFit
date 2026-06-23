@@ -1,0 +1,76 @@
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_db
+from app.deps import get_current_user
+from app.models.shopping import ShoppingQuery
+from app.models.user import User
+from app.schemas.shopping import (
+    ShoppingHistoryItem,
+    ShoppingSearchRequest,
+    ShoppingSearchResponse,
+)
+from app.services.shopping_service import search_products
+
+router = APIRouter(prefix="/shopping", tags=["shopping"])
+
+
+@router.post("/search", response_model=ShoppingSearchResponse)
+async def search(
+    payload: ShoppingSearchRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    results = await search_products(
+        query=payload.query,
+        budget_max=payload.budget_max,
+        category=payload.category,
+    )
+
+    record = ShoppingQuery(
+        user_id=user.id,
+        query=payload.query,
+        budget_max=payload.budget_max,
+        category=payload.category,
+        results_json={"results": [r.model_dump() for r in results]},
+    )
+    db.add(record)
+    await db.commit()
+
+    return ShoppingSearchResponse(
+        query=payload.query,
+        results=results,
+        total=len(results),
+    )
+
+
+@router.get("/history", response_model=list[ShoppingHistoryItem])
+async def history(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+    limit: Annotated[int, Query(ge=1, le=50)] = 20,
+):
+    q = (
+        select(ShoppingQuery)
+        .where(ShoppingQuery.user_id == user.id)
+        .order_by(ShoppingQuery.created_at.desc())
+        .limit(limit)
+    )
+    res = await db.execute(q)
+    items: list[ShoppingHistoryItem] = []
+    for row in res.scalars().all():
+        rj = row.results_json or {}
+        items.append(
+            ShoppingHistoryItem(
+                id=str(row.id),
+                query=row.query,
+                budget_max=row.budget_max,
+                category=row.category,
+                result_count=len(rj.get("results", [])),
+                created_at=row.created_at,
+            )
+        )
+    return items

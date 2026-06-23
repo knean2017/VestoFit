@@ -7,7 +7,7 @@ import app.models  # noqa: F401 — ensure ORM mappers register
 from app.config import get_settings
 from app.database import Base, engine
 from app.db_migrate import run_migrations
-from app.routers import auth, avatar, files, outfits, settings, stylist, tryon, wardrobe
+from app.routers import auth, avatar, files, outfits, settings, shopping, stylist, tryon, wardrobe
 
 _settings = get_settings()
 
@@ -38,6 +38,7 @@ app.include_router(wardrobe.router)
 app.include_router(outfits.router)
 app.include_router(stylist.router)
 app.include_router(files.router)
+app.include_router(shopping.router)
 
 
 @app.get("/health", tags=["health"])
