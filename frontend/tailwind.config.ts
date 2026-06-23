@@ -31,6 +31,7 @@ const config: Config = {
       },
       letterSpacing: {
         tightest: "-0.03em",
+        tighter2: "-0.04em",
       },
       borderRadius: {
         xl2: "1.25rem",
@@ -40,6 +41,7 @@ const config: Config = {
       boxShadow: {
         soft: "0 2px 8px rgba(42, 37, 34, 0.06), 0 0 1px rgba(42, 37, 34, 0.08)",
         glow: "0 4px 20px rgba(255, 107, 94, 0.12)",
+        glow2: "0 4px 24px rgba(255, 107, 94, 0.18)",
         lifted: "0 8px 32px rgba(42, 37, 34, 0.10)",
         ring: "0 0 0 4px rgba(255, 107, 94, 0.18)",
       },
@@ -68,6 +70,11 @@ const config: Config = {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-4px)" },
         },
+        shuffleSpin: {
+          "0%": { opacity: "1", transform: "scale(1) rotate(0deg)" },
+          "50%": { opacity: "0.5", transform: "scale(0.92) rotate(3deg)" },
+          "100%": { opacity: "1", transform: "scale(1) rotate(0deg)" },
+        },
       },
       animation: {
         rise: "rise 0.5s cubic-bezier(.22, 1, .36, 1) both",
@@ -76,6 +83,7 @@ const config: Config = {
         pulse2: "pulse2 2s ease-in-out infinite",
         shimmer: "shimmerBg 1.4s linear infinite",
         bounce2: "bounce2 0.5s cubic-bezier(.22, 1, .36, 1)",
+        shuffleSpin: "shuffleSpin 0.4s cubic-bezier(.22, 1, .36, 1)",
       },
     },
   },
