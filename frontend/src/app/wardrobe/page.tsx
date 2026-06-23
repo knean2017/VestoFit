@@ -10,10 +10,10 @@ import { getToken } from "@/lib/auth";
 
 type Filter = "all" | Category | "favorites";
 
-const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
-  { id: "tops", label: "Tops", emoji: "👕" },
-  { id: "bottoms", label: "Bottoms", emoji: "👖" },
-  { id: "dresses", label: "Dresses", emoji: "👗" },
+const CATEGORIES: { id: Category; label: string }[] = [
+  { id: "tops", label: "Tops" },
+  { id: "bottoms", label: "Bottoms" },
+  { id: "dresses", label: "Dresses" },
 ];
 
 export default function WardrobePage() {
@@ -113,7 +113,7 @@ export default function WardrobePage() {
                       : "bg-surface2 text-muted hover:text-ink")
                   }
                 >
-                  {c.emoji} {c.label}
+                  {c.label}
                 </button>
               ))}
             </div>
@@ -123,7 +123,7 @@ export default function WardrobePage() {
               onClick={() => fileInput.current?.click()}
               className="btn-primary"
             >
-              {uploading ? "Adding..." : "📸 Add photo"}
+              {uploading ? "Adding..." : "Add photo"}
             </button>
             <input
               ref={fileInput}
@@ -176,7 +176,7 @@ export default function WardrobePage() {
         ) : items.length === 0 ? (
           <div className="card p-12 text-center animate-rise">
             <div className="w-20 h-20 rounded-full bg-coralSoft grid place-items-center mx-auto mb-4">
-              <span className="text-3xl">👗</span>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FF6B5E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 5h18v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"/><path d="M12 5v16"/><path d="M3 5a2 2 0 012-2h14a2 2 0 012 2"/></svg>
             </div>
             <h3 className="heading-md">Nothing here yet</h3>
             <p className="mt-2 text-sm text-muted max-w-xs mx-auto">
@@ -238,6 +238,13 @@ function ItemCard({ item, onEdit }: { item: WardrobeItem; onEdit: () => void }) 
             <span className="text-xs text-muted">· {item.color}</span>
           )}
         </div>
+        {item.conditions && (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {item.conditions.split(",").map((c) => c.trim()).filter(Boolean).slice(0, 2).map((c) => (
+              <span key={c} className="text-[10px] font-bold text-coral bg-coralSoft px-1.5 py-0.5 rounded-full">{c}</span>
+            ))}
+          </div>
+        )}
       </div>
     </button>
   );
@@ -330,7 +337,7 @@ function EditModal({
           <label className="block">
             <span className="label">Category</span>
             <select className="field mt-2 cursor-pointer" value={category} onChange={(e) => setCategory(e.target.value as Category)}>
-              {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
+              {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
           </label>
           <label className="block">

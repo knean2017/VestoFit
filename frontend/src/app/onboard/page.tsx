@@ -56,8 +56,8 @@ export default function OnboardPage() {
       <section className="container-app py-8 sm:py-12">
         <div className="max-w-lg mx-auto animate-rise">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-teal text-white grid place-items-center text-2xl font-extrabold mx-auto mb-4">
-              📸
+            <div className="w-16 h-16 rounded-2xl bg-teal text-white grid place-items-center mx-auto mb-4">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
             </div>
             <h1 className="heading-lg">Upload your photo</h1>
             <p className="mt-2 text-sm text-muted font-medium max-w-sm mx-auto">
@@ -99,7 +99,9 @@ export default function OnboardPage() {
                 </div>
               ) : (
                 <>
-                  <div className="mx-auto w-14 h-14 rounded-full bg-coralSoft grid place-items-center text-coral text-xl">+</div>
+                  <div className="mx-auto w-14 h-14 rounded-full bg-coralSoft grid place-items-center text-coral">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </div>
                   <p className="mt-4 text-sm font-bold">Drop a photo here or tap to browse</p>
                   <p className="mt-1 text-xs text-muted font-medium">JPG, PNG, WEBP</p>
                 </>

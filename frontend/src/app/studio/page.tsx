@@ -160,7 +160,7 @@ export default function StudioPage() {
               <div className="mt-6 flex items-center justify-between gap-3">
                 <p className="text-xs text-muted font-medium">~15-30 seconds per render</p>
                 <button type="button" onClick={submit} disabled={submitting || (mode === "url" ? !url : !file)} className="btn-primary">
-                  {submitting ? "Sending..." : "✨ Render"}
+                  {submitting ? "Sending..." : "Render"}
                 </button>
               </div>
             </div>
@@ -224,7 +224,7 @@ function ResultPanel({ job }: { job: TryOnStatus | null }) {
     return (
       <div className="card p-10 text-center">
         <div className="w-16 h-16 rounded-full bg-surface2 grid place-items-center mx-auto mb-3">
-          <span className="text-2xl">✨</span>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8C8279" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M11 3l1 7 1-7"/><path d="M2 9h20"/></svg>
         </div>
         <p className="text-muted font-semibold">Your render will appear here</p>
       </div>

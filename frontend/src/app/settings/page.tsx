@@ -33,7 +33,7 @@ export default function SettingsPage() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={avatar.photo_url} alt="avatar" className="w-full h-full rounded-full object-cover" />
               ) : (
-                <span>👤</span>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF6B5E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               )}
             </div>
             <div>
