@@ -74,9 +74,13 @@ async def add_item(
     photo: Annotated[UploadFile, File(...)],
     category: Annotated[Literal["tops", "bottoms", "dresses"], Form()],
 ):
-    data = await photo.read()
+    if photo.content_type not in ("image/jpeg", "image/png", "image/webp"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Only JPEG, PNG, or WebP images allowed")
+    data = await photo.read(10 * 1024 * 1024 + 1)
     if not data:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Empty file")
+    if len(data) > 10 * 1024 * 1024:
+        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "File too large (max 10 MB)")
     item = await create_item(
         db, user.id, photo.filename or "item.jpg", data, category
     )

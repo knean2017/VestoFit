@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.deps import get_current_user
 from app.models.user import User
+from app.rate_limit import rate_limit_auth
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserMe
 from app.services.auth_service import (
     create_access_token,
@@ -17,7 +18,7 @@ from app.services.auth_service import (
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=TokenResponse)
+@router.post("/register", response_model=TokenResponse, dependencies=[Depends(rate_limit_auth)])
 async def register(
     payload: RegisterRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -33,7 +34,7 @@ async def register(
     return TokenResponse(access_token=create_access_token(str(user.id)))
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse, dependencies=[Depends(rate_limit_auth)])
 async def login(
     payload: LoginRequest,
     db: Annotated[AsyncSession, Depends(get_db)],

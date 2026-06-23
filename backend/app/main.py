@@ -43,12 +43,4 @@ app.include_router(shopping.router)
 
 @app.get("/health", tags=["health"])
 async def health() -> dict[str, str]:
-    return {
-        "status": "ok",
-        "storage": _settings.storage_backend,
-        "tryon_model": _settings.fal_tryon_model,
-        "avatar_model": _settings.fal_avatar_model,
-        "fal_configured": "true" if _settings.fal_key else "false",
-        "llm_configured": "true" if _settings.gemini_api_key else "false",
-        "llm_model": _settings.llm_model,
-    }
+    return {"status": "ok"}

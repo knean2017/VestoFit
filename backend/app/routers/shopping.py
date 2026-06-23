@@ -8,6 +8,7 @@ from app.database import get_db
 from app.deps import get_current_user
 from app.models.shopping import ShoppingQuery
 from app.models.user import User
+from app.rate_limit import rate_limit_search
 from app.schemas.shopping import (
     ShoppingHistoryItem,
     ShoppingSearchRequest,
@@ -18,7 +19,7 @@ from app.services.shopping_service import search_products
 router = APIRouter(prefix="/shopping", tags=["shopping"])
 
 
-@router.post("/search", response_model=ShoppingSearchResponse)
+@router.post("/search", response_model=ShoppingSearchResponse, dependencies=[Depends(rate_limit_search)])
 async def search(
     payload: ShoppingSearchRequest,
     db: Annotated[AsyncSession, Depends(get_db)],

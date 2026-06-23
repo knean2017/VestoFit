@@ -118,14 +118,18 @@ async function request<T>(
   });
 
   if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem("fitme.token");
+        window.location.href = "/login";
+      }
+    }
     let detail = "Request failed";
     try {
       const body = await res.json();
-      detail = body.detail || body.message || JSON.stringify(body);
+      detail = body.detail || body.message || "Request failed";
     } catch {
-      try {
-        detail = await res.text();
-      } catch {}
+      /* swallow parse errors */
     }
     throw new Error(detail);
   }

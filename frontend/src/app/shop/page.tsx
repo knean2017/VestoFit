@@ -167,6 +167,14 @@ export default function ShopPage() {
   );
 }
 
+function safeHref(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === "https:" || parsed.protocol === "http:") return url;
+  } catch {}
+  return "#";
+}
+
 function ShopResultCard({ item }: { item: ShoppingResultItem }) {
   return (
     <div className="card-interactive overflow-hidden group">
@@ -188,7 +196,7 @@ function ShopResultCard({ item }: { item: ShoppingResultItem }) {
             {item.currency === "USD" ? "$" : item.currency}{item.price.toFixed(2)}
           </span>
           <a
-            href={item.product_url}
+            href={safeHref(item.product_url)}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs font-bold text-muted hover:text-coral transition-colors"

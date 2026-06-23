@@ -29,9 +29,13 @@ async def upload(
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[User, Depends(get_current_user)],
 ):
-    data = await photo.read()
+    if photo.content_type not in ("image/jpeg", "image/png", "image/webp"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Only JPEG, PNG, or WebP images allowed")
+    data = await photo.read(10 * 1024 * 1024 + 1)
     if not data:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Empty file")
+    if len(data) > 10 * 1024 * 1024:
+        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "File too large (max 10 MB)")
     avatar = await create_or_replace_avatar(
         db, user.id, photo.filename or "photo.jpg", data
     )
