@@ -28,6 +28,10 @@ export default function HomePage() {
 
 /* ─── Authenticated: Stylist-first home ─── */
 
+function cap(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 function StylistHome() {
   const toast = useToast();
   const router = useRouter();
@@ -159,24 +163,45 @@ function StylistHome() {
     await sendPrompt(msg);
   }
 
+  // Proactive flow config: opener -> narrowing -> final.
   const OPENER_CHIPS: Chip[] = [
     { label: "Work", value: "work" },
     { label: "Date night", value: "date night" },
     { label: "Casual day", value: "casual day" },
     { label: "Going out", value: "going out" },
   ];
+  const NARROWING_CHIPS: Chip[] = [
+    { label: "Dressy", value: "dressy" },
+    { label: "Laid-back", value: "laid-back" },
+    { label: "Bold", value: "bold" },
+    { label: "Minimal", value: "minimal" },
+  ];
+  const activeChips = flowStage === "opener" ? OPENER_CHIPS : NARROWING_CHIPS;
 
   async function handleChip(value: string) {
-    setTags((prev) => [...prev, value]);
+    const nextTags = [...tags, value];
+    setTags(nextTags);
+
+    if (flowStage === "opener") {
+      // Local narrowing question — no API call, instant. Refine silhouette.
+      pickRandom(wardrobe);
+      setFlowStage("narrowing");
+      setReasoning(`${cap(value)} it is — dressy or laid-back?`);
+      setCardVisible(true);
+      return;
+    }
+
+    // Narrowing -> final: call the API for genuine reasoning.
     setFlowStage("final");
-    await sendPrompt(
-      `Suggest an outfit for ${value} from my wardrobe.`,
-      value.charAt(0).toUpperCase() + value.slice(1),
-    );
+    const prompt = `Suggest an outfit for ${nextTags.join(", ")} from my wardrobe.`;
+    await sendPrompt(prompt, cap(value));
   }
 
   const showChips =
-    hasWardrobe && flowStage !== "final" && cardVisible && messages.length === 0;
+    hasWardrobe &&
+    flowStage !== "final" &&
+    cardVisible &&
+    messages.length === 0;
 
   /* ---------- Empty state ---------- */
   if (!loading && !hasWardrobe) {
@@ -236,7 +261,7 @@ function StylistHome() {
               onDismiss={() => setCardVisible(false)}
             >
               {showChips && (
-                <QuickReplyChips chips={OPENER_CHIPS} onSelect={handleChip} />
+                <QuickReplyChips chips={activeChips} onSelect={handleChip} />
               )}
             </FloatingCard>
           </div>
