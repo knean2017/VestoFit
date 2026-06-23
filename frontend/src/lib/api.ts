@@ -77,6 +77,31 @@ export type TryOnStatus = {
   created_at: string;
 };
 
+export type ShoppingResultItem = {
+  title: string;
+  price: number;
+  currency: string;
+  image_url: string;
+  product_url: string;
+  source: string;
+  category: string | null;
+};
+
+export type ShoppingSearchResponse = {
+  query: string;
+  results: ShoppingResultItem[];
+  total: number;
+};
+
+export type ShoppingHistoryItem = {
+  id: string;
+  query: string;
+  budget_max: number | null;
+  category: string | null;
+  result_count: number;
+  created_at: string;
+};
+
 async function request<T>(
   path: string,
   opts: RequestInit = {},
@@ -249,5 +274,14 @@ export const api = {
   },
   stylistMessages() {
     return request<StylistMessage[]>("/stylist/messages");
+  },
+  shoppingSearch(query: string, budget_max?: number, category?: string) {
+    return request<ShoppingSearchResponse>("/shopping/search", {
+      method: "POST",
+      body: JSON.stringify({ query, budget_max: budget_max || null, category: category || null }),
+    });
+  },
+  shoppingHistory() {
+    return request<ShoppingHistoryItem[]>("/shopping/history");
   },
 };

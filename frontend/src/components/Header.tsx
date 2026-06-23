@@ -8,6 +8,7 @@ import { clearToken, getToken } from "@/lib/auth";
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/wardrobe", label: "Closet" },
+  { href: "/shop", label: "Shop" },
   { href: "/studio", label: "Studio" },
   { href: "/settings", label: "Profile" },
 ];
