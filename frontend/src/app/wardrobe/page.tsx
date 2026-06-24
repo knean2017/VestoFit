@@ -1,12 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/components/Toast";
 import { api, type Category, type WardrobeItem } from "@/lib/api";
 import { getToken } from "@/lib/auth";
+import CategoryTabs from "@/components/wardrobe/CategoryTabs";
+import HangingRack from "@/components/wardrobe/HangingRack";
+import MagneticButton from "@/components/MagneticButton";
+
+const SmoothScroll = dynamic(() => import("@/components/SmoothScroll"), { ssr: false });
+const ClosetDoors3D = dynamic(() => import("@/components/wardrobe/ClosetDoors3D"), {
+  ssr: false,
+});
 
 type Filter = "all" | Category | "favorites";
 
@@ -27,6 +36,7 @@ export default function WardrobePage() {
   const [uploading, setUploading] = useState(false);
   const [addCategory, setAddCategory] = useState<Category>("tops");
   const [editing, setEditing] = useState<WardrobeItem | null>(null);
+  const [doorsDone, setDoorsDone] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -84,169 +94,88 @@ export default function WardrobePage() {
   }
 
   return (
-    <main className="min-h-screen bg-bg pb-nav md:pb-0">
-      <Header />
+    <SmoothScroll>
+      <main className="min-h-screen bg-bg pb-nav md:pb-0">
+        <Header />
 
-      <section className="container-app py-6 sm:py-8">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="heading-lg">Your closet</h1>
-            <p className="mt-1 text-sm text-muted font-medium">
-              {items.length} item{items.length === 1 ? "" : "s"} — add more to get better outfit suggestions
-            </p>
-          </div>
-        </div>
-
-        {/* Add section */}
-        <div className="card p-5 mb-6">
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="flex gap-2">
-              {CATEGORIES.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => setAddCategory(c.id)}
-                  className={
-                    "px-4 py-2 rounded-xl text-sm font-bold transition-all " +
-                    (addCategory === c.id
-                      ? "bg-coral text-white shadow-glow"
-                      : "bg-surface2 text-muted hover:text-ink")
-                  }
-                >
-                  {c.label}
-                </button>
-              ))}
+        <div className="relative">
+          {!doorsDone && (
+            <div className="absolute inset-0 z-40 pointer-events-auto">
+              <ClosetDoors3D onComplete={() => setDoorsDone(true)} />
             </div>
-            <button
-              type="button"
-              disabled={uploading}
-              onClick={() => fileInput.current?.click()}
-              className="btn-primary"
-            >
-              {uploading ? "Adding..." : "Add photo"}
-            </button>
-            <input
-              ref={fileInput}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              hidden
-              onChange={(e) => onAddFile(e.target.files?.[0])}
-            />
-          </div>
-        </div>
-
-        {/* Filter tabs */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {(
-            [
-              { id: "all" as const, label: "All" },
-              ...CATEGORIES.map((c) => ({ id: c.id, label: c.label })),
-              { id: "favorites" as const, label: "♥ Favorites" },
-            ] as const
-          ).map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setFilter(tab.id)}
-              className={
-                "px-4 py-2 rounded-full text-sm font-bold transition-all " +
-                (filter === tab.id
-                  ? "bg-ink text-white"
-                  : "bg-surface2 text-muted hover:text-ink")
-              }
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Grid */}
-        {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="card overflow-hidden">
-                <div className="aspect-[3/4] skeleton" />
-                <div className="p-3 space-y-2">
-                  <div className="h-4 w-2/3 skeleton" />
-                  <div className="h-3 w-1/3 skeleton" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : items.length === 0 ? (
-          <div className="card p-12 text-center animate-rise">
-            <div className="w-20 h-20 rounded-full bg-coralSoft grid place-items-center mx-auto mb-4">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FF6B5E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 5h18v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"/><path d="M12 5v16"/><path d="M3 5a2 2 0 012-2h14a2 2 0 012 2"/></svg>
-            </div>
-            <h3 className="heading-md">Nothing here yet</h3>
-            <p className="mt-2 text-sm text-muted max-w-xs mx-auto">
-              Start building your digital closet — snap a photo of any clothing item
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {items.map((item) => (
-              <ItemCard key={item.id} item={item} onEdit={() => setEditing(item)} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {editing && (
-        <EditModal
-          item={editing}
-          onClose={() => setEditing(null)}
-          onSaved={async () => { setEditing(null); await load(); }}
-          onDelete={() => onDelete(editing.id)}
-        />
-      )}
-
-      <BottomNav />
-    </main>
-  );
-}
-
-function ItemCard({ item, onEdit }: { item: WardrobeItem; onEdit: () => void }) {
-  const img = item.clean_image_url || item.image_url;
-  const label = item.name || item.category.charAt(0).toUpperCase() + item.category.slice(1);
-
-  return (
-    <button
-      type="button"
-      onClick={onEdit}
-      className="card-interactive overflow-hidden text-left group"
-    >
-      <div className="aspect-[3/4] bg-surface2 relative">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={img}
-          alt={label}
-          className="w-full h-full object-contain p-3 group-hover:scale-[1.03] transition-transform duration-300"
-        />
-        {item.is_favorite && (
-          <span className="absolute top-2 right-2 w-7 h-7 rounded-full bg-coralSoft grid place-items-center text-coral text-xs">♥</span>
-        )}
-        {item.tagging_status === "pending" && (
-          <span className="absolute bottom-2 left-2 chip-coral text-[10px]">Tagging...</span>
-        )}
-      </div>
-      <div className="p-3">
-        <p className="text-sm font-bold truncate">{label}</p>
-        <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs text-muted capitalize">{item.category}</span>
-          {item.color && (
-            <span className="text-xs text-muted">· {item.color}</span>
           )}
+
+          <section className="container-app py-6 sm:py-8">
+            <header className="mb-5">
+              <h1 className="heading-lg">Your closet</h1>
+              <p className="text-muted text-sm">
+                {items.length} piece{items.length === 1 ? "" : "s"}
+              </p>
+            </header>
+
+            <div className="mb-4">
+              <CategoryTabs filter={filter} setFilter={setFilter} />
+            </div>
+
+            <HangingRack
+              items={items}
+              loading={loading}
+              filterKey={filter}
+              onEdit={setEditing}
+              onAdd={() => fileInput.current?.click()}
+            />
+
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <div className="flex gap-2">
+                {CATEGORIES.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setAddCategory(c.id)}
+                    className={
+                      "px-3 py-1.5 rounded-full text-sm font-semibold " +
+                      (addCategory === c.id
+                        ? "bg-teal text-surface"
+                        : "bg-surface2 text-muted")
+                    }
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+              <MagneticButton>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={uploading}
+                  onClick={() => fileInput.current?.click()}
+                >
+                  {uploading ? "Uploading…" : "Add photo"}
+                </button>
+              </MagneticButton>
+              <input
+                ref={fileInput}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                hidden
+                onChange={(e) => onAddFile(e.target.files?.[0])}
+              />
+            </div>
+          </section>
         </div>
-        {item.conditions && (
-          <div className="flex flex-wrap gap-1 mt-1">
-            {item.conditions.split(",").map((c) => c.trim()).filter(Boolean).slice(0, 2).map((c) => (
-              <span key={c} className="text-[10px] font-bold text-coral bg-coralSoft px-1.5 py-0.5 rounded-full">{c}</span>
-            ))}
-          </div>
+
+        {editing && (
+          <EditModal
+            item={editing}
+            onClose={() => setEditing(null)}
+            onSaved={async () => { setEditing(null); await load(); }}
+            onDelete={() => onDelete(editing.id)}
+          />
         )}
-      </div>
-    </button>
+
+        <BottomNav />
+      </main>
+    </SmoothScroll>
   );
 }
 
