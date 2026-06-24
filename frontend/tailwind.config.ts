@@ -75,6 +75,20 @@ const config: Config = {
           "50%": { opacity: "0.5", transform: "scale(0.92) rotate(3deg)" },
           "100%": { opacity: "1", transform: "scale(1) rotate(0deg)" },
         },
+        glint: {
+          "0%": { left: "-20%" },
+          "100%": { left: "120%" },
+        },
+        glassShimmer: {
+          "0%": { backgroundPosition: "-150% 0" },
+          "100%": { backgroundPosition: "250% 0" },
+        },
+        swing: {
+          "0%": { transform: "rotate(0deg)" },
+          "30%": { transform: "rotate(-3deg)" },
+          "60%": { transform: "rotate(2deg)" },
+          "100%": { transform: "rotate(0deg)" },
+        },
       },
       animation: {
         rise: "rise 0.5s cubic-bezier(.22, 1, .36, 1) both",
@@ -84,6 +98,9 @@ const config: Config = {
         shimmer: "shimmerBg 1.4s linear infinite",
         bounce2: "bounce2 0.5s cubic-bezier(.22, 1, .36, 1)",
         shuffleSpin: "shuffleSpin 0.4s cubic-bezier(.22, 1, .36, 1)",
+        glint: "glint 0.8s cubic-bezier(.45,0,.55,1) forwards",
+        "glass-shimmer": "glassShimmer 3.5s ease-in-out infinite",
+        swing: "swing 0.8s ease-in-out",
       },
     },
   },

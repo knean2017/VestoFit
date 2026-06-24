@@ -187,3 +187,67 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- immersive redesign ---------- */
+
+/* Closet rod — metallic bar items hang from */
+.rod {
+  height: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #cfc7ba, #efe9df);
+  box-shadow: 0 1px 2px rgba(42, 37, 34, 0.12);
+}
+
+/* Glassy white reflection sweep for window-display cards */
+.glass-shimmer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 70%
+  );
+  background-size: 250% 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .glass-shimmer {
+    animation: glassShimmer 3.5s ease-in-out infinite;
+  }
+}
+
+/* Polaroid frame for studio history */
+.polaroid {
+  background: #fff;
+  padding: 8px 8px 28px 8px;
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(42, 37, 34, 0.1);
+}
+
+/* Curtain drape fold lines */
+.curtain-fold {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 0px,
+    rgba(0, 0, 0, 0) 14px,
+    rgba(255, 255, 255, 0.05) 28px,
+    rgba(0, 0, 0, 0) 42px
+  );
+}
+
+/* Glint sweep bar for mirror entrance */
+.glint-bar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 12%;
+  pointer-events: none;
+  filter: blur(8px);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+}
