@@ -95,10 +95,10 @@ async def ask(
 ):
     try:
         item_ids = [uuid.UUID(i) for i in payload.item_ids] if payload.item_ids else None
-        reply = await ask_stylist(db, user.id, payload.prompt, item_ids)
+        result = await ask_stylist(db, user.id, payload.prompt, item_ids)
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid item id") from e
-    return StylistAskResponse(reply=reply)
+    return StylistAskResponse(reply=result["reply"], chips=result.get("chips"))
 
 
 @router.get("/messages", response_model=list[StylistMessageResponse])

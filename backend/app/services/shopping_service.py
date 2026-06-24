@@ -146,3 +146,51 @@ async def _search_serpapi(
             )
         )
     return items
+
+
+from app.services.llm_service import LlmError, shopping_ask
+
+
+async def ask_shopping_assistant(
+    prompt: str,
+    history: list[dict[str, str]] | None = None,
+) -> dict:
+    try:
+        result = shopping_ask(prompt, history)
+        llm_result = await result
+    except LlmError:
+        return {
+            "reply": "I'm having trouble thinking right now. Try again in a moment.",
+            "results": None,
+            "search_query": None,
+            "chips": None,
+        }
+
+    search_params = llm_result.get("search")
+    results = None
+    search_query = None
+
+    if search_params and isinstance(search_params, dict):
+        query = search_params.get("query", "").strip()
+        if query:
+            search_query = query
+            budget_max = search_params.get("budget_max")
+            category = search_params.get("category")
+            if isinstance(budget_max, (int, float)) and budget_max > 0:
+                budget_max = float(budget_max)
+            else:
+                budget_max = None
+            if category not in ("tops", "bottoms", "dresses"):
+                category = None
+            results = await search_products(
+                query=query,
+                budget_max=budget_max,
+                category=category,
+            )
+
+    return {
+        "reply": llm_result.get("reply", ""),
+        "results": results,
+        "search_query": search_query,
+        "chips": llm_result.get("chips"),
+    }

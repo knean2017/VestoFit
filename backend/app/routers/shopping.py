@@ -10,11 +10,13 @@ from app.models.shopping import ShoppingQuery
 from app.models.user import User
 from app.rate_limit import rate_limit_search
 from app.schemas.shopping import (
+    ShoppingAskRequest,
+    ShoppingAskResponse,
     ShoppingHistoryItem,
     ShoppingSearchRequest,
     ShoppingSearchResponse,
 )
-from app.services.shopping_service import search_products
+from app.services.shopping_service import ask_shopping_assistant, search_products
 
 router = APIRouter(prefix="/shopping", tags=["shopping"])
 
@@ -45,6 +47,26 @@ async def search(
         query=payload.query,
         results=results,
         total=len(results),
+    )
+
+
+@router.post("/ask", response_model=ShoppingAskResponse, dependencies=[Depends(rate_limit_search)])
+async def ask(
+    payload: ShoppingAskRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    history = None
+    if payload.history:
+        history = [{"role": m.role, "content": m.content} for m in payload.history]
+
+    result = await ask_shopping_assistant(payload.prompt, history)
+
+    return ShoppingAskResponse(
+        reply=result["reply"],
+        results=result.get("results"),
+        search_query=result.get("search_query"),
+        chips=result.get("chips"),
     )
 
 
