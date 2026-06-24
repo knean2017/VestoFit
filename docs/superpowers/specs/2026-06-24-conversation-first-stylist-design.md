@@ -39,10 +39,11 @@
 
 ### UI Structure
 
-- Full-width scrollable message area with existing bubble styling from `ChatSheet` (user = coral, assistant = surface2, `rounded-xl3`, max 80% width).
+- Full-width scrollable message area with existing bubble styling from `ChatSheet` (user = coral, assistant = surface2, `rounded-xl3`, capped at `max-w-md` on wide screens for readability).
 - Sticky input bar at the bottom: text input + send button.
-- Typing indicator (three-dot pulse) while waiting for API response.
-- Quick-reply chips render below the latest assistant message when the API returns them.
+- Typing indicator (three-dot pulse) while waiting for API response. After 5 seconds without a reply, show a subtle "Still thinking..." label below the dots so users know the request is alive.
+- On API failure, show an inline error bubble: "Something went wrong — tap to retry" with a retry button. Never show raw error strings in the chat.
+- Quick-reply chips render below the latest assistant message when the API returns them. Chips wrap on mobile (flex-wrap) and are capped at 4 per response to prevent overflow.
 - Auto-scrolls to latest message on new messages.
 - `prefers-reduced-motion`: no entrance animations on bubbles, instant scroll instead of smooth.
 
@@ -75,10 +76,12 @@ In stylist mode, `StylistChat` accepts an optional `onSuggestion?: (reasoning: s
 **Remove:** The dead-end card with hardcoded "Add clothes" / "Browse shop" links.
 
 **Replace with:**
-- `SilhouettePreview` (faded/empty placeholder, same as now)
+- `SilhouettePreview` (faded/empty placeholder, same as now) — collapsed to `min-h-[30vh]` on mobile to leave room for chat
 - `<StylistChat mode="stylist">` at the bottom
 - AI greeting: "Hey! I'm your stylist. What's the occasion today — or just tell me about your style and we'll go from there."
+- Below the greeting, show 2-3 ghost-text example prompts (faded, not interactive): *Try: "I need an outfit for a date" or "What's trending right now?"* — these disappear once the user sends their first message.
 - If the user says "I have nothing to wear," the AI naturally suggests adding clothes or browsing the shop, with contextual quick-reply chips like `[Add from closet]` `[Browse shop]`. These emerge from conversation, not as forced buttons.
+- `FloatingCard` and `QuickReplyChips` are no longer used on this page in either state — all communication goes through `StylistChat`.
 
 ### Has-Wardrobe State
 
@@ -98,15 +101,16 @@ In stylist mode, `StylistChat` accepts an optional `onSuggestion?: (reasoning: s
 
 **Rewire:**
 - The chat input replaces the form at the bottom. `StylistChat` handles send/receive.
-- When the AI suggests an outfit (via `stylistAsk`), the reasoning appears as a chat bubble AND updates the `FloatingCard`-style reasoning display near the silhouette.
+- When the AI suggests an outfit (via `stylistAsk`), the reasoning appears as a chat bubble AND fires the `onSuggestion` callback so the page can update the silhouette and reasoning state.
 - Shuffle and Try On buttons stay in their current position between the silhouette and chat.
+- No `FloatingCard` on this page in any state — the chat bubbles serve the same purpose.
 
 ### Layout (top to bottom)
 
 1. `<Header />`
-2. Silhouette zone (flex-1, centered, same as now)
-3. Action buttons row (shuffle + try on)
-4. `<StylistChat mode="stylist" />` (takes remaining space, scrollable messages + sticky input)
+2. Silhouette zone — `min-h-[30vh]` on mobile, `min-h-[45vh]` on `sm:` and up. Collapses to leave room for chat on small screens.
+3. Action buttons row (shuffle + try on) — compact, single row
+4. `<StylistChat mode="stylist" />` — fills remaining space. Scrollable message area + sticky input bar above BottomNav.
 5. `<BottomNav />`
 
 ---
@@ -121,14 +125,15 @@ In stylist mode, `StylistChat` accepts an optional `onSuggestion?: (reasoning: s
 
 **Add:**
 - `<StylistChat mode="shopping" onSearchResults={setResults} />` as the primary interface, positioned after the `WindowDisplay` hero
-- A small magnifying glass icon button in the top-right corner of the chat area. Tapping it reveals/collapses the existing `SearchBar` component for power users who know exactly what they want.
+- A labeled "Filters" chip button in the top-right corner of the chat area (not just an icon — labeled for discoverability). Tapping it reveals/collapses the existing `SearchBar` component for power users who know exactly what they want. The toggle sits outside the chat scroll area so it's always accessible.
 
 ### Flow
 
-1. User arrives → curtain entrance → AI greeting: "Looking for something specific, or want me to help you find the right piece?"
-2. User types "I need a summer dress under $80" → AI auto-parses, calls `shoppingSearch("summer dress", 80, "dresses")` via backend, replies "Here's what I found — 12 summer dresses under $80", fires `onSearchResults` → results appear in existing grid below
-3. User types "something for a job interview" → AI asks "What kind of role? And are you thinking more formal or smart casual?" with chips `[Formal]` `[Smart casual]` `[Business casual]`
-4. User picks or types → AI constructs the search, results appear
+1. User arrives → curtain entrance → AI greeting: "Looking for something specific, or want me to help you find the right piece?" with example prompts faded below: *Try: "summer dress under $80" or "help me find interview clothes"*
+2. User types "I need a summer dress under $80" → single call to `/shopping/ask` → backend parses intent, runs search, returns reply + results in one response → chat bubble says "Here's what I found — 12 summer dresses under $80" → `onSearchResults` fires → results appear in grid below
+3. User types "something for a job interview" → `/shopping/ask` returns reply with no results + chips → AI asks "What kind of role? Are you thinking more formal or smart casual?" with chips `[Formal]` `[Smart casual]` `[Business casual]`
+4. User picks or types → AI constructs the search, results appear in one round-trip
+5. User types "cheaper" → frontend sends last 10 messages as `history` → AI understands context, searches for lower-priced versions of previous query
 
 ### What Stays Unchanged
 
@@ -150,34 +155,38 @@ In stylist mode, `StylistChat` accepts an optional `onSuggestion?: (reasoning: s
 
 ### `POST /shopping/ask`
 
+**Auth + rate limiting:** This endpoint requires `Depends(get_current_user)` and `Depends(rate_limit_search)` — same as `/shopping/search`. LLM calls are expensive; rate limiting prevents abuse.
+
 **Request schema: `ShoppingAskRequest`**
 ```python
+class ShoppingMessageItem(BaseModel):
+    role: str    # "user" or "assistant"
+    content: str
+
 class ShoppingAskRequest(BaseModel):
     prompt: str
-    history: list[dict] | None = None  # recent messages for context
+    history: list[ShoppingMessageItem] | None = None
 ```
 
 **Response schema: `ShoppingAskResponse`**
 ```python
 class ShoppingAskResponse(BaseModel):
-    reply: str                          # always present — conversational text
-    search: ShoppingSearchParams | None # when present, frontend auto-fires search
-    chips: list[str] | None             # suggested quick replies
-
-class ShoppingSearchParams(BaseModel):
-    query: str
-    budget_max: int | None = None
-    category: str | None = None
+    reply: str                                      # always present — conversational text
+    results: list[ShoppingResultItem] | None = None # when present, search was auto-triggered
+    search_query: str | None = None                 # the query that was searched (for display)
+    chips: list[str] | None = None                  # suggested quick replies
 ```
 
 **Behavior:**
-- Sends the user's prompt (+ optional recent history for context) to the LLM with a system prompt instructing it to:
+- Sends the user's prompt (+ optional recent history for multi-turn context) to the LLM with a system prompt instructing it to:
   - Extract shopping intent (query, budget, category) when the user's request is specific enough
-  - Return `search: null` when it needs more info, and ask a follow-up question
+  - Return a structured JSON response indicating whether to search
   - Always return a conversational `reply`
   - Optionally suggest `chips` for guided follow-up
-- When `search` is non-null, the frontend calls the existing `api.shoppingSearch()` with those params and renders results in the grid.
-- The existing `POST /shopping/search` endpoint stays untouched.
+- When the LLM decides to search, **the backend calls `search_products()` directly** and returns the results in the same response — no second round-trip from the frontend. The frontend receives `results` and fires `onSearchResults` to render the grid.
+- When the LLM needs more info, it returns `results: null` and asks a follow-up question with chips.
+- The existing `POST /shopping/search` endpoint stays untouched (still used by the manual SearchBar toggle).
+- Shopping conversations are ephemeral — the `history` field carries context within a session. The frontend sends the last N messages (max 10) as `history` so the AI can understand follow-ups like "cheaper" after "find me dresses."
 
 ### Frontend API Addition
 
@@ -196,7 +205,8 @@ shoppingAsk(prompt: string, history?: { role: string; content: string }[]) {
 ```ts
 export type ShoppingAskResponse = {
   reply: string;
-  search: { query: string; budget_max: number | null; category: string | null } | null;
+  results: ShoppingResultItem[] | null;  // non-null when AI auto-searched
+  search_query: string | null;           // the query that was searched
   chips: string[] | null;
 };
 ```
@@ -230,9 +240,9 @@ stylistAsk(prompt: string, item_ids: string[] = []) {
 | `StylistChat.tsx` | **Create** — shared chat component |
 | `app/page.tsx` | **Modify** — remove chip flow/FloatingCard/ChatSheet, add StylistChat |
 | `app/shop/page.tsx` | **Modify** — replace SearchBar with StylistChat, add manual search toggle |
-| `ChatSheet.tsx` | **Keep** — no longer imported by home page, but stays in codebase |
-| `FloatingCard.tsx` | **Keep** — no longer imported by home page, but stays in codebase |
-| `QuickReplyChips.tsx` | **Keep** — no longer imported by home page, but stays in codebase |
+| `ChatSheet.tsx` | **Delete** — only imported by home page, which no longer uses it |
+| `FloatingCard.tsx` | **Delete** — only imported by home page, which no longer uses it |
+| `QuickReplyChips.tsx` | **Delete** — only imported by home page, which no longer uses it |
 | `SearchBar.tsx` | **Keep** — used behind toggle on shop page |
 | `SilhouettePreview.tsx` | **Unchanged** |
 | `WindowDisplay.tsx` | **Unchanged** |
