@@ -102,6 +102,13 @@ export type ShoppingHistoryItem = {
   created_at: string;
 };
 
+export type ShoppingAskResponse = {
+  reply: string;
+  results: ShoppingResultItem[] | null;
+  search_query: string | null;
+  chips: string[] | null;
+};
+
 export type SubscriptionStatus = {
   is_active: boolean;
   plan: string | null;
@@ -283,7 +290,7 @@ export const api = {
     });
   },
   stylistAsk(prompt: string, item_ids: string[] = []) {
-    return request<{ reply: string }>("/stylist/ask", {
+    return request<{ reply: string; chips?: string[] | null }>("/stylist/ask", {
       method: "POST",
       body: JSON.stringify({ prompt, item_ids }),
     });
@@ -295,6 +302,12 @@ export const api = {
     return request<ShoppingSearchResponse>("/shopping/search", {
       method: "POST",
       body: JSON.stringify({ query, budget_max: budget_max || null, category: category || null }),
+    });
+  },
+  shoppingAsk(prompt: string, history?: { role: string; content: string }[]) {
+    return request<ShoppingAskResponse>("/shopping/ask", {
+      method: "POST",
+      body: JSON.stringify({ prompt, history: history || null }),
     });
   },
   shoppingHistory() {
