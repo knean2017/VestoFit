@@ -25,6 +25,7 @@ class StylistSuggestResponse(BaseModel):
 
 class StylistAskResponse(BaseModel):
     reply: str
+    chips: list[str] | None = None
 
 
 class StylistMessageResponse(BaseModel):

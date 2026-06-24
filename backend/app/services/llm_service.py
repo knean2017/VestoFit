@@ -132,3 +132,99 @@ async def stylist_ask(
         }
     ]
     return await _gemini_generate(parts, json_mode=json_mode)
+
+
+STYLIST_ASK_STRUCTURED = """You are a personal stylist assistant. ONLY answer questions about clothing, outfits, and style.
+If off-topic, politely decline and steer back to fashion. Be concise and helpful.
+
+Respond as JSON:
+{
+  "reply": "<your conversational response>",
+  "chips": ["<suggested quick reply 1>", ...] or null
+}
+
+Chips are optional 1-4 word quick-reply suggestions the user can tap. Use them when there are natural follow-up actions.
+Examples: after suggesting an outfit → ["Try it on", "Something different", "More casual"]
+For a new user with empty wardrobe → ["Add from closet", "Browse shop"]
+When no follow-up is natural → null"""
+
+
+async def stylist_ask_structured(
+    wardrobe_json: str,
+    prompt: str,
+    *,
+    item_ids: list[str] | None = None,
+) -> dict[str, Any]:
+    extra = f"\nReferenced item ids: {item_ids}" if item_ids else ""
+    parts = [
+        {
+            "text": (
+                f"{STYLIST_ASK_STRUCTURED}\n\nWardrobe:\n{wardrobe_json}{extra}\n\n"
+                f"User: {prompt}"
+            )
+        }
+    ]
+    raw = await _gemini_generate(parts, json_mode=True)
+    try:
+        parsed = _parse_json(raw)
+        return {
+            "reply": str(parsed.get("reply", raw)),
+            "chips": parsed.get("chips"),
+        }
+    except LlmError:
+        return {"reply": raw, "chips": None}
+
+
+SHOPPING_ASK_SYSTEM = """You are a shopping assistant for a fashion app. Help users find clothes to buy.
+
+Given the user's message (and optional conversation history), decide:
+1. If the user has a clear, specific shopping request → extract search parameters
+2. If the request is vague → ask ONE follow-up question with quick-reply chips
+3. If conversational/advisory → just reply, no search
+
+Respond as JSON:
+{
+  "reply": "<your conversational response>",
+  "search": {"query": "<search terms>", "budget_max": <number or null>, "category": "<tops|bottoms|dresses or null>"} or null,
+  "chips": ["<quick reply>", ...] or null
+}
+
+Rules:
+- "search" is null when you need more info or are just chatting
+- "search" is filled when you have enough to search (at minimum a query)
+- budget_max is a number in USD or null if not specified
+- category must be exactly "tops", "bottoms", or "dresses", or null
+- chips are 1-4 word tap-able suggestions, max 4 items
+- Be warm and helpful, like a personal shopper"""
+
+
+async def shopping_ask(
+    prompt: str,
+    history: list[dict[str, str]] | None = None,
+) -> dict[str, Any]:
+    context = ""
+    if history:
+        for msg in history[-10:]:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            context += f"\n{role.capitalize()}: {content}"
+
+    parts = [
+        {
+            "text": (
+                f"{SHOPPING_ASK_SYSTEM}\n\n"
+                f"{'Conversation so far:' + context + chr(10) + chr(10) if context else ''}"
+                f"User: {prompt}"
+            )
+        }
+    ]
+    raw = await _gemini_generate(parts, json_mode=True)
+    try:
+        parsed = _parse_json(raw)
+        return {
+            "reply": str(parsed.get("reply", raw)),
+            "search": parsed.get("search"),
+            "chips": parsed.get("chips"),
+        }
+    except LlmError:
+        return {"reply": raw, "search": None, "chips": None}

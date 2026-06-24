@@ -32,3 +32,20 @@ class ShoppingHistoryItem(BaseModel):
     category: str | None
     result_count: int
     created_at: datetime
+
+
+class ShoppingMessageItem(BaseModel):
+    role: str
+    content: str
+
+
+class ShoppingAskRequest(BaseModel):
+    prompt: str = Field(..., min_length=1, max_length=2000)
+    history: list[ShoppingMessageItem] | None = None
+
+
+class ShoppingAskResponse(BaseModel):
+    reply: str
+    results: list[ShoppingResultItem] | None = None
+    search_query: str | None = None
+    chips: list[str] | None = None
