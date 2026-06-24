@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/components/Toast";
@@ -13,6 +14,7 @@ import { usePrefersReducedMotion } from "@/lib/useReducedMotion";
 import WindowDisplay from "@/components/shop/WindowDisplay";
 import SearchBar from "@/components/shop/SearchBar";
 import ResultCard from "@/components/shop/ResultCard";
+import StylistChat from "@/components/StylistChat";
 
 const SmoothScroll = dynamic(() => import("@/components/SmoothScroll"), { ssr: false });
 const CurtainReveal = dynamic(() => import("@/components/shop/CurtainReveal"), { ssr: false });
@@ -46,7 +48,7 @@ export default function ShopPage() {
   const [results, setResults] = useState<ShoppingResultItem[]>([]);
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [curtainDone, setCurtainDone] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const grid = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -70,6 +72,11 @@ export default function ShopPage() {
     } finally {
       setSearching(false);
     }
+  }
+
+  function handleAIResults(aiResults: ShoppingResultItem[]) {
+    setResults(aiResults);
+    setSearched(true);
   }
 
   useGSAP(
@@ -96,24 +103,56 @@ export default function ShopPage() {
     <SmoothScroll>
       <main className="min-h-screen bg-bg pb-nav md:pb-0">
         <Header />
-        {!curtainDone && <CurtainReveal onComplete={() => setCurtainDone(true)} />}
+        <CurtainReveal />
         <section className="container-app py-6 sm:py-8 max-w-4xl">
           <WindowDisplay items={searched ? results : undefined} />
+
+          {/* Chat + Filters toggle */}
           <div className="mt-6">
-            <SearchBar
-              query={query}
-              setQuery={setQuery}
-              budgetMax={budgetMax}
-              setBudgetMax={setBudgetMax}
-              category={category}
-              setCategory={setCategory}
-              budgetOptions={BUDGET_OPTIONS}
-              categoryOptions={CATEGORY_OPTIONS}
-              onSubmit={handleSearch}
-              searching={searching}
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="heading-md">Ask your stylist</h2>
+              <button
+                type="button"
+                onClick={() => setShowFilters((o) => !o)}
+                className={"chip text-xs " + (showFilters ? "chip-coral" : "")}
+              >
+                Filters
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  className="overflow-hidden mb-4"
+                >
+                  <SearchBar
+                    query={query}
+                    setQuery={setQuery}
+                    budgetMax={budgetMax}
+                    setBudgetMax={setBudgetMax}
+                    category={category}
+                    setCategory={setCategory}
+                    budgetOptions={BUDGET_OPTIONS}
+                    categoryOptions={CATEGORY_OPTIONS}
+                    onSubmit={handleSearch}
+                    searching={searching}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <StylistChat
+              mode="shopping"
+              onSearchResults={handleAIResults}
+              className="h-[40vh] border border-line rounded-xl3 overflow-hidden"
             />
           </div>
 
+          {/* Results grid */}
           {searching && (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
               {Array.from({ length: 6 }).map((_, i) => (
