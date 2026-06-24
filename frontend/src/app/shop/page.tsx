@@ -1,12 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/components/Toast";
 import { api, type ShoppingResultItem } from "@/lib/api";
 import { getToken } from "@/lib/auth";
+import { gsap, useGSAP } from "@/lib/gsap";
+import { usePrefersReducedMotion } from "@/lib/useReducedMotion";
+import WindowDisplay from "@/components/shop/WindowDisplay";
+import SearchBar from "@/components/shop/SearchBar";
+import ResultCard from "@/components/shop/ResultCard";
+
+const SmoothScroll = dynamic(() => import("@/components/SmoothScroll"), { ssr: false });
+const CurtainReveal = dynamic(() => import("@/components/shop/CurtainReveal"), { ssr: false });
+const DotLottieReact = dynamic(
+  () => import("@lottiefiles/dotlottie-react").then((m) => m.DotLottieReact),
+  { ssr: false },
+);
 
 const BUDGET_OPTIONS = [
   { label: "$25", value: 25 },
@@ -25,6 +38,7 @@ const CATEGORY_OPTIONS = [
 export default function ShopPage() {
   const router = useRouter();
   const toast = useToast();
+  const reduce = usePrefersReducedMotion();
 
   const [query, setQuery] = useState("");
   const [budgetMax, setBudgetMax] = useState<number | null>(null);
@@ -32,6 +46,8 @@ export default function ShopPage() {
   const [results, setResults] = useState<ShoppingResultItem[]>([]);
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [curtainDone, setCurtainDone] = useState(false);
+  const grid = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!getToken()) { router.replace("/login"); }
@@ -56,91 +72,56 @@ export default function ShopPage() {
     }
   }
 
+  useGSAP(
+    () => {
+      if (reduce || !grid.current || results.length === 0) return;
+      const cards = grid.current.querySelectorAll("[data-result-card]");
+      gsap.fromTo(
+        cards,
+        { opacity: 0, y: 28 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.55,
+          ease: "power3.out",
+          stagger: 0.06,
+          scrollTrigger: { trigger: grid.current, start: "top 80%", once: true },
+        },
+      );
+    },
+    { dependencies: [results, reduce], revertOnUpdate: true },
+  );
+
   return (
-    <main className="min-h-screen bg-bg pb-nav md:pb-0">
-      <Header />
-      <section className="container-app py-6 sm:py-8 max-w-4xl mx-auto">
-        <div className="animate-rise">
-          <h1 className="heading-lg">Shop</h1>
-          <p className="text-sm text-muted font-medium mt-1">
-            Find clothes from real stores within your budget
-          </p>
-        </div>
-
-        <form onSubmit={handleSearch} className="mt-6 space-y-4 animate-rise" style={{ animationDelay: "0.1s" }}>
-          <div className="card p-5 space-y-4">
-            <label className="block">
-              <span className="label">What are you looking for?</span>
-              <input
-                type="text"
-                className="field mt-2"
-                placeholder="e.g. casual outfit for a weekend brunch"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            </label>
-
-            <div>
-              <span className="label">Budget</span>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {BUDGET_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setBudgetMax(budgetMax === opt.value ? null : opt.value)}
-                    className={
-                      "px-4 py-2 rounded-full text-sm font-bold transition-all " +
-                      (budgetMax === opt.value
-                        ? "bg-coral text-white shadow-glow2"
-                        : "bg-surface2 text-muted hover:text-ink")
-                    }
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <span className="label">Category</span>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {CATEGORY_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setCategory(opt.value)}
-                    className={
-                      "px-4 py-2 rounded-full text-sm font-bold transition-all " +
-                      (category === opt.value
-                        ? "bg-ink text-white"
-                        : "bg-surface2 text-muted hover:text-ink")
-                    }
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={!query.trim() || searching}
-              className="btn-primary w-full sm:w-auto"
-            >
-              {searching ? "Searching..." : "Search"}
-            </button>
+    <SmoothScroll>
+      <main className="min-h-screen bg-bg pb-nav md:pb-0">
+        <Header />
+        {!curtainDone && <CurtainReveal onComplete={() => setCurtainDone(true)} />}
+        <section className="container-app py-6 sm:py-8 max-w-4xl">
+          <WindowDisplay items={searched ? results : undefined} />
+          <div className="mt-6">
+            <SearchBar
+              query={query}
+              setQuery={setQuery}
+              budgetMax={budgetMax}
+              setBudgetMax={setBudgetMax}
+              category={category}
+              setCategory={setCategory}
+              budgetOptions={BUDGET_OPTIONS}
+              categoryOptions={CATEGORY_OPTIONS}
+              onSubmit={handleSearch}
+              searching={searching}
+            />
           </div>
-        </form>
 
-        <div className="mt-6">
           {searching && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="card overflow-hidden">
+                <div key={i} className="card p-0 overflow-hidden">
                   <div className="aspect-[3/4] skeleton" />
                   <div className="p-3 space-y-2">
-                    <div className="h-4 w-3/4 skeleton" />
-                    <div className="h-3 w-1/3 skeleton" />
+                    <div className="h-4 w-12 skeleton rounded ml-auto" />
+                    <div className="h-3 w-3/4 skeleton rounded" />
                   </div>
                 </div>
               ))}
@@ -148,63 +129,30 @@ export default function ShopPage() {
           )}
 
           {!searching && searched && results.length === 0 && (
-            <div className="card p-12 text-center animate-rise">
-              <p className="text-muted font-semibold">No results found. Try a different search.</p>
+            <div className="py-12 grid place-items-center text-center">
+              {reduce ? (
+                <div className="w-24 h-24 rounded-full bg-surface2 grid place-items-center text-muted">∅</div>
+              ) : (
+                <div className="w-32 h-32">
+                  <DotLottieReact src="/lottie/mannequin.lottie" loop autoplay />
+                </div>
+              )}
+              <p className="text-muted mt-2">Nothing in stock.</p>
             </div>
           )}
 
           {!searching && results.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 animate-rise">
+            <div ref={grid} className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
               {results.map((item, i) => (
-                <ShopResultCard key={i} item={item} />
+                <div key={i} data-result-card>
+                  <ResultCard item={item} />
+                </div>
               ))}
             </div>
           )}
-        </div>
-      </section>
-      <BottomNav />
-    </main>
-  );
-}
-
-function safeHref(url: string): string {
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol === "https:" || parsed.protocol === "http:") return url;
-  } catch {}
-  return "#";
-}
-
-function ShopResultCard({ item }: { item: ShoppingResultItem }) {
-  return (
-    <div className="card-interactive overflow-hidden group">
-      <div className="aspect-[3/4] bg-surface2 relative overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={item.image_url}
-          alt={item.title}
-          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
-        />
-        <span className="absolute top-2 left-2 chip-coral text-[10px]">
-          {item.source}
-        </span>
-      </div>
-      <div className="p-3">
-        <p className="text-sm font-bold line-clamp-2 leading-snug">{item.title}</p>
-        <div className="flex items-center justify-between mt-2">
-          <span className="text-base font-extrabold text-coral">
-            {item.currency === "USD" ? "$" : item.currency}{item.price.toFixed(2)}
-          </span>
-          <a
-            href={safeHref(item.product_url)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs font-bold text-muted hover:text-coral transition-colors"
-          >
-            View
-          </a>
-        </div>
-      </div>
-    </div>
+        </section>
+        <BottomNav />
+      </main>
+    </SmoothScroll>
   );
 }

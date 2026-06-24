@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { usePrefersReducedMotion } from "@/lib/useReducedMotion";
 
-export default function CurtainReveal() {
+export default function CurtainReveal({ onComplete }: { onComplete?: () => void } = {}) {
   const reduce = usePrefersReducedMotion();
   const [hidden, setHidden] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -14,10 +14,11 @@ export default function CurtainReveal() {
     () => {
       if (reduce) {
         setHidden(true);
+        onComplete?.();
         return;
       }
       if (!left.current || !right.current) return;
-      const tl = gsap.timeline({ delay: 0.2, onComplete: () => setHidden(true) });
+      const tl = gsap.timeline({ delay: 0.2, onComplete: () => { setHidden(true); onComplete?.(); } });
       tl.to(
         [left.current, right.current],
         { xPercent: (i: number) => (i === 0 ? 2 : -2), duration: 0.12, ease: "power2.out" },
