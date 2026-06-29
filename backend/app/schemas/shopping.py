@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -7,22 +8,30 @@ class ShoppingSearchRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=500)
     budget_max: float | None = Field(default=None, gt=0)
     category: str | None = None
+    country: str | None = None
+    city: str | None = None
+    lat: float | None = None
+    lng: float | None = None
 
 
 class ShoppingResultItem(BaseModel):
     title: str
-    price: float
+    price: float | None = None
     currency: str = "USD"
     image_url: str
     product_url: str
     source: str
     category: str | None = None
+    kind: Literal["product", "store"] = "product"
 
 
 class ShoppingSearchResponse(BaseModel):
     query: str
     results: list[ShoppingResultItem]
     total: int
+    city: str | None = None
+    currency: str = "USD"
+    no_local: bool = False
 
 
 class ShoppingHistoryItem(BaseModel):
@@ -42,6 +51,10 @@ class ShoppingMessageItem(BaseModel):
 class ShoppingAskRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=2000)
     history: list[ShoppingMessageItem] | None = None
+    country: str | None = None
+    city: str | None = None
+    lat: float | None = None
+    lng: float | None = None
 
 
 class ShoppingAskResponse(BaseModel):
@@ -49,3 +62,6 @@ class ShoppingAskResponse(BaseModel):
     results: list[ShoppingResultItem] | None = None
     search_query: str | None = None
     chips: list[str] | None = None
+    city: str | None = None
+    currency: str = "USD"
+    no_local: bool = False

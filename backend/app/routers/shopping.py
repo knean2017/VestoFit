@@ -27,10 +27,14 @@ async def search(
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[User, Depends(get_current_user)],
 ):
-    results = await search_products(
+    result = await search_products(
         query=payload.query,
         budget_max=payload.budget_max,
         category=payload.category,
+        country=payload.country,
+        city=payload.city,
+        lat=payload.lat,
+        lng=payload.lng,
     )
 
     record = ShoppingQuery(
@@ -38,15 +42,18 @@ async def search(
         query=payload.query,
         budget_max=payload.budget_max,
         category=payload.category,
-        results_json={"results": [r.model_dump() for r in results]},
+        results_json={"results": [r.model_dump() for r in result["results"]]},
     )
     db.add(record)
     await db.commit()
 
     return ShoppingSearchResponse(
         query=payload.query,
-        results=results,
-        total=len(results),
+        results=result["results"],
+        total=len(result["results"]),
+        city=payload.city,
+        currency=result["currency"],
+        no_local=result["no_local"],
     )
 
 
@@ -60,13 +67,23 @@ async def ask(
     if payload.history:
         history = [{"role": m.role, "content": m.content} for m in payload.history]
 
-    result = await ask_shopping_assistant(payload.prompt, history)
+    result = await ask_shopping_assistant(
+        payload.prompt,
+        history,
+        country=payload.country,
+        city=payload.city,
+        lat=payload.lat,
+        lng=payload.lng,
+    )
 
     return ShoppingAskResponse(
         reply=result["reply"],
         results=result.get("results"),
         search_query=result.get("search_query"),
         chips=result.get("chips"),
+        city=payload.city,
+        currency=result.get("currency", "USD"),
+        no_local=result.get("no_local", False),
     )
 
 

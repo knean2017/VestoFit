@@ -1,3 +1,5 @@
+import asyncio
+
 from app.config import get_settings
 from app.schemas.shopping import ShoppingResultItem
 
@@ -77,17 +79,44 @@ MOCK_RESULTS: list[dict] = [
 ]
 
 
+async def _empty_list() -> list:
+    return []
+
+
 async def search_products(
     query: str,
     budget_max: float | None = None,
     category: str | None = None,
-) -> list[ShoppingResultItem]:
+    country: str | None = None,
+    city: str | None = None,
+    lat: float | None = None,
+    lng: float | None = None,
+) -> dict:
+    from app.services.shopping_locale import currency_for
+
     settings = get_settings()
+    currency = currency_for(country) if country else "USD"
 
-    if settings.serpapi_key:
-        return await _search_serpapi(query, budget_max, category, settings.serpapi_key)
+    if not settings.serpapi_key:
+        results = _search_mock(query, budget_max, category)
+        return {"results": results, "currency": currency, "no_local": False}
 
-    return _search_mock(query, budget_max, category)
+    products, stores = await asyncio.gather(
+        _search_serpapi(query, budget_max, category, settings.serpapi_key, country, city),
+        _search_local_stores(query, city, settings.serpapi_key, country, lat, lng) if city
+        else _empty_list(),
+        return_exceptions=True,
+    )
+
+    if isinstance(products, Exception):
+        products = []
+    if isinstance(stores, Exception):
+        stores = []
+
+    all_results = list(products) + list(stores)
+    no_local = len(all_results) == 0
+
+    return {"results": all_results, "currency": currency, "no_local": no_local}
 
 
 def _search_mock(
@@ -108,8 +137,16 @@ async def _search_serpapi(
     budget_max: float | None,
     category: str | None,
     api_key: str,
+    country: str | None = None,
+    city: str | None = None,
 ) -> list[ShoppingResultItem]:
     import httpx
+
+    from app.services.shopping_locale import currency_for, locale_for
+
+    locale = locale_for(country) if country else None
+    if locale is None and country:
+        return []  # unsupported for google_shopping
 
     params = {
         "engine": "google_shopping",
@@ -117,6 +154,14 @@ async def _search_serpapi(
         "api_key": api_key,
         "num": 20,
     }
+    if locale:
+        params["gl"] = locale["gl"]
+        params["hl"] = locale["hl"]
+        params["google_domain"] = locale["google_domain"]
+        if city:
+            params["location"] = city
+        else:
+            params["location"] = locale["location"]
     if budget_max:
         params["price_max"] = str(int(budget_max))
 
@@ -125,6 +170,7 @@ async def _search_serpapi(
         resp.raise_for_status()
         data = resp.json()
 
+    item_currency = currency_for(country) if country else "USD"
     items: list[ShoppingResultItem] = []
     for r in data.get("shopping_results", [])[:12]:
         price_str = r.get("extracted_price") or r.get("price", "0")
@@ -134,17 +180,70 @@ async def _search_serpapi(
             price = 0
         if budget_max and price > budget_max:
             continue
+        product_url = r.get("product_link") or r.get("link", "")
         items.append(
             ShoppingResultItem(
                 title=r.get("title", ""),
                 price=price,
-                currency="USD",
+                currency=item_currency,
                 image_url=r.get("thumbnail", ""),
-                product_url=r.get("link", ""),
+                product_url=product_url,
                 source=r.get("source", ""),
                 category=category,
+                kind="product",
             )
         )
+    return items
+
+
+async def _search_local_stores(
+    query: str,
+    city: str,
+    api_key: str,
+    country: str | None = None,
+    lat: float | None = None,
+    lng: float | None = None,
+) -> list[ShoppingResultItem]:
+    import httpx
+
+    from app.services.shopping_locale import currency_for, locale_for
+
+    params = {
+        "engine": "google_local",
+        "q": f"{query} clothing store",
+        "api_key": api_key,
+        "location": city,
+        "num": 10,
+    }
+    if lat is not None and lng is not None:
+        params["ll"] = f"@{lat},{lng},14z"
+    locale = locale_for(country) if country else None
+    if locale:
+        params["gl"] = locale["gl"]
+        params["hl"] = locale["hl"]
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.get("https://serpapi.com/search", params=params)
+        resp.raise_for_status()
+        data = resp.json()
+
+    item_currency = currency_for(country) if country else "USD"
+    items: list[ShoppingResultItem] = []
+    for r in data.get("local_results", [])[:8]:
+        thumbnail = r.get("thumbnail") or ""
+        website = (r.get("links") or {}).get("website") or r.get("website") or ""
+        if not website:
+            continue  # skip stores with no website
+        items.append(ShoppingResultItem(
+            title=r.get("title", ""),
+            price=None,
+            currency=item_currency,
+            image_url=thumbnail,
+            product_url=website,
+            source=r.get("title", ""),
+            category=None,
+            kind="store",
+        ))
     return items
 
 
@@ -154,6 +253,10 @@ from app.services.llm_service import LlmError, shopping_ask
 async def ask_shopping_assistant(
     prompt: str,
     history: list[dict[str, str]] | None = None,
+    country: str | None = None,
+    city: str | None = None,
+    lat: float | None = None,
+    lng: float | None = None,
 ) -> dict:
     try:
         result = shopping_ask(prompt, history)
@@ -164,11 +267,15 @@ async def ask_shopping_assistant(
             "results": None,
             "search_query": None,
             "chips": None,
+            "currency": "USD",
+            "no_local": False,
         }
 
     search_params = llm_result.get("search")
     results = None
     search_query = None
+    currency = "USD"
+    no_local = False
 
     if search_params and isinstance(search_params, dict):
         query = search_params.get("query", "").strip()
@@ -182,15 +289,28 @@ async def ask_shopping_assistant(
                 budget_max = None
             if category not in ("tops", "bottoms", "dresses"):
                 category = None
-            results = await search_products(
+            product_result = await search_products(
                 query=query,
                 budget_max=budget_max,
                 category=category,
+                country=country,
+                city=city,
+                lat=lat,
+                lng=lng,
             )
+            results = product_result["results"]
+            currency = product_result["currency"]
+            no_local = product_result["no_local"]
+
+    reply = llm_result.get("reply", "")
+    if no_local and city:
+        reply += f" I couldn't find any clothing results in {city} right now."
 
     return {
-        "reply": llm_result.get("reply", ""),
+        "reply": reply,
         "results": results,
         "search_query": search_query,
         "chips": llm_result.get("chips"),
+        "currency": currency,
+        "no_local": no_local,
     }
