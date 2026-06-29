@@ -258,6 +258,9 @@ async def ask_shopping_assistant(
     lat: float | None = None,
     lng: float | None = None,
 ) -> dict:
+    from app.services.shopping_locale import currency_for
+    currency = currency_for(country) if country else "USD"
+
     try:
         result = shopping_ask(prompt, history)
         llm_result = await result
@@ -267,14 +270,13 @@ async def ask_shopping_assistant(
             "results": None,
             "search_query": None,
             "chips": None,
-            "currency": "USD",
+            "currency": currency,
             "no_local": False,
         }
 
     search_params = llm_result.get("search")
     results = None
     search_query = None
-    currency = "USD"
     no_local = False
 
     if search_params and isinstance(search_params, dict):
