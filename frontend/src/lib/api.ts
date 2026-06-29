@@ -77,20 +77,33 @@ export type TryOnStatus = {
   created_at: string;
 };
 
+export type UserMe = {
+  id: string;
+  email: string;
+  country?: string | null;
+  city?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+};
+
 export type ShoppingResultItem = {
   title: string;
-  price: number;
+  price: number | null;
   currency: string;
   image_url: string;
   product_url: string;
   source: string;
   category: string | null;
+  kind?: "product" | "store";
 };
 
 export type ShoppingSearchResponse = {
   query: string;
   results: ShoppingResultItem[];
   total: number;
+  city?: string | null;
+  currency?: string;
+  no_local?: boolean;
 };
 
 export type ShoppingHistoryItem = {
@@ -107,6 +120,9 @@ export type ShoppingAskResponse = {
   results: ShoppingResultItem[] | null;
   search_query: string | null;
   chips: string[] | null;
+  city?: string | null;
+  currency?: string;
+  no_local?: boolean;
 };
 
 export type SubscriptionStatus = {
@@ -139,7 +155,7 @@ async function request<T>(
   if (!res.ok) {
     if (res.status === 401 || res.status === 403) {
       if (typeof window !== "undefined") {
-        window.localStorage.removeItem("fitme.token");
+        window.localStorage.removeItem("vestofit.token");
         window.location.href = "/login";
       }
     }
@@ -170,7 +186,13 @@ export const api = {
     });
   },
   me() {
-    return request<{ id: string; email: string }>("/auth/me");
+    return request<UserMe>("/auth/me");
+  },
+  updateLocation(loc: { country?: string; city?: string; lat?: number; lng?: number }) {
+    return request<UserMe>("/auth/me", {
+      method: "PATCH",
+      body: JSON.stringify(loc),
+    });
   },
   myAvatar() {
     return request<AvatarResponse | null>("/avatar/me").catch((e) => {
@@ -191,6 +213,12 @@ export const api = {
     return request<{ job_id: string; status: JobStatus }>("/tryon/url", {
       method: "POST",
       body: JSON.stringify({ garment_url, description }),
+    });
+  },
+  tryOnOutfit(item_ids: string[]) {
+    return request<{ job_id: string; status: JobStatus }>("/tryon/outfit", {
+      method: "POST",
+      body: JSON.stringify({ item_ids }),
     });
   },
   tryOnUpload(garment: File, description?: string) {
@@ -298,16 +326,34 @@ export const api = {
   stylistMessages() {
     return request<StylistMessage[]>("/stylist/messages");
   },
-  shoppingSearch(query: string, budget_max?: number, category?: string) {
+  shoppingSearch(
+    query: string,
+    budget_max?: number,
+    category?: string,
+    location?: { country?: string; city?: string; lat?: number; lng?: number }
+  ) {
     return request<ShoppingSearchResponse>("/shopping/search", {
       method: "POST",
-      body: JSON.stringify({ query, budget_max: budget_max || null, category: category || null }),
+      body: JSON.stringify({
+        query,
+        budget_max: budget_max || null,
+        category: category || null,
+        ...(location || {}),
+      }),
     });
   },
-  shoppingAsk(prompt: string, history?: { role: string; content: string }[]) {
+  shoppingAsk(
+    prompt: string,
+    history?: { role: string; content: string }[],
+    location?: { country?: string; city?: string; lat?: number; lng?: number }
+  ) {
     return request<ShoppingAskResponse>("/shopping/ask", {
       method: "POST",
-      body: JSON.stringify({ prompt, history: history || null }),
+      body: JSON.stringify({
+        prompt,
+        history: history || null,
+        ...(location || {}),
+      }),
     });
   },
   shoppingHistory() {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
@@ -46,6 +47,7 @@ export default function SettingsPage() {
 
           <SubscriptionSection sub={sub} />
           <AvatarSection avatar={avatar} setAvatar={setAvatar} />
+          <LocationSection />
           <PasswordSection />
           <HistorySection />
           <DangerSection onDeleted={() => { clearToken(); router.replace("/login"); }} />
@@ -93,11 +95,16 @@ function SubscriptionSection({ sub }: { sub: SubscriptionStatus | null }) {
             <span className="text-sm text-ink">{new Date(sub.renews_at).toLocaleDateString()}</span>
           </div>
         )}
-        {sub.customer_portal_url && (
-          <a href={sub.customer_portal_url} target="_blank" rel="noopener noreferrer" className="btn-soft inline-block mt-2">
-            Manage subscription
-          </a>
-        )}
+        <div className="flex flex-wrap gap-2 mt-2">
+          {sub.customer_portal_url && (
+            <a href={sub.customer_portal_url} target="_blank" rel="noopener noreferrer" className="btn-soft inline-block">
+              Manage subscription
+            </a>
+          )}
+          <Link href="/pricing" className="btn-link inline-flex items-center gap-1">
+            View plans →
+          </Link>
+        </div>
       </div>
     </SectionCard>
   );
@@ -139,6 +146,116 @@ function AvatarSection({ avatar, setAvatar }: { avatar: AvatarResponse | null; s
             {busy ? "Uploading..." : "Replace photo"}
           </button>
           <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => onFile(e.target.files?.[0])} />
+        </div>
+      </div>
+    </SectionCard>
+  );
+}
+
+function LocationSection() {
+  const toast = useToast();
+  const [country, setCountry] = useState("");
+  const [city, setCity] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [detecting, setDetecting] = useState(false);
+
+  useEffect(() => {
+    api.me().then((u) => {
+      setCountry(u.country || "");
+      setCity(u.city || "");
+    }).catch(() => {});
+  }, []);
+
+  async function save() {
+    if (!country && !city) return;
+    setBusy(true);
+    try {
+      await api.updateLocation({ country: country || undefined, city: city || undefined });
+      toast("success", "Location saved");
+    } catch (e: unknown) {
+      toast("error", e instanceof Error ? e.message : "Failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function detectLocation() {
+    if (!navigator.geolocation) {
+      toast("error", "Geolocation not supported");
+      return;
+    }
+    setDetecting(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        try {
+          const res = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
+          );
+          const data = await res.json();
+          const detectedCity = data.city || data.locality || "";
+          const detectedCountry = (data.countryCode || "").toLowerCase();
+          setCity(detectedCity);
+          setCountry(detectedCountry);
+          await api.updateLocation({ country: detectedCountry, city: detectedCity, lat, lng });
+          toast("success", `Location set to ${detectedCity}`);
+        } catch {
+          toast("error", "Could not detect city");
+        } finally {
+          setDetecting(false);
+        }
+      },
+      () => {
+        toast("error", "Location access denied");
+        setDetecting(false);
+      }
+    );
+  }
+
+  return (
+    <SectionCard title="Shopping location">
+      <p className="text-sm text-muted font-medium">
+        Used to find clothes available near you or in your country.
+      </p>
+      <div className="space-y-3">
+        <label className="block">
+          <span className="label">Country code</span>
+          <input
+            type="text"
+            maxLength={2}
+            placeholder="e.g. az, tr, us"
+            className="field mt-2 uppercase"
+            value={country}
+            onChange={(e) => setCountry(e.target.value.toLowerCase())}
+          />
+        </label>
+        <label className="block">
+          <span className="label">City</span>
+          <input
+            type="text"
+            placeholder="e.g. Baku, Istanbul"
+            className="field mt-2"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+          />
+        </label>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={save}
+            disabled={busy || (!country && !city)}
+            className="btn-primary"
+          >
+            {busy ? "Saving..." : "Save"}
+          </button>
+          <button
+            type="button"
+            onClick={detectLocation}
+            disabled={detecting}
+            className="btn-soft"
+          >
+            {detecting ? "Detecting..." : "Use my location"}
+          </button>
         </div>
       </div>
     </SectionCard>

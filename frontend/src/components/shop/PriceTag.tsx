@@ -1,8 +1,9 @@
 "use client";
 import { motion, useReducedMotion } from "framer-motion";
 
-export default function PriceTag({ price, currency }: { price: number; currency: string }) {
+export default function PriceTag({ price, currency }: { price: number | null; currency: string }) {
   const reduce = useReducedMotion();
+  if (price === null) return null;
   const label = `${currency === "USD" ? "$" : currency}${price.toFixed(2)}`;
 
   return (
