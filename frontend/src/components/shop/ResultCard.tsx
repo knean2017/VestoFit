@@ -1,38 +1,69 @@
 "use client";
-import MotionCard from "@/components/MotionCard";
-import PriceTag from "./PriceTag";
+
+import { useState, useEffect } from "react";
+import { convertCurrencySync } from "@/lib/currency";
 import type { ShoppingResultItem } from "@/lib/api";
 
-function safeHref(url: string): string {
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol === "https:" || parsed.protocol === "http:") return url;
-  } catch { /* invalid URL */ }
-  return "#";
+interface Props {
+  item: ShoppingResultItem;
+  displayCurrency: string;
 }
 
-export default function ResultCard({ item }: { item: ShoppingResultItem }) {
+function safeHref(u: string): string {
+  try {
+    const p = new URL(u);
+    return p.protocol === "https:" || p.protocol === "http:" ? u : "#";
+  } catch {
+    return "#";
+  }
+}
+
+export default function ResultCard({ item, displayCurrency }: Props) {
+  const [converted, setConverted] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (item.price == null) { setConverted(null); return; }
+    const sync = convertCurrencySync(item.price, item.currency || "USD", displayCurrency);
+    setConverted(sync);
+  }, [item.price, item.currency, displayCurrency]);
+
+  const priceLabel = converted != null
+    ? `${displayCurrency} ${converted.toFixed(2)}`
+    : item.price != null
+      ? `${item.currency || "USD"} ${item.price.toFixed(2)}`
+      : "Visit store";
+
   return (
-    <MotionCard className="p-0 overflow-hidden relative">
-      <div className="relative aspect-[3/4] bg-surface2">
-        {item.image_url && (
+    <a
+      href={safeHref(item.product_url)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group block rounded-xl3 overflow-hidden bg-surface2 border border-line hover:border-coral transition-colors"
+      data-result-card
+    >
+      {/* Image */}
+      <div className="relative aspect-[3/4] overflow-hidden bg-surface2">
+        {item.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+          <img
+            src={item.image_url}
+            alt={item.title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted text-3xl">
+            🛍
+          </div>
         )}
-        <PriceTag price={item.price} currency={item.currency} />
-        <span className="absolute top-2 left-2 chip-coral text-[10px]">{item.source}</span>
+
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-ink/70 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-3 text-center">
+          <span className="text-white font-semibold text-sm leading-tight line-clamp-2">
+            {item.source}
+          </span>
+          <span className="text-coral font-bold text-base">{priceLabel}</span>
+        </div>
       </div>
-      <div className="p-3">
-        <p className="font-semibold text-sm text-ink mt-1 line-clamp-2">{item.title}</p>
-        <a
-          href={safeHref(item.product_url)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-soft mt-2 inline-block text-sm"
-        >
-          View
-        </a>
-      </div>
-    </MotionCard>
+    </a>
   );
 }

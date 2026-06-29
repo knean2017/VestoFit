@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { api } from "@/lib/api";
 import type { ShoppingResultItem, StylistMessage } from "@/lib/api";
@@ -11,7 +12,10 @@ type ChatMessage = {
   content: string;
   chips?: string[];
   searchTriggered?: boolean;
+  shopQuery?: string;
 };
+
+const SHOP_KEYWORDS = /\b(buy|purchase|shop|find|where.+get|looking for|recommend.+store|price|budget|affordable|under \$)\b/i;
 
 const DEFAULT_GREETINGS = {
   stylist:
@@ -29,48 +33,57 @@ export default function StylistChat({
   mode,
   onSearchResults,
   onSuggestion,
+  onStylistResult,
+  onSend,
   greeting,
+  location,
   className = "",
 }: {
   mode: "stylist" | "shopping";
-  onSearchResults?: (results: ShoppingResultItem[]) => void;
+  onSearchResults?: (results: ShoppingResultItem[], currency?: string, noLocal?: boolean, city?: string) => void;
   onSuggestion?: (reasoning: string) => void;
+  onStylistResult?: (result: { reasoning: string; item_ids: string[]; outfit_id: string; decline: boolean }) => void;
+  onSend?: () => void;
   greeting?: string;
+  location?: { country?: string; city?: string; lat?: number; lng?: number };
   className?: string;
 }) {
   const reduce = useReducedMotion();
+  const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [slowTimer, setSlowTimer] = useState(false);
-  const [historyLoaded, setHistoryLoaded] = useState(mode !== "stylist");
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyMessages, setHistoryMessages] = useState<ChatMessage[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const greetingText = greeting || DEFAULT_GREETINGS[mode];
-  const showExamples = messages.length === 0;
+  const showExamples = messages.length === 0 && !showHistory;
 
-  useEffect(() => {
-    if (mode !== "stylist") return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const history = await api.stylistMessages();
-        if (cancelled) return;
-        if (history.length > 0) {
-          setMessages(
-            history.map((m: StylistMessage) => ({
-              id: m.id,
-              role: m.role as "user" | "assistant",
-              content: m.content,
-            })),
-          );
-        }
-      } catch {}
-      setHistoryLoaded(true);
-    })();
-    return () => { cancelled = true; };
-  }, [mode]);
+  async function loadHistory() {
+    if (historyMessages.length > 0) {
+      setShowHistory(true);
+      return;
+    }
+    setHistoryLoading(true);
+    try {
+      const history = await api.stylistMessages();
+      if (history.length > 0) {
+        setHistoryMessages(
+          history.map((m: StylistMessage) => ({
+            id: m.id,
+            role: m.role as "user" | "assistant",
+            content: m.content,
+          })),
+        );
+      }
+      setShowHistory(true);
+    } catch {}
+    setHistoryLoading(false);
+  }
 
   const scrollToBottom = useCallback(() => {
     if (!scrollRef.current) return;
@@ -98,27 +111,31 @@ export default function StylistChat({
     setMessages((prev) => [...prev, userMsg]);
     setSending(true);
     setSlowTimer(false);
+    onSend?.();
 
     const timer = setTimeout(() => setSlowTimer(true), 5000);
 
     try {
       if (mode === "stylist") {
-        const res = await api.stylistAsk(text);
+        const res = await api.stylistSuggest(text);
         clearTimeout(timer);
+        const reply = res.reasoning;
+        const hasShopIntent = SHOP_KEYWORDS.test(text) || SHOP_KEYWORDS.test(reply);
         const assistantMsg: ChatMessage = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: res.reply,
-          chips: res.chips?.slice(0, 4) ?? undefined,
+          content: reply,
+          shopQuery: hasShopIntent ? text : undefined,
         };
         setMessages((prev) => [...prev, assistantMsg]);
-        onSuggestion?.(res.reply);
+        onSuggestion?.(reply);
+        onStylistResult?.(res);
       } else {
         const history = messages.slice(-10).map((m) => ({
           role: m.role,
           content: m.content,
         }));
-        const res = await api.shoppingAsk(text, history);
+        const res = await api.shoppingAsk(text, history, location);
         clearTimeout(timer);
         const assistantMsg: ChatMessage = {
           id: (Date.now() + 1).toString(),
@@ -129,7 +146,7 @@ export default function StylistChat({
         };
         setMessages((prev) => [...prev, assistantMsg]);
         if (res.results && onSearchResults) {
-          onSearchResults(res.results);
+          onSearchResults(res.results ?? [], res.currency, res.no_local, res.city ?? undefined);
         }
       }
     } catch {
@@ -161,20 +178,69 @@ export default function StylistChat({
     setTimeout(() => inputRef.current?.form?.requestSubmit(), 50);
   }
 
-  if (mode === "stylist" && !historyLoaded) return null;
-
   return (
     <div className={"flex flex-col " + className}>
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0"
       >
-        {/* Greeting */}
+        {/* Greeting + history toggle */}
         <div className="flex justify-start">
           <div className="max-w-md rounded-xl3 px-4 py-2.5 text-sm bg-surface2 text-ink rounded-bl-lg">
             {greetingText}
           </div>
         </div>
+
+        {mode === "stylist" && messages.length === 0 && !showHistory && (
+          <button
+            type="button"
+            onClick={loadHistory}
+            disabled={historyLoading}
+            className="text-xs text-muted/60 hover:text-coral transition-colors px-1 flex items-center gap-1"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            {historyLoading ? "Loading..." : "View past conversations"}
+          </button>
+        )}
+
+        {/* Past history (on demand) */}
+        {showHistory && historyMessages.length > 0 && (
+          <div className="space-y-2 border-b border-line/40 pb-3 mb-2">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[10px] font-medium text-muted/50 uppercase tracking-wider">Past messages</span>
+              <button
+                type="button"
+                onClick={() => setShowHistory(false)}
+                className="text-[10px] text-muted/50 hover:text-coral transition-colors"
+              >
+                Hide
+              </button>
+            </div>
+            {historyMessages.map((msg) => (
+              <div
+                key={msg.id}
+                className={"flex " + (msg.role === "user" ? "justify-end" : "justify-start")}
+              >
+                <div
+                  className={
+                    "max-w-md rounded-xl3 px-4 py-2.5 text-sm opacity-50 " +
+                    (msg.role === "user"
+                      ? "bg-coral text-white rounded-br-lg"
+                      : "bg-surface2 text-ink rounded-bl-lg")
+                  }
+                >
+                  {msg.content}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {showHistory && historyMessages.length === 0 && !historyLoading && (
+          <p className="text-xs text-muted/40 px-1 italic">No past conversations yet</p>
+        )}
 
         {/* Example prompts */}
         {showExamples && (
@@ -223,6 +289,15 @@ export default function StylistChat({
                       </button>
                     ))}
                   </div>
+                )}
+                {msg.shopQuery && (
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/shop?q=${encodeURIComponent(msg.shopQuery!)}&from=stylist`)}
+                    className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-coral hover:text-ink transition-colors"
+                  >
+                    Shop these →
+                  </button>
                 )}
               </div>
             </motion.div>
