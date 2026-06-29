@@ -19,3 +19,14 @@ class TokenResponse(BaseModel):
 class UserMe(BaseModel):
     id: str
     email: EmailStr
+    country: str | None = None
+    city: str | None = None
+    lat: float | None = None
+    lng: float | None = None
+
+
+class UserUpdateRequest(BaseModel):
+    country: str | None = None
+    city: str | None = None
+    lat: float | None = None
+    lng: float | None = None

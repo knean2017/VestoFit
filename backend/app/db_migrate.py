@@ -92,3 +92,40 @@ async def run_migrations(conn: AsyncConnection) -> None:
             """
         )
     )
+
+    await conn.execute(
+        text(
+            """
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'users' AND column_name = 'country'
+                ) THEN
+                    ALTER TABLE users ADD COLUMN country VARCHAR(2);
+                END IF;
+
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'users' AND column_name = 'city'
+                ) THEN
+                    ALTER TABLE users ADD COLUMN city VARCHAR(100);
+                END IF;
+
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'users' AND column_name = 'lat'
+                ) THEN
+                    ALTER TABLE users ADD COLUMN lat DOUBLE PRECISION;
+                END IF;
+
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'users' AND column_name = 'lng'
+                ) THEN
+                    ALTER TABLE users ADD COLUMN lng DOUBLE PRECISION;
+                END IF;
+            END $$;
+            """
+        )
+    )

@@ -8,7 +8,7 @@ from app.database import get_db
 from app.deps import get_current_user
 from app.models.user import User
 from app.rate_limit import rate_limit_auth
-from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserMe
+from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserMe, UserUpdateRequest
 from app.services.auth_service import (
     create_access_token,
     hash_password,
@@ -48,4 +48,38 @@ async def login(
 
 @router.get("/me", response_model=UserMe)
 async def me(user: Annotated[User, Depends(get_current_user)]):
-    return UserMe(id=str(user.id), email=user.email)
+    return UserMe(
+        id=str(user.id),
+        email=user.email,
+        country=user.country,
+        city=user.city,
+        lat=user.lat,
+        lng=user.lng,
+    )
+
+
+@router.patch("/me", response_model=UserMe)
+async def update_me(
+    payload: UserUpdateRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    if payload.country is not None:
+        user.country = payload.country
+    if payload.city is not None:
+        user.city = payload.city
+    if payload.lat is not None:
+        user.lat = payload.lat
+    if payload.lng is not None:
+        user.lng = payload.lng
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return UserMe(
+        id=str(user.id),
+        email=user.email,
+        country=user.country,
+        city=user.city,
+        lat=user.lat,
+        lng=user.lng,
+    )
