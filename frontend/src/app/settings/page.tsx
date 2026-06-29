@@ -195,10 +195,22 @@ function LocationSection() {
           const data = await res.json();
           const detectedCity = data.city || data.locality || "";
           const detectedCountry = (data.countryCode || "").toLowerCase();
+
+          if (!detectedCity && !detectedCountry) {
+            toast("error", "Could not detect city");
+            setDetecting(false);
+            return;
+          }
+
           setCity(detectedCity);
           setCountry(detectedCountry);
-          await api.updateLocation({ country: detectedCountry, city: detectedCity, lat, lng });
-          toast("success", `Location set to ${detectedCity}`);
+          await api.updateLocation({
+            country: detectedCountry || undefined,
+            city: detectedCity || undefined,
+            lat,
+            lng,
+          });
+          toast("success", `Location set to ${detectedCity || detectedCountry}`);
         } catch {
           toast("error", "Could not detect city");
         } finally {
