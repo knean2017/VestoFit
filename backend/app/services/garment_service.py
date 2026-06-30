@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from io import BytesIO
 
 from PIL import Image
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Category auto-detection
@@ -59,6 +62,7 @@ def _clean_sync(data: bytes) -> bytes:
     try:
         from rembg import remove
     except ImportError:
+        logger.warning("rembg not installed — returning original image without background removal")
         return data
 
     try:
@@ -70,6 +74,7 @@ def _clean_sync(data: bytes) -> bytes:
         bg.save(out, format="PNG", optimize=True)
         return out.getvalue()
     except Exception:
+        logger.warning("rembg background removal failed — returning original image", exc_info=True)
         return data
 
 
