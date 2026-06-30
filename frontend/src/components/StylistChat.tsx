@@ -158,6 +158,9 @@ export default function StylistChat({
         chips: ["Try again"],
       };
       setMessages((prev) => [...prev, errorMsg]);
+      if (mode === "stylist") {
+        onStylistResult?.({ decline: true, item_ids: [], outfit_id: "", reasoning: "" });
+      }
     } finally {
       setSending(false);
       setSlowTimer(false);

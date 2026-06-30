@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid as _uuid
 
 from sqlalchemy import select
@@ -11,6 +12,8 @@ from app.models.wardrobe_item import WardrobeItem
 from app.services.garment_service import clean_garment
 from app.services.llm_service import LlmError, tag_garment_image
 from app.services.storage import get_storage
+
+logger = logging.getLogger(__name__)
 
 
 async def tag_wardrobe_item(item_id: _uuid.UUID) -> None:
@@ -35,12 +38,17 @@ async def tag_wardrobe_item(item_id: _uuid.UUID) -> None:
 
             result = await tag_garment_image(data, mime)
             if result.get("category") is None:
-                # Not a clothing item — delete from storage and DB
-                await storage.delete(item.image_key)
-                if item.clean_image_key:
-                    await storage.delete(item.clean_image_key)
+                # Not a clothing item — commit DB deletion first, then storage
+                image_key = item.image_key
+                clean_key = item.clean_image_key
                 await db.delete(item)
                 await db.commit()
+                await storage.delete(image_key)
+                if clean_key:
+                    try:
+                        await storage.delete(clean_key)
+                    except Exception:
+                        pass
                 return
             else:
                 cat = result.get("category")
@@ -57,10 +65,23 @@ async def tag_wardrobe_item(item_id: _uuid.UUID) -> None:
                 item.tagging_status = "done"
 
                 # Re-run background removal and update clean image
-                cleaned = await clean_garment(data)
-                clean_key = f"wardrobe/{item.user_id}/{_uuid.uuid4().hex}.png"
-                await storage.save_bytes(clean_key, cleaned, "image/png")
-                item.clean_image_key = clean_key
+                try:
+                    old_clean_key = item.clean_image_key
+                    cleaned = await clean_garment(data)
+                    clean_key = f"wardrobe/{item.user_id}/{_uuid.uuid4().hex}.png"
+                    await storage.save_bytes(clean_key, cleaned, "image/png")
+                    item.clean_image_key = clean_key
+                    if old_clean_key and old_clean_key != clean_key:
+                        try:
+                            await storage.delete(old_clean_key)
+                        except Exception:
+                            pass
+                except Exception:
+                    logger.warning(
+                        "clean image save failed for item %s — keeping original",
+                        item_id,
+                        exc_info=True,
+                    )
 
         except (LlmError, ValueError, TypeError) as e:
             item.tagging_status = "failed"
