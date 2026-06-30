@@ -35,8 +35,13 @@ async def tag_wardrobe_item(item_id: _uuid.UUID) -> None:
 
             result = await tag_garment_image(data, mime)
             if result.get("category") is None:
-                item.tagging_status = "failed"
-                item.attributes = result
+                # Not a clothing item — delete from storage and DB
+                await storage.delete(item.image_key)
+                if item.clean_image_key:
+                    await storage.delete(item.clean_image_key)
+                await db.delete(item)
+                await db.commit()
+                return
             else:
                 cat = result.get("category")
                 if cat in ("tops", "bottoms", "dresses"):

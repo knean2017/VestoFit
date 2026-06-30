@@ -60,12 +60,39 @@ export default function WardrobePage() {
     load();
   }, [router, load]);
 
+  const prevPendingRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
-    const pending = items.some((i) => i.tagging_status === "pending");
-    if (!pending) return;
-    const t = setInterval(() => load(), 3000);
+    const pendingIds = items
+      .filter((i) => i.tagging_status === "pending")
+      .map((i) => i.id);
+    prevPendingRef.current = new Set(pendingIds);
+  }, [items]);
+
+  useEffect(() => {
+    const hasPending = items.some((i) => i.tagging_status === "pending");
+    if (!hasPending) return;
+    const t = setInterval(async () => {
+      const before = new Set(prevPendingRef.current);
+      try {
+        const params =
+          filter === "all"
+            ? undefined
+            : filter === "favorites"
+              ? { favorites_only: true }
+              : { category: filter };
+        const fresh = await api.listWardrobe(params);
+        const freshIds = new Set(fresh.map((i) => i.id));
+        for (const id of before) {
+          if (!freshIds.has(id)) {
+            toast("info", "Removed — that doesn't look like a clothing item");
+          }
+        }
+        setItems(fresh);
+      } catch {}
+    }, 3000);
     return () => clearInterval(t);
-  }, [items, load]);
+  }, [items, filter, toast]);
 
   async function onAddFile(file: File | undefined) {
     if (!file) return;
