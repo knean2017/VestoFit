@@ -15,6 +15,7 @@ import { warmRates } from "@/lib/currency";
 import WindowDisplay from "@/components/shop/WindowDisplay";
 import SearchBar from "@/components/shop/SearchBar";
 import ResultCard from "@/components/shop/ResultCard";
+import StoreCard from "@/components/shop/StoreCard";
 import CurrencySwitcher from "@/components/shop/CurrencySwitcher";
 import StylistChat from "@/components/StylistChat";
 
@@ -235,19 +236,55 @@ function ShopContent() {
             </div>
           )}
 
-          {!searching && results.length > 0 && (
-            <>
-              <div className="flex items-center justify-between mt-6 mb-2">
-                <p className="text-xs text-muted">{results.length} results</p>
-                <CurrencySwitcher value={displayCurrency} onChange={setDisplayCurrency} />
-              </div>
-              <div ref={grid} className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {results.map((item, i) => (
-                  <ResultCard key={i} item={item} displayCurrency={displayCurrency} />
-                ))}
-              </div>
-            </>
-          )}
+          {!searching && results.length > 0 && (() => {
+            const stores = results.filter((r) => r.kind === "store");
+            const products = results.filter((r) => r.kind !== "store");
+            return (
+              <>
+                {/* Nearby stores row */}
+                {stores.length > 0 && (
+                  <div className="mt-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <h2 className="heading-md">Nearby stores</h2>
+                      {searchedCity && (
+                        <span className="text-xs text-muted">in {searchedCity}</span>
+                      )}
+                      <span className="chip text-[10px] ml-auto">{stores.length}</span>
+                    </div>
+                    <div className="flex gap-3 overflow-x-auto pb-3 -mx-4 px-4 snap-x snap-mandatory">
+                      {stores.map((store, i) => (
+                        <div key={i} className="snap-start shrink-0">
+                          <StoreCard item={store} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Online products grid */}
+                {products.length > 0 && (
+                  <>
+                    <div className="flex items-center justify-between mt-6 mb-2">
+                      <p className="text-xs text-muted">
+                        {stores.length > 0 ? "Online" : ""} {products.length} results
+                      </p>
+                      <CurrencySwitcher value={displayCurrency} onChange={setDisplayCurrency} />
+                    </div>
+                    <div ref={grid} className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {products.map((item, i) => (
+                        <ResultCard key={i} item={item} displayCurrency={displayCurrency} />
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Only stores, no products */}
+                {products.length === 0 && stores.length > 0 && (
+                  <p className="text-xs text-muted mt-4 text-center">No online listings found — check the stores above.</p>
+                )}
+              </>
+            );
+          })()}
         </section>
         <BottomNav />
       </main>

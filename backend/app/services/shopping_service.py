@@ -234,6 +234,10 @@ async def _search_local_stores(
         website = (r.get("links") or {}).get("website") or r.get("website") or ""
         if not website:
             continue  # skip stores with no website
+        open_state = r.get("open_state") or ""
+        open_now: bool | None = None
+        if open_state:
+            open_now = "open" in open_state.lower()
         items.append(ShoppingResultItem(
             title=r.get("title", ""),
             price=None,
@@ -243,6 +247,11 @@ async def _search_local_stores(
             source=r.get("title", ""),
             category=None,
             kind="store",
+            address=r.get("address") or None,
+            phone=r.get("phone") or None,
+            rating=r.get("rating") or None,
+            rating_count=r.get("reviews") or None,
+            open_now=open_now,
         ))
     return items
 

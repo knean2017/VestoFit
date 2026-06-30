@@ -95,6 +95,11 @@ export type ShoppingResultItem = {
   source: string;
   category: string | null;
   kind?: "product" | "store";
+  address?: string | null;
+  phone?: string | null;
+  rating?: number | null;
+  rating_count?: number | null;
+  open_now?: boolean | null;
 };
 
 export type ShoppingSearchResponse = {

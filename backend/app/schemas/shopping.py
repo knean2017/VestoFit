@@ -23,6 +23,12 @@ class ShoppingResultItem(BaseModel):
     source: str
     category: str | None = None
     kind: Literal["product", "store"] = "product"
+    # store-only fields
+    address: str | None = None
+    phone: str | None = None
+    rating: float | None = None
+    rating_count: int | None = None
+    open_now: bool | None = None
 
 
 class ShoppingSearchResponse(BaseModel):
