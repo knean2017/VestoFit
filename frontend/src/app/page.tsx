@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import Footer from "@/components/Footer";
 import SilhouettePreview from "@/components/SilhouettePreview";
 import StylistChat from "@/components/StylistChat";
-import { useToast } from "@/components/Toast";
 import { getToken } from "@/lib/auth";
-import { api, WardrobeItem, StylistMessage } from "@/lib/api";
+import { api, WardrobeItem } from "@/lib/api";
 
 export default function HomePage() {
   const [authed, setAuthed] = useState<boolean | null>(null);
@@ -26,51 +26,26 @@ export default function HomePage() {
 
 /* ─── Authenticated: Stylist-first home ─── */
 
+type StageState = "idle" | "thinking" | "dressed";
+
 function StylistHome() {
-  const toast = useToast();
   const router = useRouter();
   const reduce = useReducedMotion();
 
   const [wardrobe, setWardrobe] = useState<WardrobeItem[]>([]);
   const [suggestion, setSuggestion] = useState<WardrobeItem[]>([]);
-  const [reasoning, setReasoning] = useState("");
+  const [outfitId, setOutfitId] = useState("");
+  const [stage, setStage] = useState<StageState>("idle");
   const [shuffling, setShuffling] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const hasWardrobe = wardrobe.length >= 2;
-
-  function pickRandom(items: WardrobeItem[]) {
-    const tops = items.filter((i) => i.category === "tops");
-    const bottoms = items.filter((i) => i.category === "bottoms");
-    const dresses = items.filter((i) => i.category === "dresses");
-
-    let picked: WardrobeItem[] = [];
-    let why = "";
-    if (dresses.length > 0 && Math.random() > 0.5) {
-      picked = [dresses[Math.floor(Math.random() * dresses.length)]];
-      why = "A simple one-piece look for today";
-    } else if (tops.length > 0 && bottoms.length > 0) {
-      const t = tops[Math.floor(Math.random() * tops.length)];
-      const b = bottoms[Math.floor(Math.random() * bottoms.length)];
-      picked = [t, b];
-      why = `${t.name || "A top"} paired with ${b.name || "bottoms"} — effortless`;
-    } else if (items.length > 0) {
-      picked = [items[Math.floor(Math.random() * items.length)]];
-      why = "Here's something from your closet";
-    }
-    setSuggestion(picked);
-    setReasoning(why);
-    return { picked, why };
-  }
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const items = await api.listWardrobe();
       setWardrobe(items);
-      if (items.length >= 2) {
-        pickRandom(items);
-      }
     } catch {}
     setLoading(false);
   }, []);
@@ -84,7 +59,22 @@ function StylistHome() {
   function handleShuffle() {
     if (!hasWardrobe || shuffling) return;
     setShuffling(true);
-    pickRandom(wardrobe);
+    const tops = wardrobe.filter((i) => i.category === "tops");
+    const bottoms = wardrobe.filter((i) => i.category === "bottoms");
+    const dresses = wardrobe.filter((i) => i.category === "dresses");
+    let picked: WardrobeItem[] = [];
+    if (dresses.length > 0 && Math.random() > 0.5) {
+      picked = [dresses[Math.floor(Math.random() * dresses.length)]];
+    } else if (tops.length > 0 && bottoms.length > 0) {
+      picked = [tops[Math.floor(Math.random() * tops.length)], bottoms[Math.floor(Math.random() * bottoms.length)]];
+    } else if (wardrobe.length > 0) {
+      picked = [wardrobe[Math.floor(Math.random() * wardrobe.length)]];
+    }
+    setSuggestion(picked);
+    if (picked.length > 0) {
+      setOutfitId("shuffle-" + Date.now());
+      setStage("dressed");
+    }
     setTimeout(() => setShuffling(false), 500);
   }
 
@@ -93,12 +83,50 @@ function StylistHome() {
     router.push(`/studio?items=${currentItemIds.join(",")}`);
   }
 
-  function handleSuggestion(reply: string) {
-    setReasoning(reply);
-    if (hasWardrobe) pickRandom(wardrobe);
+  function handleSend() {
+    setStage("thinking");
+    setSuggestion([]);
   }
 
-  /* Loading skeleton */
+  async function handleStylistResult(result: { reasoning: string; item_ids: string[]; outfit_id: string; decline: boolean }) {
+    if (result.decline || result.item_ids.length === 0) {
+      setStage("idle");
+      return;
+    }
+
+    // Try matching against local wardrobe state first
+    let resolved = result.item_ids
+      .map((id) => wardrobe.find((w) => w.id === id))
+      .filter((w): w is WardrobeItem => !!w);
+
+    // If no matches, wardrobe state may be stale — re-fetch and retry
+    if (resolved.length === 0 && result.item_ids.length > 0) {
+      try {
+        const fresh = await api.listWardrobe();
+        setWardrobe(fresh);
+        resolved = result.item_ids
+          .map((id) => fresh.find((w) => w.id === id))
+          .filter((w): w is WardrobeItem => !!w);
+      } catch {}
+    }
+
+    if (resolved.length === 0) {
+      setStage("idle");
+      return;
+    }
+    setSuggestion(resolved);
+    setOutfitId(result.outfit_id);
+    setStage("dressed");
+  }
+
+  function handleRemoveItem(id: string) {
+    setSuggestion((prev) => {
+      const next = prev.filter((i) => i.id !== id);
+      if (next.length === 0) setStage("idle");
+      return next;
+    });
+  }
+
   if (loading) {
     return (
       <main className="min-h-screen bg-bg pb-nav md:pb-0 flex flex-col">
@@ -117,18 +145,70 @@ function StylistHome() {
       <Header />
 
       <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-5 min-h-0">
-        {/* Silhouette zone */}
+        {/* Silhouette zone with choreography */}
         <div className="relative min-h-[30vh] sm:min-h-[45vh] flex items-center justify-center pt-4 shrink-0">
-          <SilhouettePreview items={suggestion} className={hasWardrobe ? "" : "opacity-60"} />
+          <AnimatePresence mode="wait">
+            {stage === "idle" && (
+              <motion.div
+                key="idle"
+                initial={reduce ? { opacity: 0 } : { opacity: 0 }}
+                animate={reduce ? { opacity: 1 } : { opacity: 1, scale: [1, 1.015, 1] }}
+                exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96, filter: "blur(6px)" }}
+                transition={
+                  reduce
+                    ? { duration: 0.2 }
+                    : { opacity: { duration: 0.45 }, scale: { duration: 3.2, repeat: Infinity, ease: "easeInOut" }, exit: { duration: 0.45 } }
+                }
+                className="w-full flex items-center justify-center"
+              >
+                <SilhouettePreview items={[]} className={hasWardrobe ? "" : "opacity-60"} />
+              </motion.div>
+            )}
+
+            {stage === "thinking" && (
+              <motion.div
+                key="thinking"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="w-full flex items-center justify-center"
+              >
+                <div className="w-16 h-16 rounded-full bg-coralSoft/40 animate-pulse" />
+              </motion.div>
+            )}
+
+            {stage === "dressed" && (
+              <motion.div
+                key={"dressed-" + outfitId}
+                initial={reduce ? { opacity: 0 } : { opacity: 0, x: "60%", scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+                transition={
+                  reduce
+                    ? { duration: 0.2 }
+                    : { type: "spring", stiffness: 90, damping: 18, mass: 1.1 }
+                }
+                className="w-full flex items-center justify-center"
+              >
+                <SilhouettePreview
+                  items={suggestion}
+                  startDelay={0.5}
+                  editable
+                  onRemove={handleRemoveItem}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Action buttons — only when wardrobe has items */}
-        {hasWardrobe && (
+        {/* Action buttons */}
+        {stage === "dressed" && (
           <div className="flex items-center justify-center gap-3 py-3 shrink-0">
             <motion.button
               type="button"
               onClick={handleShuffle}
-              disabled={shuffling}
+              disabled={shuffling || !hasWardrobe}
               aria-label="Shuffle outfit"
               className="w-12 h-12 rounded-full bg-coralSoft text-coral grid place-items-center shadow-soft disabled:opacity-40"
               animate={shuffling && !reduce ? { rotate: 360 } : { rotate: 0 }}
@@ -157,11 +237,21 @@ function StylistHome() {
         )}
 
         {/* Chat */}
-        <StylistChat
-          mode="stylist"
-          onSuggestion={handleSuggestion}
-          className="flex-1 min-h-0"
-        />
+        {hasWardrobe ? (
+          <StylistChat
+            mode="stylist"
+            onSend={handleSend}
+            onStylistResult={handleStylistResult}
+            className="flex-1 min-h-0"
+          />
+        ) : (
+          <div className="flex-1 flex items-center justify-center px-6">
+            <div className="text-center">
+              <p className="text-muted text-sm mb-3">Add at least 2 items to your wardrobe to get styled</p>
+              <Link href="/wardrobe" className="btn-primary">Open wardrobe</Link>
+            </div>
+          </div>
+        )}
       </div>
 
       <BottomNav />
@@ -204,7 +294,7 @@ function LandingPage() {
             className="mt-6 text-lg text-muted max-w-xl leading-relaxed font-medium"
             {...reveal(1)}
           >
-            FitMe knows your wardrobe, suggests daily outfits, and lets you try on
+            VestoFit knows your wardrobe, suggests daily outfits, and lets you try on
             any clothes virtually — all powered by AI that actually understands your style.
           </motion.p>
 
@@ -235,7 +325,7 @@ function LandingPage() {
 
       <section className="container-app pb-24">
         <div className="card p-8 sm:p-10">
-          <h2 className="heading-lg text-center mb-8">Why FitMe?</h2>
+          <h2 className="heading-lg text-center mb-8">Why VestoFit?</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {FEATURES.map((f, i) => (
               <motion.div key={f.t} className="flex gap-3" {...reveal(i)}>
@@ -252,12 +342,7 @@ function LandingPage() {
         </div>
       </section>
 
-      <footer className="mt-auto border-t border-line">
-        <div className="container-app py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-muted">
-          <p>© FitMe {new Date().getFullYear()}</p>
-          <p className="font-medium">Made for the well-dressed.</p>
-        </div>
-      </footer>
+      <Footer />
     </main>
   );
 }
