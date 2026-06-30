@@ -15,8 +15,6 @@ import RenderHistory from "@/components/studio/RenderHistory";
 const SmoothScroll = dynamic(() => import("@/components/SmoothScroll"), { ssr: false });
 const MirrorReveal = dynamic(() => import("@/components/studio/MirrorReveal"), { ssr: false });
 
-type Mode = "url" | "upload";
-
 export default function StudioPage() {
   const router = useRouter();
   const toast = useToast();
@@ -25,8 +23,6 @@ export default function StudioPage() {
   const [history, setHistory] = useState<TryOnStatus[]>([]);
   const [active, setActive] = useState<TryOnStatus | null>(null);
 
-  const [mode, setMode] = useState<Mode>("url");
-  const [url, setUrl] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
@@ -70,13 +66,10 @@ export default function StudioPage() {
   }, [active, toast]);
 
   async function submit() {
-    if (mode === "url" && !url) return;
-    if (mode === "upload" && !file) return;
+    if (!file) return;
     setSubmitting(true);
     try {
-      const res = mode === "url"
-        ? await api.tryOnUrl(url, description || undefined)
-        : await api.tryOnUpload(file!, description || undefined);
+      const res = await api.tryOnUpload(file, description || undefined);
       const fresh = await api.jobStatus(res.job_id);
       setActive(fresh);
       toast("info", "Render started — about 15-30 seconds");
@@ -90,28 +83,24 @@ export default function StudioPage() {
   if (!avatar) {
     return (
       <main className="min-h-screen bg-bg grid place-items-center">
-        <div className="w-48 h-64 rounded-xl3 bg-surface2 relative overflow-hidden">
+        <div className="stage-plate w-48 h-64 rounded-2xl relative overflow-hidden">
           <div className="glass-shimmer" />
         </div>
       </main>
     );
   }
 
-  const canSubmit = mode === "url" ? !!url.trim() : !!file;
+  const canSubmit = !!file;
 
   return (
     <SmoothScroll>
       <main className="min-h-screen bg-bg pb-nav md:pb-0">
         <Header />
-        <section className="container-app py-6 sm:py-8 max-w-4xl">
+        <section className="container-app py-6 sm:py-10 max-w-4xl">
           <MirrorReveal>
-            <div className="grid md:grid-cols-2 gap-6 items-start">
+            <div className="grid md:grid-cols-[1.15fr_0.85fr] gap-6 items-start">
               <ReflectionPanel avatar={avatar} active={active} />
               <GarmentInput
-                mode={mode}
-                setMode={setMode}
-                url={url}
-                setUrl={setUrl}
                 description={description}
                 setDescription={setDescription}
                 filePreview={filePreview}
