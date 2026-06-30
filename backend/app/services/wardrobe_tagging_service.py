@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
-import uuid
+import uuid as _uuid
 
 from sqlalchemy import select
 
 from app.database import AsyncSessionLocal
 from app.models.wardrobe_item import WardrobeItem
+from app.services.garment_service import clean_garment
 from app.services.llm_service import LlmError, tag_garment_image
 from app.services.storage import get_storage
 
 
-async def tag_wardrobe_item(item_id: uuid.UUID) -> None:
+async def tag_wardrobe_item(item_id: _uuid.UUID) -> None:
     async with AsyncSessionLocal() as db:
         res = await db.execute(
             select(WardrobeItem).where(WardrobeItem.id == item_id)
@@ -49,6 +50,13 @@ async def tag_wardrobe_item(item_id: uuid.UUID) -> None:
                 item.warmth = int(warmth) if warmth is not None else None
                 item.attributes = result
                 item.tagging_status = "done"
+
+                # Re-run background removal and update clean image
+                cleaned = await clean_garment(data)
+                clean_key = f"wardrobe/{item.user_id}/{_uuid.uuid4().hex}.png"
+                await storage.save_bytes(clean_key, cleaned, "image/png")
+                item.clean_image_key = clean_key
+
         except (LlmError, ValueError, TypeError) as e:
             item.tagging_status = "failed"
             item.attributes = {"error": str(e)[:500]}
