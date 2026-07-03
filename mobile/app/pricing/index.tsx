@@ -4,6 +4,7 @@ import { useStyles, createStyleSheet } from 'react-native-unistyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import * as WebBrowser from 'expo-web-browser';
+import { Check } from 'lucide-react-native';
 
 import { api } from '../../src/lib/api';
 import { PLANS } from '../../src/lib/plans';
@@ -54,7 +55,10 @@ export default function PricingScreen() {
             </View>
             <View style={styles.features}>
               {plan.features.map((f) => (
-                <Text key={f} style={styles.feature}>✓ {f}</Text>
+                <View key={f} style={styles.featureRow}>
+                  <Check size={14} color={theme.colors.ink} strokeWidth={3} />
+                  <Text style={styles.feature}>{f}</Text>
+                </View>
               ))}
             </View>
             {plan.variantId ? (
@@ -91,5 +95,6 @@ const stylesheet = createStyleSheet((theme) => ({
   priceHighlight: { color: theme.colors.accent },
   period: { fontFamily: theme.typography.families.sans, fontSize: theme.typography.sizes.md, color: theme.colors.muted },
   features: { gap: theme.spacing.xs },
+  featureRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   feature: { fontFamily: theme.typography.families.sans, fontSize: theme.typography.sizes.md, color: theme.colors.ink, lineHeight: 22 },
 }));

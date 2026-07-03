@@ -9,6 +9,7 @@ import Animated, {
   withSequence,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Check, X, Info, TriangleAlert } from 'lucide-react-native';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -89,11 +90,16 @@ function ToastItem({ toast }: { toast: ToastState }) {
     warning: styles.warning,
   }[toast.type];
 
-  const icon = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' }[toast.type];
+  const iconComponent = {
+    success: <Check size={16} color="#fff" strokeWidth={2.5} />,
+    error: <X size={16} color="#fff" strokeWidth={2.5} />,
+    info: <Info size={16} color="#fff" strokeWidth={2.5} />,
+    warning: <TriangleAlert size={16} color="#fff" strokeWidth={2.5} />,
+  }[toast.type];
 
   return (
     <Animated.View style={[styles.toast, typeStyle, animStyle]}>
-      <Text style={styles.icon}>{icon}</Text>
+      <View style={styles.iconContainer}>{iconComponent}</View>
       <Text style={styles.message} numberOfLines={2}>{toast.message}</Text>
     </Animated.View>
   );
@@ -113,7 +119,7 @@ const stylesheet = createStyleSheet((theme) => ({
   error: { backgroundColor: theme.colors.error },
   info: { backgroundColor: theme.colors.info },
   warning: { backgroundColor: theme.colors.warning },
-  icon: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  iconContainer: { width: 16, height: 16, justifyContent: 'center', alignItems: 'center' },
   message: {
     flex: 1,
     color: '#fff',
