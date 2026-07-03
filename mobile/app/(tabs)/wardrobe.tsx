@@ -21,6 +21,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
+import { Heart, Trash2, Camera, Tag, Sparkles, Shirt } from 'lucide-react-native';
 
 import { api, type WardrobeItem, type Category, type NativeFile } from '../../src/lib/api';
 import { Chip } from '../../src/components/ui/Chip';
@@ -178,9 +179,17 @@ export default function WardrobeScreen() {
           style={styles.favFilter}
           onPress={() => setFavoritesOnly((v) => !v)}
         >
-          <Text style={[styles.favFilterText, favoritesOnly && styles.favFilterActive]}>
-            {favoritesOnly ? '❤️ Favorites' : '🤍 All items'}
-          </Text>
+          <View style={styles.favFilterContainer}>
+            <Heart
+              size={14}
+              color={favoritesOnly ? theme.colors.accent : theme.colors.muted}
+              fill={favoritesOnly ? theme.colors.accent : 'transparent'}
+              strokeWidth={2}
+            />
+            <Text style={[styles.favFilterText, favoritesOnly && styles.favFilterActive]}>
+              {favoritesOnly ? 'Favorites' : 'All items'}
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -190,13 +199,13 @@ export default function WardrobeScreen() {
       ) : items.length === 0 ? (
         <View style={styles.center}>
           <CoachingCard
-            emoji="👗"
+            emoji={<Shirt size={48} color={theme.colors.accent} strokeWidth={1.5} />}
             title="Build your wardrobe"
             subtitle="Upload your clothing and let AI tag everything automatically."
             steps={[
-              { icon: '📸', text: 'Tap "+ Add" and pick a photo of any garment' },
-              { icon: '🏷️', text: 'AI detects color, category, and season for you' },
-              { icon: '✨', text: 'Use items in Studio try-ons or get Stylist outfits' },
+              { icon: <Camera size={20} color={theme.colors.muted} strokeWidth={1.5} />, text: 'Tap "+ Add" and pick a photo of any garment' },
+              { icon: <Tag size={20} color={theme.colors.muted} strokeWidth={1.5} />, text: 'AI detects color, category, and season for you' },
+              { icon: <Sparkles size={20} color={theme.colors.muted} strokeWidth={1.5} />, text: 'Use items in Studio try-ons or get Stylist outfits' },
             ]}
           >
             <Button label="Add my first item" onPress={pickAndAdd} style={{ marginTop: 8 }} fullWidth />
@@ -252,6 +261,7 @@ const stylesheet = createStyleSheet((theme) => ({
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.xs,
   },
+  favFilterContainer: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   favFilterText: {
     fontFamily: theme.typography.families.sans,
     fontWeight: theme.typography.weights.semibold,
@@ -341,7 +351,6 @@ const stylesheet = createStyleSheet((theme) => ({
     paddingHorizontal: theme.spacing.sm,
     minWidth: 64,
   },
-  swipeIcon: { fontSize: 20 },
   swipeLabel: {
     fontFamily: theme.typography.families.sans,
     fontWeight: theme.typography.weights.bold,
@@ -364,7 +373,7 @@ function WardrobeCard({
   onToggleFavorite: () => void;
   onDelete: () => void;
 }) {
-  const { styles } = useStyles(stylesheet);
+  const { styles, theme } = useStyles(stylesheet);
   const swipeRef = useRef<Swipeable>(null);
   const scale = useSharedValue(1);
   const cardAnim = useAnimatedStyle(() => ({
@@ -395,13 +404,18 @@ function WardrobeCard({
       overshootLeft={false}
       renderLeftActions={() => (
         <TouchableOpacity style={styles.swipeFav} onPress={handleFav}>
-          <Text style={styles.swipeIcon}>{item.is_favorite ? '💔' : '❤️'}</Text>
+          <Heart
+            size={20}
+            color="#fff"
+            fill={item.is_favorite ? '#fff' : 'transparent'}
+            strokeWidth={2}
+          />
           <Text style={styles.swipeLabel}>{item.is_favorite ? 'Unfav' : 'Fav'}</Text>
         </TouchableOpacity>
       )}
       renderRightActions={() => (
         <TouchableOpacity style={styles.swipeDelete} onPress={handleDelete}>
-          <Text style={styles.swipeIcon}>🗑️</Text>
+          <Trash2 size={20} color="#fff" strokeWidth={2} />
           <Text style={styles.swipeLabel}>Delete</Text>
         </TouchableOpacity>
       )}
@@ -422,7 +436,12 @@ function WardrobeCard({
               {item.color ? <Text style={styles.cardMeta}>{item.color}</Text> : null}
             </View>
             <TouchableOpacity onPress={onToggleFavorite} style={styles.favBtn}>
-              <Text style={{ fontSize: 18 }}>{item.is_favorite ? '❤️' : '🤍'}</Text>
+              <Heart
+                size={18}
+                color={item.is_favorite ? theme.colors.accent : theme.colors.muted}
+                fill={item.is_favorite ? theme.colors.accent : 'transparent'}
+                strokeWidth={2}
+              />
             </TouchableOpacity>
           </View>
           {item.tagging_status === 'pending' && (

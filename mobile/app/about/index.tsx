@@ -1,14 +1,17 @@
 import React from 'react';
-import { Text, ScrollView } from 'react-native';
+import { Text, ScrollView, View } from 'react-native';
 import { useStyles, createStyleSheet } from 'react-native-unistyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Sparkles } from 'lucide-react-native';
 
 export default function AboutScreen() {
-  const { styles } = useStyles(stylesheet);
+  const { styles, theme } = useStyles(stylesheet);
   const insets = useSafeAreaInsets();
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={[styles.container, { paddingBottom: insets.bottom + 40 }]}>
-      <Text style={styles.emoji}>✨</Text>
+      <View style={styles.emojiContainer}>
+        <Sparkles size={48} color={theme.colors.accent} strokeWidth={1.5} />
+      </View>
       <Text style={styles.title}>About VestoFit</Text>
       <Text style={styles.body}>
         VestoFit is your AI-powered personal fashion studio. Upload your wardrobe, get AI-curated outfit suggestions, try on clothes virtually, and shop the looks you love — all in one place.
@@ -24,7 +27,7 @@ export default function AboutScreen() {
 const stylesheet = createStyleSheet((theme) => ({
   scroll: { flex: 1, backgroundColor: theme.colors.background },
   container: { padding: theme.spacing.xl, gap: theme.spacing.md, alignItems: 'center' },
-  emoji: { fontSize: 64, marginBottom: theme.spacing.sm },
+  emojiContainer: { width: 64, height: 64, justifyContent: 'center', alignItems: 'center', marginBottom: theme.spacing.sm },
   title: { fontFamily: theme.typography.families.sans, fontWeight: theme.typography.weights.extrabold, fontSize: theme.typography.sizes.xxxl, color: theme.colors.ink, textAlign: 'center' },
   body: { fontFamily: theme.typography.families.sans, fontSize: theme.typography.sizes.md, color: theme.colors.muted, textAlign: 'center', lineHeight: 24 },
   version: { fontFamily: theme.typography.families.sans, fontSize: theme.typography.sizes.sm, color: theme.colors.muted, marginTop: theme.spacing.xl },

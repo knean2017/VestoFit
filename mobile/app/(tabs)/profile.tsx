@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useStyles, createStyleSheet } from 'react-native-unistyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Settings, Info, HelpCircle } from 'lucide-react-native';
 
 import { api } from '../../src/lib/api';
 import { clearToken } from '../../src/lib/auth';
@@ -125,9 +126,9 @@ export default function ProfileScreen() {
       {/* Account settings */}
       <Card style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
-        <MenuItem label="⚙️  Settings" onPress={() => router.push('/settings')} />
-        <MenuItem label="ℹ️  About" onPress={() => router.push('/about')} />
-        <MenuItem label="❓  FAQ" onPress={() => router.push('/faq')} />
+        <MenuItem icon={<Settings size={20} color={theme.colors.ink} strokeWidth={2} />} label="Settings" onPress={() => router.push('/settings')} />
+        <MenuItem icon={<Info size={20} color={theme.colors.ink} strokeWidth={2} />} label="About" onPress={() => router.push('/about')} />
+        <MenuItem icon={<HelpCircle size={20} color={theme.colors.ink} strokeWidth={2} />} label="FAQ" onPress={() => router.push('/faq')} />
       </Card>
 
       {/* Danger zone */}
@@ -156,11 +157,16 @@ export default function ProfileScreen() {
   );
 }
 
-function MenuItem({ label, onPress }: { label: string; onPress: () => void }) {
+function MenuItem({ icon, label, onPress }: { icon: React.ReactNode; label: string; onPress: () => void }) {
   const { styles } = useStyles(stylesheet);
   return (
     <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
-      <Text style={styles.menuLabel}>{label}</Text>
+      <View style={styles.menuItemContent}>
+        <View style={styles.menuIcon}>
+          {icon}
+        </View>
+        <Text style={styles.menuLabel}>{label}</Text>
+      </View>
       <Text style={styles.menuArrow}>›</Text>
     </TouchableOpacity>
   );
@@ -216,6 +222,8 @@ const stylesheet = createStyleSheet((theme) => ({
   rowValue: { fontFamily: theme.typography.families.sans, fontWeight: theme.typography.weights.semibold, fontSize: theme.typography.sizes.md, color: theme.colors.ink },
   accent: { color: theme.colors.accent },
   menuItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: theme.spacing.sm },
+  menuItemContent: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
+  menuIcon: { width: 24, height: 24, justifyContent: 'center', alignItems: 'center' },
   menuLabel: { fontFamily: theme.typography.families.sans, fontSize: theme.typography.sizes.md, color: theme.colors.ink },
   menuArrow: { fontSize: 20, color: theme.colors.muted },
 }));

@@ -8,6 +8,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { useStyles, createStyleSheet } from 'react-native-unistyles';
+import { Eye, EyeOff } from 'lucide-react-native';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -45,7 +46,11 @@ export function Input({
         />
         {secureToggle ? (
           <TouchableOpacity onPress={() => setHidden((h) => !h)} style={styles.eyeBtn}>
-            <Text style={styles.eyeText}>{hidden ? '👁' : '🙈'}</Text>
+            {hidden ? (
+              <Eye size={18} color={theme.colors.muted} strokeWidth={2} />
+            ) : (
+              <EyeOff size={18} color={theme.colors.muted} strokeWidth={2} />
+            )}
           </TouchableOpacity>
         ) : null}
       </View>
@@ -85,8 +90,7 @@ const stylesheet = createStyleSheet((theme) => ({
     color: theme.colors.ink,
     paddingVertical: theme.spacing.sm,
   },
-  eyeBtn: { padding: 4 },
-  eyeText: { fontSize: 16 },
+  eyeBtn: { padding: 4, justifyContent: 'center', alignItems: 'center' },
   error: {
     fontFamily: theme.typography.families.sans,
     fontSize: theme.typography.sizes.xs,

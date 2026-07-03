@@ -12,6 +12,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useStyles, createStyleSheet } from 'react-native-unistyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
+import { ShoppingBag, Sparkles, MessageCircle, MapPin, Link as LinkIcon, Star } from 'lucide-react-native';
 
 import { api, type ShoppingResultItem, type ShoppingAskResponse } from '../../src/lib/api';
 import { Input } from '../../src/components/ui/Input';
@@ -25,7 +26,7 @@ import { CoachingCard } from '../../src/components/ui/CoachingCard';
 const CATEGORIES = ['All', 'Tops', 'Bottoms', 'Dresses', 'Shoes', 'Bags', 'Accessories'];
 
 export default function ShopScreen() {
-  const { styles } = useStyles(stylesheet);
+  const { styles, theme } = useStyles(stylesheet);
   const insets = useSafeAreaInsets();
   const toast = useToast();
 
@@ -71,7 +72,7 @@ export default function ShopScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Shop 🛍️</Text>
+        <Text style={styles.title}>Shop</Text>
         <Text style={styles.subtitle}>Discover fashion near you</Text>
       </View>
 
@@ -100,7 +101,10 @@ export default function ShopScreen() {
         {/* AI reply */}
         {lastResponse?.reply && (
           <Card style={styles.aiReply}>
-            <Text style={styles.aiLabel}>✨ AI Stylist</Text>
+            <View style={styles.aiLabelContainer}>
+              <Sparkles size={16} color={theme.colors.accent} strokeWidth={2} />
+              <Text style={styles.aiLabel}>AI Stylist</Text>
+            </View>
             <Text style={styles.aiText}>{lastResponse.reply}</Text>
           </Card>
         )}
@@ -136,12 +140,12 @@ export default function ShopScreen() {
         {/* Empty state coaching */}
         {!askMutation.isPending && !lastResponse && (
           <CoachingCard
-            emoji="🛍️"
+            emoji={<ShoppingBag size={48} color={theme.colors.accent} strokeWidth={1.5} />}
             title="Find your next favourite"
             steps={[
-              { icon: '💬', text: 'Type what you want — brand, style, budget, occasion' },
-              { icon: '📍', text: 'Allow location for results available near you' },
-              { icon: '🔗', text: 'Tap any result to view or buy from the store' },
+              { icon: <MessageCircle size={20} color={theme.colors.muted} strokeWidth={1.5} />, text: 'Type what you want — brand, style, budget, occasion' },
+              { icon: <MapPin size={20} color={theme.colors.muted} strokeWidth={1.5} />, text: 'Allow location for results available near you' },
+              { icon: <LinkIcon size={20} color={theme.colors.muted} strokeWidth={1.5} />, text: 'Tap any result to view or buy from the store' },
             ]}
           />
         )}
@@ -170,7 +174,7 @@ export default function ShopScreen() {
 }
 
 function ProductCard({ item, currency }: { item: ShoppingResultItem; currency?: string }) {
-  const { styles } = useStyles(productStyle);
+  const { styles, theme } = useStyles(productStyle);
 
   function open() {
     Linking.openURL(item.product_url).catch(() => {});
@@ -188,7 +192,10 @@ function ProductCard({ item, currency }: { item: ShoppingResultItem; currency?: 
           </Text>
         )}
         {item.rating != null && (
-          <Text style={styles.rating}>⭐ {item.rating} ({item.rating_count ?? 0})</Text>
+          <View style={styles.ratingContainer}>
+            <Star size={14} color={theme.colors.muted} fill={theme.colors.muted} strokeWidth={1.5} />
+            <Text style={styles.rating}>{item.rating} ({item.rating_count ?? 0})</Text>
+          </View>
         )}
       </View>
     </TouchableOpacity>
@@ -211,6 +218,7 @@ const productStyle = createStyleSheet((theme) => ({
   source: { fontFamily: theme.typography.families.sans, fontSize: theme.typography.sizes.xs, color: theme.colors.muted, textTransform: 'uppercase', fontWeight: theme.typography.weights.bold },
   name: { fontFamily: theme.typography.families.sans, fontSize: theme.typography.sizes.md, fontWeight: theme.typography.weights.semibold, color: theme.colors.ink },
   price: { fontFamily: theme.typography.families.sans, fontSize: theme.typography.sizes.lg, fontWeight: theme.typography.weights.extrabold, color: theme.colors.accent },
+  ratingContainer: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   rating: { fontFamily: theme.typography.families.sans, fontSize: theme.typography.sizes.xs, color: theme.colors.muted },
 }));
 
@@ -221,6 +229,7 @@ const stylesheet = createStyleSheet((theme) => ({
   subtitle: { fontFamily: theme.typography.families.sans, fontSize: theme.typography.sizes.sm, color: theme.colors.muted, marginTop: 2 },
   results: { paddingHorizontal: theme.spacing.md, paddingTop: theme.spacing.sm, gap: theme.spacing.sm },
   aiReply: { padding: theme.spacing.md, gap: theme.spacing.xs },
+  aiLabelContainer: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   aiLabel: { fontFamily: theme.typography.families.sans, fontWeight: theme.typography.weights.bold, fontSize: theme.typography.sizes.xs, color: theme.colors.accent, textTransform: 'uppercase' },
   aiText: { fontFamily: theme.typography.families.sans, fontSize: theme.typography.sizes.md, color: theme.colors.ink, lineHeight: 22 },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

@@ -4,12 +4,12 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useStyles, createStyleSheet } from 'react-native-unistyles';
 
 interface Step {
-  icon: string;
+  icon: React.ReactNode;
   text: string;
 }
 
 interface CoachingCardProps {
-  emoji: string;
+  emoji: React.ReactNode;
   title: string;
   subtitle?: string;
   steps: Step[];
@@ -17,10 +17,12 @@ interface CoachingCardProps {
 }
 
 export function CoachingCard({ emoji, title, subtitle, steps, children }: CoachingCardProps) {
-  const { styles } = useStyles(stylesheet);
+  const { styles, theme } = useStyles(stylesheet);
   return (
     <Animated.View entering={FadeInDown.duration(400).springify()} style={styles.card}>
-      <Text style={styles.emoji}>{emoji}</Text>
+      <View style={styles.emojiContainer}>
+        {typeof emoji === 'string' ? <Text style={styles.emoji}>{emoji}</Text> : emoji}
+      </View>
       <Text style={styles.title}>{title}</Text>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       <View style={styles.steps}>
@@ -29,7 +31,9 @@ export function CoachingCard({ emoji, title, subtitle, steps, children }: Coachi
             <View style={styles.stepBadge}>
               <Text style={styles.stepNum}>{i + 1}</Text>
             </View>
-            <Text style={styles.stepIcon}>{step.icon}</Text>
+            <View style={styles.stepIconContainer}>
+              {typeof step.icon === 'string' ? <Text style={styles.stepIcon}>{step.icon}</Text> : step.icon}
+            </View>
             <Text style={styles.stepText}>{step.text}</Text>
           </View>
         ))}
@@ -45,6 +49,7 @@ const stylesheet = createStyleSheet((theme) => ({
     padding: theme.spacing.lg,
     gap: theme.spacing.sm,
   },
+  emojiContainer: { width: 64, height: 64, justifyContent: 'center', alignItems: 'center' },
   emoji: { fontSize: 52, marginBottom: theme.spacing.xs },
   title: {
     fontFamily: theme.typography.families.sans,
@@ -89,6 +94,7 @@ const stylesheet = createStyleSheet((theme) => ({
     fontSize: theme.typography.sizes.xs,
     color: '#fff',
   },
+  stepIconContainer: { width: 20, height: 20, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
   stepIcon: { fontSize: 18, flexShrink: 0 },
   stepText: {
     flex: 1,

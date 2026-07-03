@@ -6,19 +6,25 @@ import * as ImagePicker from 'expo-image-picker';
 import { useStyles, createStyleSheet } from 'react-native-unistyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
+import { Camera, Plus } from 'lucide-react-native';
 
 import { api, type NativeFile } from '../../src/lib/api';
 import { Button } from '../../src/components/ui/Button';
 import { useToast } from '../../src/components/ui/Toast';
 
 export default function OnboardScreen() {
-  const { styles } = useStyles(stylesheet);
+  const { styles, theme } = useStyles(stylesheet);
   const router = useRouter();
   const toast = useToast();
   const insets = useSafeAreaInsets();
 
   const [photo, setPhoto] = useState<{ uri: string; file: NativeFile } | null>(null);
   const [uploading, setUploading] = useState(false);
+
+  const reduced = useReducedMotion();
+  const enter = (step: number) =>
+    reduced ? undefined : FadeInDown.delay(step * 60).springify().damping(20).stiffness(300);
 
   async function pickPhoto() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -57,26 +63,30 @@ export default function OnboardScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
-      <View style={styles.textBlock}>
-        <Text style={styles.emoji}>📸</Text>
+      <Animated.View entering={enter(0)} style={styles.textBlock}>
+        <View style={styles.iconCircle}>
+          <Camera size={28} color={theme.colors.white} strokeWidth={2.2} />
+        </View>
         <Text style={styles.title}>Add your photo</Text>
         <Text style={styles.sub}>
           We use your photo to create a digital avatar for virtual try-ons. Use a clear, well-lit photo in fitted clothing.
         </Text>
-      </View>
+      </Animated.View>
 
-      <TouchableOpacity style={styles.picker} onPress={pickPhoto} activeOpacity={0.8}>
-        {photo ? (
-          <Image source={{ uri: photo.uri }} style={styles.preview} contentFit="cover" />
-        ) : (
-          <View style={styles.placeholder}>
-            <Text style={styles.placeholderIcon}>+</Text>
-            <Text style={styles.placeholderText}>Tap to choose photo</Text>
-          </View>
-        )}
-      </TouchableOpacity>
+      <Animated.View entering={enter(1)} style={{ alignItems: 'center' }}>
+        <TouchableOpacity style={styles.picker} onPress={pickPhoto} activeOpacity={0.8}>
+          {photo ? (
+            <Image source={{ uri: photo.uri }} style={styles.preview} contentFit="cover" />
+          ) : (
+            <View style={styles.placeholder}>
+              <Plus size={36} color={theme.colors.muted} strokeWidth={1.6} />
+              <Text style={styles.placeholderText}>Tap to choose photo</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </Animated.View>
 
-      <View style={styles.actions}>
+      <Animated.View entering={enter(2)} style={styles.actions}>
         <Button
           label={photo ? 'Continue' : 'Choose photo'}
           onPress={photo ? upload : pickPhoto}
@@ -91,7 +101,7 @@ export default function OnboardScreen() {
             fullWidth
           />
         )}
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -105,7 +115,15 @@ const stylesheet = createStyleSheet((theme) => ({
     justifyContent: 'center',
   },
   textBlock: { alignItems: 'center', gap: theme.spacing.sm },
-  emoji: { fontSize: 48 },
+  iconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: theme.radii.full,
+    backgroundColor: theme.colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing.xs,
+  },
   title: {
     fontFamily: theme.typography.families.sans,
     fontWeight: theme.typography.weights.extrabold,
@@ -133,7 +151,6 @@ const stylesheet = createStyleSheet((theme) => ({
   },
   preview: { width: '100%', height: '100%', resizeMode: 'cover' },
   placeholder: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: theme.spacing.sm },
-  placeholderIcon: { fontSize: 40, color: theme.colors.muted },
   placeholderText: {
     fontFamily: theme.typography.families.sans,
     fontSize: theme.typography.sizes.sm,

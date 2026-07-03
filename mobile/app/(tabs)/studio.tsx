@@ -14,6 +14,7 @@ import * as Haptics from 'expo-haptics';
 import { useStyles, createStyleSheet } from 'react-native-unistyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { Eye, Shirt, Zap } from 'lucide-react-native';
 
 import { api, type TryOnStatus, type NativeFile } from '../../src/lib/api';
 import {
@@ -110,7 +111,7 @@ export default function StudioScreen() {
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.title}>Studio ✨</Text>
+      <Text style={styles.title}>Studio</Text>
       <Text style={styles.subtitle}>Virtual try-on — upload a garment</Text>
 
       {/* Garment picker */}
@@ -119,7 +120,7 @@ export default function StudioScreen() {
           <Image source={{ uri: file.uri }} style={styles.pickerImage} contentFit="cover" />
         ) : (
           <View style={styles.pickerEmpty}>
-            <Text style={styles.pickerIcon}>👕</Text>
+            <Shirt size={36} color={theme.colors.muted} strokeWidth={1.5} />
             <Text style={styles.pickerLabel}>Tap to choose garment</Text>
           </View>
         )}
@@ -165,12 +166,12 @@ export default function StudioScreen() {
       {/* First-run coaching — only when nothing is happening yet */}
       {!file && history.length === 0 && !activeJobId && (
         <CoachingCard
-          emoji="🪞"
+          emoji={<Eye size={48} color={theme.colors.accent} strokeWidth={1.5} />}
           title="Virtual try-on"
           steps={[
-            { icon: '👕', text: 'Upload a photo of any garment' },
-            { icon: '🤖', text: 'AI places it on your avatar realistically' },
-            { icon: '⚡', text: 'Results ready in ~15–30 seconds' },
+            { icon: <Shirt size={20} color={theme.colors.muted} strokeWidth={1.5} />, text: 'Upload a photo of any garment' },
+            { icon: <Zap size={20} color={theme.colors.muted} strokeWidth={1.5} />, text: 'AI places it on your avatar realistically' },
+            { icon: <Zap size={20} color={theme.colors.muted} strokeWidth={1.5} />, text: 'Results ready in ~15–30 seconds' },
           ]}
         />
       )}

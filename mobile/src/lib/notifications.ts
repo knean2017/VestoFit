@@ -33,7 +33,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
 export async function scheduleRenderCompleteNotification(success: boolean): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: success ? '✨ Your try-on is ready!' : 'Render failed',
+      title: success ? 'Your try-on is ready!' : 'Render failed',
       body: success
         ? 'Tap to see how the outfit looks on you.'
         : 'Something went wrong. Try again from the Studio tab.',

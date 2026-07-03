@@ -2,13 +2,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AppState, View, Text, TouchableOpacity } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useStyles, createStyleSheet } from 'react-native-unistyles';
+import { Lock } from 'lucide-react-native';
 import { isBiometricAvailable, authenticateWithBiometrics } from '../../lib/biometric';
 import { getToken } from '../../lib/auth';
 
 interface Props { children: React.ReactNode }
 
 export function BiometricGate({ children }: Props) {
-  const { styles } = useStyles(stylesheet);
+  const { styles, theme } = useStyles(stylesheet);
   const [locked, setLocked] = useState(false);
   const appState = useRef(AppState.currentState);
 
@@ -52,7 +53,9 @@ export function BiometricGate({ children }: Props) {
     <>
       {children}
       <Animated.View entering={FadeIn.duration(150)} style={styles.overlay}>
-        <Text style={styles.icon}>🔒</Text>
+        <View style={styles.iconContainer}>
+          <Lock size={48} color={theme.colors.accent} strokeWidth={1.5} />
+        </View>
         <Text style={styles.title}>VestoFit locked</Text>
         <Text style={styles.subtitle}>Authenticate to continue</Text>
         <TouchableOpacity style={styles.btn} onPress={tryUnlock}>
@@ -72,7 +75,7 @@ const stylesheet = createStyleSheet((theme) => ({
     gap: theme.spacing.sm,
     zIndex: 9999,
   },
-  icon: { fontSize: 52, marginBottom: theme.spacing.xs },
+  iconContainer: { width: 64, height: 64, justifyContent: 'center', alignItems: 'center', marginBottom: theme.spacing.xs },
   title: {
     fontFamily: theme.typography.families.sans,
     fontWeight: theme.typography.weights.extrabold,

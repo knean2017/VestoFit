@@ -12,6 +12,7 @@ import * as Haptics from 'expo-haptics';
 import { useStyles, createStyleSheet } from 'react-native-unistyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Sparkles, Shirt, MessageCircle, Target, Shuffle } from 'lucide-react-native';
 
 import { api, type StylistMessage } from '../../src/lib/api';
 import { Input } from '../../src/components/ui/Input';
@@ -29,7 +30,7 @@ const QUICK_PROMPTS = [
 ];
 
 export default function StylistScreen() {
-  const { styles } = useStyles(stylesheet);
+  const { styles, theme } = useStyles(stylesheet);
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();
@@ -91,14 +92,19 @@ export default function StylistScreen() {
           entering={FadeInDown.delay(index < 10 ? 0 : 100).duration(250)}
           style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleAI]}
         >
-          {!isUser && <Text style={styles.roleLabel}>✨ Stylist</Text>}
+          {!isUser && (
+            <View style={styles.roleLabelContainer}>
+              <Sparkles size={14} color={theme.colors.accent} strokeWidth={2} />
+              <Text style={styles.roleLabel}>Stylist</Text>
+            </View>
+          )}
           <Text style={[styles.bubbleText, isUser ? styles.bubbleTextUser : styles.bubbleTextAI]}>
             {item.content}
           </Text>
         </Animated.View>
       );
     },
-    [styles],
+    [styles, theme],
   );
 
   return (
@@ -110,7 +116,7 @@ export default function StylistScreen() {
       <View style={[styles.container, { paddingTop: insets.top }]}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Stylist 💬</Text>
+          <Text style={styles.title}>Stylist</Text>
           <Text style={styles.subtitle}>Ask your AI fashion advisor</Text>
         </View>
 
@@ -120,13 +126,13 @@ export default function StylistScreen() {
         ) : messages.length === 0 ? (
           <View style={styles.center}>
             <CoachingCard
-              emoji="✨"
+              emoji={<Sparkles size={48} color={theme.colors.accent} strokeWidth={1.5} />}
               title="Your AI Stylist"
               subtitle="Ask anything — your closet, outfit ideas, style advice."
               steps={[
-                { icon: '👗', text: 'Add items to your wardrobe first for personalised picks' },
-                { icon: '💬', text: 'Ask a question or tap a suggestion below' },
-                { icon: '🎯', text: 'Request an outfit and we\'ll suggest one from your closet' },
+                { icon: <Shirt size={20} color={theme.colors.muted} strokeWidth={1.5} />, text: 'Add items to your wardrobe first for personalised picks' },
+                { icon: <MessageCircle size={20} color={theme.colors.muted} strokeWidth={1.5} />, text: 'Ask a question or tap a suggestion below' },
+                { icon: <Target size={20} color={theme.colors.muted} strokeWidth={1.5} />, text: 'Request an outfit and we\'ll suggest one from your closet' },
               ]}
             />
             <View style={styles.quickRow}>
@@ -163,14 +169,16 @@ export default function StylistScreen() {
               onPress={() => suggestMutation.mutate(prompt || 'Suggest me an outfit from my wardrobe')}
               disabled={isBusy}
             >
-              <Text style={styles.actionBtnText}>✨ Suggest outfit</Text>
+              <Sparkles size={16} color="#fff" strokeWidth={2} />
+              <Text style={styles.actionBtnText}>Suggest outfit</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionBtn, styles.actionBtnShuffle]}
               onPress={() => rerollMutation.mutate(prompt || 'Give me a different outfit')}
               disabled={isBusy}
             >
-              <Text style={[styles.actionBtnText, styles.actionBtnTextLight]}>🔀 Shuffle</Text>
+              <Shuffle size={16} color={theme.colors.muted} strokeWidth={2} />
+              <Text style={[styles.actionBtnText, styles.actionBtnTextLight]}>Shuffle</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -251,12 +259,17 @@ const stylesheet = createStyleSheet((theme) => ({
     backgroundColor: theme.colors.sand,
     borderBottomLeftRadius: 4,
   },
+  roleLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
   roleLabel: {
     fontFamily: theme.typography.families.sans,
     fontWeight: theme.typography.weights.bold,
     fontSize: theme.typography.sizes.xs,
     color: theme.colors.muted,
-    marginBottom: 4,
   },
   bubbleText: {
     fontFamily: theme.typography.families.sans,
@@ -293,7 +306,10 @@ const stylesheet = createStyleSheet((theme) => ({
     flex: 1,
     padding: theme.spacing.sm,
     borderRadius: theme.radii.lg,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
     borderWidth: 1,
     borderColor: theme.colors.line,
   },
