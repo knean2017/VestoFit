@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { useStyles, createStyleSheet } from 'react-native-unistyles';
+import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 
 import { api } from '../../src/lib/api';
 import { setToken } from '../../src/lib/auth';
@@ -18,6 +19,10 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  const reduced = useReducedMotion();
+  const enter = (step: number) =>
+    reduced ? undefined : FadeInDown.delay(step * 60).springify().damping(20).stiffness(300);
 
   function validate() {
     const e: typeof errors = {};
@@ -51,44 +56,54 @@ export default function LoginScreen() {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.header}>
+        <Animated.View entering={enter(0)} style={styles.header}>
           <Text style={styles.wordmark}>VestoFit</Text>
           <Text style={styles.tagline}>Your AI fashion studio</Text>
-        </View>
+        </Animated.View>
 
         <View style={styles.form}>
-          <Text style={styles.title}>Welcome back</Text>
+          <Animated.View entering={enter(1)}>
+            <Text style={styles.title}>Welcome back</Text>
+          </Animated.View>
 
-          <Input
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            placeholder="you@example.com"
-            error={errors.email}
-          />
-          <Input
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            secureToggle
-            placeholder="••••••••"
-            returnKeyType="done"
-            onSubmitEditing={submit}
-            error={errors.password}
-          />
+          <Animated.View entering={enter(2)}>
+            <Input
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholder="you@example.com"
+              error={errors.email}
+            />
+          </Animated.View>
+          <Animated.View entering={enter(3)}>
+            <Input
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              secureToggle
+              placeholder="••••••••"
+              returnKeyType="done"
+              onSubmitEditing={submit}
+              error={errors.password}
+            />
+          </Animated.View>
 
-          <Button label="Sign in" onPress={submit} loading={loading} fullWidth />
+          <Animated.View entering={enter(4)}>
+            <Button label="Sign in" onPress={submit} loading={loading} fullWidth />
+          </Animated.View>
 
-          <Text style={styles.foot}>
-            Don&apos;t have an account?{' '}
-            <Link href="/(auth)/register" style={{ color: theme.colors.accent, fontWeight: '700' }}>
-              Sign up
-            </Link>
-          </Text>
+          <Animated.View entering={enter(5)}>
+            <Text style={styles.foot}>
+              Don&apos;t have an account?{' '}
+              <Link href="/(auth)/register" style={{ color: theme.colors.accent, fontWeight: '700' }}>
+                Sign up
+              </Link>
+            </Text>
+          </Animated.View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
