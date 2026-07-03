@@ -4,6 +4,7 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
+  useReducedMotion,
   withSpring,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,9 +23,23 @@ const ICONS: Record<string, LucideIcon> = {
 
 const SPRING = { damping: 20, stiffness: 300 };
 
-function TabIcon({ Icon, focused, color }: { Icon: LucideIcon; focused: boolean; color: string }) {
+function TabIcon({
+  Icon,
+  focused,
+  color,
+  reduced,
+}: {
+  Icon: LucideIcon;
+  focused: boolean;
+  color: string;
+  reduced: boolean;
+}) {
   const style = useAnimatedStyle(() => ({
-    transform: [{ scale: withSpring(focused ? 1.12 : 1, SPRING) }],
+    transform: [
+      {
+        scale: reduced ? (focused ? 1.12 : 1) : withSpring(focused ? 1.12 : 1, SPRING),
+      },
+    ],
   }));
   return (
     <Animated.View style={style}>
@@ -37,6 +52,7 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const { styles, theme } = useStyles(stylesheet);
   const insets = useSafeAreaInsets();
   const tabWidth = useSharedValue(0);
+  const reduced = useReducedMotion();
 
   function onLayout(e: LayoutChangeEvent) {
     tabWidth.value = e.nativeEvent.layout.width / state.routes.length;
@@ -44,7 +60,13 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
   const pillStyle = useAnimatedStyle(() => ({
     width: Math.max(tabWidth.value - 24, 0),
-    transform: [{ translateX: withSpring(state.index * tabWidth.value + 12, SPRING) }],
+    transform: [
+      {
+        translateX: reduced
+          ? state.index * tabWidth.value + 12
+          : withSpring(state.index * tabWidth.value + 12, SPRING),
+      },
+    ],
   }));
 
   return (
@@ -84,6 +106,7 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               Icon={Icon}
               focused={focused}
               color={focused ? theme.colors.tabActive : theme.colors.tabInactive}
+              reduced={reduced}
             />
             <Text style={[styles.label, focused && styles.labelActive]}>{label}</Text>
           </Pressable>
