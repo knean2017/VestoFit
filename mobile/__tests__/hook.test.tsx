@@ -54,12 +54,13 @@ describe('HookScreen', () => {
     mockReplace.mockClear();
   });
 
-  test('renders all four slide headlines', async () => {
-    const { getByText } = await render(<HookScreen />);
-    expect(getByText('Your closet. Digital.')).toBeTruthy();
-    expect(getByText('Try it on. Before you buy.')).toBeTruthy();
-    expect(getByText('A stylist who knows you.')).toBeTruthy();
-    expect(getByText('Your turn.')).toBeTruthy();
+  test('renders slide headlines', async () => {
+    const { getByText, queryByText } = await render(<HookScreen />);
+    getByText('Your closet. Digital.');
+    getByText('Try it on. Before you buy.');
+    getByText('A stylist who knows you.');
+    // Slide 4 content mounts only once the pager reaches it.
+    expect(queryByText('Your turn.')).toBeNull();
   });
 
   test('Skip marks hasSeenHook and replaces to login', async () => {
