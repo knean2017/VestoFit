@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { Text } from 'react-native';
-import { render, fireEvent, act, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 import { mockTheme, mockStyles, makeWrapper } from '../src/__mocks__/testUtils';
@@ -146,8 +146,8 @@ afterAll(() => server.close());
 // ── Tests: CoachingCard ───────────────────────────────────────────────────────
 
 describe('CoachingCard', () => {
-  it('renders title and all steps', () => {
-    const { getByText } = render(
+  it('renders title and all steps', async () => {
+    const { getByText } = await render(
       <CoachingCard
         emoji="👗"
         title="Build your wardrobe"
@@ -164,15 +164,15 @@ describe('CoachingCard', () => {
     expect(getByText('Use in Studio')).toBeTruthy();
   });
 
-  it('renders optional subtitle', () => {
-    const { getByText } = render(
+  it('renders optional subtitle', async () => {
+    const { getByText } = await render(
       <CoachingCard emoji="✨" title="Title" subtitle="A helpful tip" steps={[]} />,
     );
     expect(getByText('A helpful tip')).toBeTruthy();
   });
 
-  it('renders children slot', () => {
-    const { getByText } = render(
+  it('renders children slot', async () => {
+    const { getByText } = await render(
       <CoachingCard emoji="✨" title="T" steps={[]}>
         <Text>CTA button</Text>
       </CoachingCard>,
@@ -184,16 +184,16 @@ describe('CoachingCard', () => {
 // ── Tests: Skeleton components ────────────────────────────────────────────────
 
 describe('Skeleton components', () => {
-  it('WardrobeSkeleton renders without crashing', () => {
-    expect(() => render(<WardrobeSkeleton />)).not.toThrow();
+  it('WardrobeSkeleton renders without crashing', async () => {
+    await expect(render(<WardrobeSkeleton />)).resolves.not.toThrow();
   });
 
-  it('StylistSkeleton renders without crashing', () => {
-    expect(() => render(<StylistSkeleton />)).not.toThrow();
+  it('StylistSkeleton renders without crashing', async () => {
+    await expect(render(<StylistSkeleton />)).resolves.not.toThrow();
   });
 
-  it('ShopSkeleton renders without crashing', () => {
-    expect(() => render(<ShopSkeleton />)).not.toThrow();
+  it('ShopSkeleton renders without crashing', async () => {
+    await expect(render(<ShopSkeleton />)).resolves.not.toThrow();
   });
 });
 
@@ -201,40 +201,40 @@ describe('Skeleton components', () => {
 
 describe('LoginScreen — form validation', () => {
   it('shows both errors when submitting empty form', async () => {
-    const { getByText } = render(<LoginScreen />);
-    await act(async () => { fireEvent.press(getByText('Sign in')); });
+    const { getByText } = await render(<LoginScreen />);
+    await fireEvent.press(getByText('Sign in'));
     expect(getByText('Enter a valid email')).toBeTruthy();
     expect(getByText('Password must be 6+ characters')).toBeTruthy();
   });
 
   it('shows email error for missing @', async () => {
-    const { getByPlaceholderText, getByText, queryByText } = render(<LoginScreen />);
-    fireEvent.changeText(getByPlaceholderText('you@example.com'), 'notanemail');
-    fireEvent.changeText(getByPlaceholderText('••••••••'), 'password123');
-    await act(async () => { fireEvent.press(getByText('Sign in')); });
+    const { getByPlaceholderText, getByText, queryByText } = await render(<LoginScreen />);
+    await fireEvent.changeText(getByPlaceholderText('you@example.com'), 'notanemail');
+    await fireEvent.changeText(getByPlaceholderText('••••••••'), 'password123');
+    await fireEvent.press(getByText('Sign in'));
     expect(getByText('Enter a valid email')).toBeTruthy();
     expect(queryByText('Password must be 6+ characters')).toBeNull();
   });
 
   it('shows password error for short password', async () => {
-    const { getByPlaceholderText, getByText, queryByText } = render(<LoginScreen />);
-    fireEvent.changeText(getByPlaceholderText('you@example.com'), 'test@example.com');
-    fireEvent.changeText(getByPlaceholderText('••••••••'), '123');
-    await act(async () => { fireEvent.press(getByText('Sign in')); });
+    const { getByPlaceholderText, getByText, queryByText } = await render(<LoginScreen />);
+    await fireEvent.changeText(getByPlaceholderText('you@example.com'), 'test@example.com');
+    await fireEvent.changeText(getByPlaceholderText('••••••••'), '123');
+    await fireEvent.press(getByText('Sign in'));
     expect(queryByText('Enter a valid email')).toBeNull();
     expect(getByText('Password must be 6+ characters')).toBeTruthy();
   });
 
   it('shows no errors for valid input', async () => {
-    const { getByPlaceholderText, getByText, queryByText } = render(<LoginScreen />);
+    const { getByPlaceholderText, getByText, queryByText } = await render(<LoginScreen />);
     server.use(
       rest.post('http://localhost:8000/auth/login', (_req, res, ctx) =>
         res(ctx.json({ access_token: 'tok', token_type: 'bearer' })),
       ),
     );
-    fireEvent.changeText(getByPlaceholderText('you@example.com'), 'test@example.com');
-    fireEvent.changeText(getByPlaceholderText('••••••••'), 'password123');
-    await act(async () => { fireEvent.press(getByText('Sign in')); });
+    await fireEvent.changeText(getByPlaceholderText('you@example.com'), 'test@example.com');
+    await fireEvent.changeText(getByPlaceholderText('••••••••'), 'password123');
+    await fireEvent.press(getByText('Sign in'));
     expect(queryByText('Enter a valid email')).toBeNull();
     expect(queryByText('Password must be 6+ characters')).toBeNull();
   });
@@ -243,14 +243,14 @@ describe('LoginScreen — form validation', () => {
 // ── Tests: WardrobeScreen ─────────────────────────────────────────────────────
 
 describe('WardrobeScreen', () => {
-  it('renders header and add button', () => {
-    const { getByText } = render(<WardrobeScreen />, { wrapper: makeWrapper() });
+  it('renders header and add button', async () => {
+    const { getByText } = await render(<WardrobeScreen />, { wrapper: makeWrapper() });
     expect(getByText('Wardrobe')).toBeTruthy();
     expect(getByText('+ Add')).toBeTruthy();
   });
 
   it('renders wardrobe items after load', async () => {
-    const { getByText } = render(<WardrobeScreen />, { wrapper: makeWrapper() });
+    const { getByText } = await render(<WardrobeScreen />, { wrapper: makeWrapper() });
     await waitFor(() => {
       expect(getByText('White tee')).toBeTruthy();
       expect(getByText('Blue jeans')).toBeTruthy();
@@ -261,7 +261,7 @@ describe('WardrobeScreen', () => {
     server.use(
       rest.get('http://localhost:8000/wardrobe/items', (_req, res, ctx) => res(ctx.json([]))),
     );
-    const { getByText } = render(<WardrobeScreen />, { wrapper: makeWrapper() });
+    const { getByText } = await render(<WardrobeScreen />, { wrapper: makeWrapper() });
     await waitFor(() => {
       expect(getByText('Build your wardrobe')).toBeTruthy();
     });

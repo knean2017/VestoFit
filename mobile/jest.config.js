@@ -8,7 +8,7 @@ module.exports = {
       'expo-image-picker|expo-image|expo-constants|expo-web-browser|expo-location|' +
       'expo-notifications|expo-font|expo-status-bar|expo-application|' +
       '@expo|@unimodules|' +
-      'react-native|@react-native|@react-native-async-storage|react-native-reanimated|' +
+      'react-native|@react-native|@react-native-async-storage|react-native-reanimated|react-native-worklets|' +
       'react-native-gesture-handler|react-native-screens|' +
       'react-native-svg|lucide-react-native|' +
       'react-native-safe-area-context|react-native-unistyles|' +
