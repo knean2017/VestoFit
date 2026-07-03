@@ -166,7 +166,7 @@ export default function StudioScreen() {
       {/* First-run coaching — only when nothing is happening yet */}
       {!file && history.length === 0 && !activeJobId && (
         <CoachingCard
-          emoji={<Eye size={48} color={theme.colors.accent} strokeWidth={1.5} />}
+          icon={<Eye size={48} color={theme.colors.accent} strokeWidth={1.5} />}
           title="Virtual try-on"
           steps={[
             { icon: <Shirt size={20} color={theme.colors.muted} strokeWidth={1.5} />, text: 'Upload a photo of any garment' },

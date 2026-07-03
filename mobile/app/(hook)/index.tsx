@@ -1,9 +1,16 @@
-import React from 'react';
-import { Pressable, Text, View, useWindowDimensions } from 'react-native';
+import React, { useState } from 'react';
+import {
+  Pressable,
+  Text,
+  View,
+  useWindowDimensions,
+  type AccessibilityActionEvent,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -54,6 +61,14 @@ export default function HookScreen() {
 
   const progress = useSharedValue(0);
   const startProgress = useSharedValue(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useAnimatedReaction(
+    () => Math.round(progress.value),
+    (rounded, prev) => {
+      if (rounded !== prev) runOnJS(setActiveIndex)(rounded);
+    },
+  );
 
   function snapTick() {
     Haptics.selectionAsync();
@@ -62,6 +77,24 @@ export default function HookScreen() {
   async function skip() {
     await markHookSeen();
     router.replace('/(auth)/login');
+  }
+
+  function goToSlide(target: number) {
+    const clamped = Math.min(Math.max(target, 0), SLIDE_COUNT - 1);
+    progress.value = withSpring(clamped, SPRING);
+  }
+
+  function onAccessibilityAction(event: AccessibilityActionEvent) {
+    switch (event.nativeEvent.actionName) {
+      case 'increment':
+        goToSlide(activeIndex + 1);
+        break;
+      case 'decrement':
+        goToSlide(activeIndex - 1);
+        break;
+      default:
+        break;
+    }
   }
 
   const pan = Gesture.Pan()
@@ -74,21 +107,34 @@ export default function HookScreen() {
       progress.value = Math.min(Math.max(raw, -0.15), SLIDE_COUNT - 1 + 0.15);
     })
     .onEnd((e) => {
+      const startIndex = Math.round(startProgress.value);
       const fling = -e.velocityX / width;
       const target = Math.round(progress.value + fling * 0.2);
       const clamped = Math.min(Math.max(target, 0), SLIDE_COUNT - 1);
       progress.value = withSpring(clamped, SPRING);
-      runOnJS(snapTick)();
+      if (clamped !== startIndex) {
+        runOnJS(snapTick)();
+      }
     });
 
   return (
     <GestureDetector gesture={pan}>
       <View style={styles.container}>
-        {SLIDES.map((Slide, i) => (
-          <SlidePane key={i} progress={progress} index={i} width={width}>
-            <Slide progress={progress} index={i} />
-          </SlidePane>
-        ))}
+        <View
+          style={styles.pager}
+          accessible
+          accessibilityRole="adjustable"
+          accessibilityLabel="Intro slides"
+          accessibilityValue={{ min: 0, max: SLIDE_COUNT - 1, now: activeIndex }}
+          accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+          onAccessibilityAction={onAccessibilityAction}
+        >
+          {SLIDES.map((Slide, i) => (
+            <SlidePane key={i} progress={progress} index={i} width={width}>
+              <Slide progress={progress} index={i} />
+            </SlidePane>
+          ))}
+        </View>
 
         <Pressable
           testID="hook-skip"
@@ -112,6 +158,9 @@ const stylesheet = createStyleSheet((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
     overflow: 'hidden',
+  },
+  pager: {
+    flex: 1,
   },
   skip: {
     position: 'absolute',

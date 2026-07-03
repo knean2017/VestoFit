@@ -126,7 +126,7 @@ export default function StylistScreen() {
         ) : messages.length === 0 ? (
           <View style={styles.center}>
             <CoachingCard
-              emoji={<Sparkles size={48} color={theme.colors.accent} strokeWidth={1.5} />}
+              icon={<Sparkles size={48} color={theme.colors.accent} strokeWidth={1.5} />}
               title="Your AI Stylist"
               subtitle="Ask anything — your closet, outfit ideas, style advice."
               steps={[

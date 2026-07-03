@@ -199,7 +199,7 @@ export default function WardrobeScreen() {
       ) : items.length === 0 ? (
         <View style={styles.center}>
           <CoachingCard
-            emoji={<Shirt size={48} color={theme.colors.accent} strokeWidth={1.5} />}
+            icon={<Shirt size={48} color={theme.colors.accent} strokeWidth={1.5} />}
             title="Build your wardrobe"
             subtitle="Upload your clothing and let AI tag everything automatically."
             steps={[

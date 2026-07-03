@@ -150,12 +150,12 @@ describe('CoachingCard', () => {
   it('renders title and all steps', async () => {
     const { getByText } = await render(
       <CoachingCard
-        emoji="👗"
+        icon={<Text>👗</Text>}
         title="Build your wardrobe"
         steps={[
-          { icon: '📸', text: 'Upload a photo' },
-          { icon: '🏷️', text: 'AI tags it' },
-          { icon: '✨', text: 'Use in Studio' },
+          { icon: <Text>📸</Text>, text: 'Upload a photo' },
+          { icon: <Text>🏷️</Text>, text: 'AI tags it' },
+          { icon: <Text>✨</Text>, text: 'Use in Studio' },
         ]}
       />,
     );
@@ -167,14 +167,14 @@ describe('CoachingCard', () => {
 
   it('renders optional subtitle', async () => {
     const { getByText } = await render(
-      <CoachingCard emoji="✨" title="Title" subtitle="A helpful tip" steps={[]} />,
+      <CoachingCard icon={<Text>✨</Text>} title="Title" subtitle="A helpful tip" steps={[]} />,
     );
     expect(getByText('A helpful tip')).toBeTruthy();
   });
 
   it('renders children slot', async () => {
     const { getByText } = await render(
-      <CoachingCard emoji="✨" title="T" steps={[]}>
+      <CoachingCard icon={<Text>✨</Text>} title="T" steps={[]}>
         <Text>CTA button</Text>
       </CoachingCard>,
     );

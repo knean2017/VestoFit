@@ -140,7 +140,7 @@ export default function ShopScreen() {
         {/* Empty state coaching */}
         {!askMutation.isPending && !lastResponse && (
           <CoachingCard
-            emoji={<ShoppingBag size={48} color={theme.colors.accent} strokeWidth={1.5} />}
+            icon={<ShoppingBag size={48} color={theme.colors.accent} strokeWidth={1.5} />}
             title="Find your next favourite"
             steps={[
               { icon: <MessageCircle size={20} color={theme.colors.muted} strokeWidth={1.5} />, text: 'Type what you want — brand, style, budget, occasion' },

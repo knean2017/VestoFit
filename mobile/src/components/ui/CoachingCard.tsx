@@ -9,20 +9,18 @@ interface Step {
 }
 
 interface CoachingCardProps {
-  emoji: React.ReactNode;
+  icon: React.ReactNode;
   title: string;
   subtitle?: string;
   steps: Step[];
   children?: React.ReactNode;
 }
 
-export function CoachingCard({ emoji, title, subtitle, steps, children }: CoachingCardProps) {
-  const { styles, theme } = useStyles(stylesheet);
+export function CoachingCard({ icon, title, subtitle, steps, children }: CoachingCardProps) {
+  const { styles } = useStyles(stylesheet);
   return (
     <Animated.View entering={FadeInDown.duration(400).springify()} style={styles.card}>
-      <View style={styles.emojiContainer}>
-        {typeof emoji === 'string' ? <Text style={styles.emoji}>{emoji}</Text> : emoji}
-      </View>
+      <View style={styles.emojiContainer}>{icon}</View>
       <Text style={styles.title}>{title}</Text>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       <View style={styles.steps}>
@@ -31,9 +29,7 @@ export function CoachingCard({ emoji, title, subtitle, steps, children }: Coachi
             <View style={styles.stepBadge}>
               <Text style={styles.stepNum}>{i + 1}</Text>
             </View>
-            <View style={styles.stepIconContainer}>
-              {typeof step.icon === 'string' ? <Text style={styles.stepIcon}>{step.icon}</Text> : step.icon}
-            </View>
+            <View style={styles.stepIconContainer}>{step.icon}</View>
             <Text style={styles.stepText}>{step.text}</Text>
           </View>
         ))}
@@ -50,7 +46,6 @@ const stylesheet = createStyleSheet((theme) => ({
     gap: theme.spacing.sm,
   },
   emojiContainer: { width: 64, height: 64, justifyContent: 'center', alignItems: 'center' },
-  emoji: { fontSize: 52, marginBottom: theme.spacing.xs },
   title: {
     fontFamily: theme.typography.families.sans,
     fontWeight: theme.typography.weights.extrabold,
@@ -95,7 +90,6 @@ const stylesheet = createStyleSheet((theme) => ({
     color: '#fff',
   },
   stepIconContainer: { width: 20, height: 20, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
-  stepIcon: { fontSize: 18, flexShrink: 0 },
   stepText: {
     flex: 1,
     fontFamily: theme.typography.families.sans,

@@ -24,14 +24,17 @@ const CHAT: { role: 'user' | 'stylist'; text: string }[] = [
   { role: 'user', text: 'Show me on me.' },
 ];
 
-function TypingDot({ delay, reduced }: { delay: number; reduced: boolean }) {
+function TypingDot({ delay, reduced, active }: { delay: number; reduced: boolean; active: boolean }) {
   const { styles } = useStyles(stylesheet);
   const t = useSharedValue(0.4);
   useEffect(() => {
-    if (reduced) return;
-    t.value = withDelay(delay, withRepeat(withTiming(1, { duration: 400 }), -1, true));
+    if (active && !reduced) {
+      t.value = withDelay(delay, withRepeat(withTiming(1, { duration: 400 }), -1, true));
+    } else {
+      cancelAnimation(t);
+    }
     return () => cancelAnimation(t);
-  }, [delay, reduced, t]);
+  }, [active, delay, reduced, t]);
   const style = useAnimatedStyle(() => ({ opacity: t.value }));
   return <Animated.View style={[styles.typingDot, style]} />;
 }
@@ -42,7 +45,9 @@ export function Slide3Stylist({ progress, index }: SlideProps) {
   const active = useActiveSlide(progress, index);
   const [shown, setShown] = useState(false);
 
-  // Bubbles animate in the first time the slide becomes active, then stay.
+  // Bubbles animate in the first time the slide becomes active, then stay mounted.
+  // The typing-dot loops below are gated on `active` directly so they stop
+  // running in the background once the slide is no longer in view.
   useEffect(() => {
     if (active) setShown(true);
   }, [active]);
@@ -75,9 +80,9 @@ export function Slide3Stylist({ progress, index }: SlideProps) {
           ))}
         {shown && (
           <Animated.View entering={enter(CHAT.length)} style={[styles.bubble, styles.stylistBubble]}>
-            <TypingDot delay={0} reduced={reduced} />
-            <TypingDot delay={130} reduced={reduced} />
-            <TypingDot delay={260} reduced={reduced} />
+            <TypingDot delay={0} reduced={reduced} active={active} />
+            <TypingDot delay={130} reduced={reduced} active={active} />
+            <TypingDot delay={260} reduced={reduced} active={active} />
           </Animated.View>
         )}
       </View>
