@@ -25,6 +25,8 @@ export default function RootLayout() {
             <BiometricGate>
             <StatusBar style="auto" />
             <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(hook)" />
               <Stack.Screen name="(auth)" />
               <Stack.Screen name="(onboard)" />
               <Stack.Screen name="(tabs)" />
