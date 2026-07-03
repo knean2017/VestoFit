@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, type AccessibilityActionEvent } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -23,13 +23,25 @@ function Dot({ progress, index }: { progress: SharedValue<number>; index: number
 export function ProgressDots({
   progress,
   count,
+  activeIndex,
+  onAccessibilityAction,
 }: {
   progress: SharedValue<number>;
   count: number;
+  activeIndex: number;
+  onAccessibilityAction: (event: AccessibilityActionEvent) => void;
 }) {
   const { styles } = useStyles(stylesheet);
   return (
-    <View style={styles.row} accessibilityLabel="Onboarding progress">
+    <View
+      style={styles.row}
+      accessible
+      accessibilityRole="adjustable"
+      accessibilityLabel="Intro slides"
+      accessibilityValue={{ min: 0, max: count - 1, now: activeIndex }}
+      accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+      onAccessibilityAction={onAccessibilityAction}
+    >
       {Array.from({ length: count }, (_, i) => (
         <Dot key={i} progress={progress} index={i} />
       ))}

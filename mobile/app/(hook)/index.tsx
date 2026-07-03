@@ -120,21 +120,11 @@ export default function HookScreen() {
   return (
     <GestureDetector gesture={pan}>
       <View style={styles.container}>
-        <View
-          style={styles.pager}
-          accessible
-          accessibilityRole="adjustable"
-          accessibilityLabel="Intro slides"
-          accessibilityValue={{ min: 0, max: SLIDE_COUNT - 1, now: activeIndex }}
-          accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
-          onAccessibilityAction={onAccessibilityAction}
-        >
-          {SLIDES.map((Slide, i) => (
-            <SlidePane key={i} progress={progress} index={i} width={width}>
-              <Slide progress={progress} index={i} />
-            </SlidePane>
-          ))}
-        </View>
+        {SLIDES.map((Slide, i) => (
+          <SlidePane key={i} progress={progress} index={i} width={width}>
+            <Slide progress={progress} index={i} />
+          </SlidePane>
+        ))}
 
         <Pressable
           testID="hook-skip"
@@ -146,7 +136,12 @@ export default function HookScreen() {
         </Pressable>
 
         <View style={[styles.dots, { bottom: insets.bottom + 24 }]}>
-          <ProgressDots progress={progress} count={SLIDE_COUNT} />
+          <ProgressDots
+            progress={progress}
+            count={SLIDE_COUNT}
+            activeIndex={activeIndex}
+            onAccessibilityAction={onAccessibilityAction}
+          />
         </View>
       </View>
     </GestureDetector>
@@ -158,9 +153,6 @@ const stylesheet = createStyleSheet((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
     overflow: 'hidden',
-  },
-  pager: {
-    flex: 1,
   },
   skip: {
     position: 'absolute',
