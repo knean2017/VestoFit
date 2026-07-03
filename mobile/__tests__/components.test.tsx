@@ -85,6 +85,7 @@ jest.mock('../src/components/ui/Toast', () => ({
 }));
 
 jest.mock('@lodev09/react-native-true-sheet', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const React = require('react');
   return { TrueSheet: React.forwardRef(function MockSheet({ children }: any) { return children ?? null; }) };
 });

@@ -15,7 +15,10 @@ import { useStyles, createStyleSheet } from 'react-native-unistyles';
 import type { SlideProps } from './types';
 import { useActiveSlide } from './useActiveSlide';
 
+// Static assets must use require() in React Native (Metro bundler)
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const BEFORE = require('../../../assets/demo/morph-before.png');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const AFTER = require('../../../assets/demo/morph-after.png');
 
 export function Slide2TryOn({ progress, index }: SlideProps) {
