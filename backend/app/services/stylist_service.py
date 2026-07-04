@@ -178,3 +178,128 @@ async def ask_stylist(
     )
     await db.commit()
     return result
+
+
+async def _recent_history(
+    db: AsyncSession, user_id: uuid.UUID, limit: int = 12
+) -> list[dict[str, str]]:
+    res = await db.execute(
+        select(StylistMessage)
+        .where(StylistMessage.user_id == user_id)
+        .order_by(StylistMessage.created_at.desc())
+        .limit(limit)
+    )
+    rows = list(res.scalars().all())
+    return [{"role": m.role, "content": m.content} for m in reversed(rows)]
+
+
+async def _load_profile_data(db: AsyncSession, user_id: uuid.UUID) -> dict | None:
+    from app.services.style_profile_service import get_profile_data
+
+    return await get_profile_data(db, user_id)
+
+
+async def chat_with_stylist(db: AsyncSession, user, prompt: str) -> dict:
+    import app.services.llm_service as llm
+    import app.services.shopping_service as shopping
+
+    wardrobe = await _load_wardrobe(db, user.id)
+    catalog = wardrobe_catalog_json(wardrobe)
+    profile = await _load_profile_data(db, user.id)
+    history = await _recent_history(db, user.id)
+
+    try:
+        parsed = await llm.stylist_chat(
+            catalog,
+            prompt,
+            history=history,
+            profile=profile,
+            city=user.city,
+            country=user.country,
+        )
+    except LlmError:
+        parsed = {
+            "reply": "I'm having trouble thinking right now — give me a moment and try again.",
+            "chips": ["Try again"],
+            "action": None,
+        }
+
+    reply: str = parsed["reply"]
+    chips = parsed["chips"]
+    action = parsed["action"] or {}
+    action_type = action.get("type")
+
+    outfit = None
+    outfit_item_ids: list[str] | None = None
+    results = None
+    search_query = None
+    currency = "USD"
+    no_local = False
+
+    if action_type in ("outfit", "mix"):
+        ids = _parse_item_ids(action.get("item_ids") or [])
+        if ids:
+            try:
+                items = await fetch_owned_items(db, user.id, ids)
+                validate_combo(items)
+                outfit = await create_outfit(
+                    db,
+                    user.id,
+                    [i.id for i in items],
+                    source="llm",
+                    prompt=prompt,
+                    reasoning=reply,
+                )
+                outfit_item_ids = [str(i.id) for i in items]
+            except OutfitValidationError:
+                reply += " Hmm, I couldn't finalize that exact combo from your closet — want me to try another one?"
+                chips = chips or ["Try again"]
+
+    if action_type in ("shop", "mix"):
+        search = action.get("search") or {}
+        query = str(search.get("query") or "").strip()
+        if query:
+            search_query = query
+            budget_max = search.get("budget_max")
+            budget_max = (
+                float(budget_max)
+                if isinstance(budget_max, (int, float)) and budget_max > 0
+                else None
+            )
+            category = search.get("category")
+            if category not in ("tops", "bottoms", "dresses"):
+                category = None
+            product_result = await shopping.search_products(
+                query=query,
+                budget_max=budget_max,
+                category=category,
+                country=user.country,
+                city=user.city,
+                lat=user.lat,
+                lng=user.lng,
+            )
+            results = product_result["results"]
+            currency = product_result["currency"]
+            no_local = product_result["no_local"]
+
+    db.add(StylistMessage(user_id=user.id, role="user", content=prompt))
+    db.add(
+        StylistMessage(
+            user_id=user.id,
+            role="assistant",
+            content=reply,
+            outfit_id=outfit.id if outfit else None,
+        )
+    )
+    await db.commit()
+
+    return {
+        "reply": reply,
+        "chips": chips,
+        "outfit": outfit,
+        "outfit_item_ids": outfit_item_ids,
+        "results": results,
+        "search_query": search_query,
+        "currency": currency,
+        "no_local": no_local,
+    }
