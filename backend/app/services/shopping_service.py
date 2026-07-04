@@ -113,6 +113,9 @@ async def search_products(
     if isinstance(stores, Exception):
         stores = []
 
+    if not products and settings.gemini_api_key:
+        products = await _search_grounded(query, budget_max, category, country, city)
+
     all_results = list(products) + list(stores)
     no_local = len(all_results) == 0
 
@@ -191,6 +194,49 @@ async def _search_serpapi(
                 source=r.get("source", ""),
                 category=category,
                 kind="product",
+            )
+        )
+    return items
+
+
+async def _search_grounded(
+    query: str,
+    budget_max: float | None,
+    category: str | None,
+    country: str | None,
+    city: str | None,
+) -> list[ShoppingResultItem]:
+    import app.services.llm_service as llm
+    from app.services.shopping_locale import currency_for, retailers_for
+
+    currency = currency_for(country) if country else "USD"
+    try:
+        raw_items = await llm.grounded_product_search(
+            query,
+            country=country,
+            city=city,
+            currency=currency,
+            budget_max=budget_max,
+            retailers=retailers_for(country) if country else None,
+        )
+    except llm.LlmError:
+        return []
+
+    items: list[ShoppingResultItem] = []
+    for r in raw_items:
+        if budget_max and r["price"] > budget_max:
+            continue
+        items.append(
+            ShoppingResultItem(
+                title=r["title"],
+                price=r["price"],
+                currency=r["currency"] or currency,
+                image_url=r["image_url"],
+                product_url=r["product_url"],
+                source=r["store"],
+                category=category,
+                kind="product",
+                approx=True,
             )
         )
     return items

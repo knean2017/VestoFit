@@ -23,6 +23,7 @@ class ShoppingResultItem(BaseModel):
     source: str
     category: str | None = None
     kind: Literal["product", "store"] = "product"
+    approx: bool = False  # True when price came from grounded LLM search, not a shopping feed
     # store-only fields
     address: str | None = None
     phone: str | None = None
