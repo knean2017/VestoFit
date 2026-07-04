@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import json
 import re
@@ -46,11 +47,17 @@ async def _gemini_generate(
         body["generationConfig"] = {"responseMimeType": "application/json"}
 
     async with httpx.AsyncClient(timeout=60) as client:
-        r = await client.post(
-            url,
-            params={"key": _settings.gemini_api_key},
-            json=body,
-        )
+        # Gemini intermittently returns 503 UNAVAILABLE under load; retry briefly.
+        for attempt in range(3):
+            r = await client.post(
+                url,
+                params={"key": _settings.gemini_api_key},
+                json=body,
+            )
+            if r.status_code in (503, 429) and attempt < 2:
+                await asyncio.sleep(2 * (attempt + 1))
+                continue
+            break
         if r.status_code >= 400:
             raise LlmError(f"Gemini error ({r.status_code}): {r.text[:300]}")
         data = r.json()

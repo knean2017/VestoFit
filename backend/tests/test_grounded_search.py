@@ -53,6 +53,52 @@ def test_parse_garbage_returns_empty():
     assert _parse_grounded_products("I could not find anything, sorry!") == []
 
 
+async def test_gemini_generate_retries_on_503(monkeypatch):
+    import json
+
+    attempts = {"count": 0}
+
+    class FakeResponse:
+        def __init__(self, status_code, payload):
+            self.status_code = status_code
+            self._payload = payload
+            self.text = json.dumps(payload)
+
+        def json(self):
+            return self._payload
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *exc):
+            return False
+
+        async def post(self, url, **kwargs):
+            attempts["count"] += 1
+            if attempts["count"] < 3:
+                return FakeResponse(503, {"error": {"code": 503, "status": "UNAVAILABLE"}})
+            return FakeResponse(
+                200,
+                {"candidates": [{"content": {"parts": [{"text": "ok"}]}}]},
+            )
+
+    monkeypatch.setattr(llm_service.httpx, "AsyncClient", FakeClient)
+    monkeypatch.setattr(llm_service._settings, "gemini_api_key", "test-key")
+
+    async def no_sleep(_seconds):
+        return None
+
+    monkeypatch.setattr(llm_service.asyncio, "sleep", no_sleep)
+
+    result = await llm_service._gemini_generate([{"text": "hi"}], json_mode=False)
+    assert result == "ok"
+    assert attempts["count"] == 3
+
+
 async def test_grounded_product_search_calls_gemini(monkeypatch):
     captured = {}
 
