@@ -13,6 +13,8 @@ from app.schemas.stylist import (
     StyleProfileResponse,
     StyleProfileUpdateRequest,
     StylistAskRequest,
+    StylistChatRequest,
+    StylistChatResponse,
     StylistAskResponse,
     StylistMessageResponse,
     StylistRerollRequest,
@@ -27,7 +29,7 @@ from app.services.style_profile_service import (
     get_profile,
     update_preferences,
 )
-from app.services.stylist_service import ask_stylist, suggest_outfit
+from app.services.stylist_service import ask_stylist, chat_with_stylist, suggest_outfit
 
 router = APIRouter(prefix="/stylist", tags=["stylist"])
 
@@ -131,6 +133,25 @@ async def list_messages(
         )
         for m in res.scalars().all()
     ]
+
+
+@router.post("/chat", response_model=StylistChatResponse)
+async def chat(
+    payload: StylistChatRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    out = await chat_with_stylist(db, user, payload.prompt)
+    return StylistChatResponse(
+        reply=out["reply"],
+        chips=out["chips"],
+        outfit_id=str(out["outfit"].id) if out["outfit"] else None,
+        outfit_item_ids=out["outfit_item_ids"],
+        results=out["results"],
+        search_query=out["search_query"],
+        currency=out["currency"],
+        no_local=out["no_local"],
+    )
 
 
 def _profile_response(profile) -> StyleProfileResponse:
