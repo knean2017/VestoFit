@@ -1,6 +1,6 @@
 # Render Quotas & Plan Gating Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Make the pricing page true — track try-on render usage per calendar month and enforce Free (5), Pro (50), Premium (unlimited) limits, with a usage API and a settings meter, so free users stop consuming unlimited paid FAL renders.
 
@@ -37,7 +37,7 @@
   - `async ensure_render_allowed(db, user_id) -> None` — raises `QuotaExceededError` at/over limit
   - `_month_start(now: datetime) -> datetime` — pure helper, first instant of `now`'s month in UTC
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `backend/tests/test_quota_service.py`:
 
@@ -153,12 +153,12 @@ async def test_unknown_plan_treated_as_free(monkeypatch):
         await ensure_render_allowed(None, USER_ID)
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests/test_quota_service.py -v`
 Expected: FAIL with `ModuleNotFoundError: No module named 'app.services.quota_service'`
 
-- [ ] **Step 3: Implement the service**
+- [x] **Step 3: Implement the service**
 
 `backend/app/services/quota_service.py`:
 
@@ -232,12 +232,12 @@ async def ensure_render_allowed(db: AsyncSession, user_id: uuid.UUID) -> None:
 
 Note: `get_render_usage` calls the module-global `count_renders_this_month`, so the tests' `monkeypatch.setattr(quota_service, "count_renders_this_month", ...)` takes effect.
 
-- [ ] **Step 4: Run tests to verify pass**
+- [x] **Step 4: Run tests to verify pass**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests/test_quota_service.py -v`
 Expected: 10 PASSED.
 
-- [ ] **Step 5: Run the full suite and commit**
+- [x] **Step 5: Run the full suite and commit**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests -v`
 Expected: all PASSED (30 existing + 10 new).
@@ -258,7 +258,7 @@ git commit -m "feat(billing): quota service — plan limits and monthly render c
 - Consumes: `ensure_render_allowed`, `QuotaExceededError` from Task 1.
 - Produces: HTTP 402 with the QuotaExceededError message as `detail` on all three endpoints; a `_check_quota` helper local to the router.
 
-- [ ] **Step 1: Add imports and helper**
+- [x] **Step 1: Add imports and helper**
 
 In `backend/app/routers/tryon.py`, extend the service imports (after the `from app.services.tryon_service import ...` line):
 
@@ -276,7 +276,7 @@ async def _check_quota(db: AsyncSession, user_id: uuid.UUID) -> None:
         raise HTTPException(status.HTTP_402_PAYMENT_REQUIRED, str(e)) from e
 ```
 
-- [ ] **Step 2: Call it first in each endpoint**
+- [x] **Step 2: Call it first in each endpoint**
 
 In `tryon_url`, `tryon_upload`, and `tryon_outfit`, insert as the FIRST line of the function body (before `_get_avatar` / content-type checks):
 
@@ -284,12 +284,12 @@ In `tryon_url`, `tryon_upload`, and `tryon_outfit`, insert as the FIRST line of 
     await _check_quota(db, user.id)
 ```
 
-- [ ] **Step 3: Verify app imports and suite passes**
+- [x] **Step 3: Verify app imports and suite passes**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -c "from app.main import app; print('ok')" && python -m pytest tests -q`
 Expected: `ok`, all PASSED.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add backend/app/routers/tryon.py
@@ -308,7 +308,7 @@ git commit -m "feat(tryon): enforce monthly render quota with 402 before any wor
 - Consumes: `get_render_usage` (Task 1).
 - Produces: `GET /billing/usage` → `RenderUsage {plan: str, limit: int | None, used: int, remaining: int | None}`. Task 4's frontend calls this.
 
-- [ ] **Step 1: Add the schema**
+- [x] **Step 1: Add the schema**
 
 Append to `backend/app/schemas/subscription.py`:
 
@@ -320,7 +320,7 @@ class RenderUsage(BaseModel):
     remaining: int | None = None
 ```
 
-- [ ] **Step 2: Add the endpoint**
+- [x] **Step 2: Add the endpoint**
 
 In `backend/app/routers/billing.py`: extend the schemas import with `RenderUsage`, add `from app.services.quota_service import get_render_usage` to the imports, and append:
 
@@ -333,12 +333,12 @@ async def render_usage(
     return RenderUsage(**await get_render_usage(db, user.id))
 ```
 
-- [ ] **Step 3: Verify route registration and suite**
+- [x] **Step 3: Verify route registration and suite**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -c "from app.main import app; assert any(getattr(r, 'path', '') == '/billing/usage' for r in app.routes); print('route ok')" && python -m pytest tests -q`
 Expected: `route ok`, all PASSED.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add backend/app/schemas/subscription.py backend/app/routers/billing.py
@@ -357,7 +357,7 @@ git commit -m "feat(billing): GET /billing/usage render quota endpoint"
 - Consumes: `GET /billing/usage` (Task 3).
 - Produces: `api.renderUsage()`, `RenderUsage` type, a usage meter row inside the existing subscription card.
 
-- [ ] **Step 1: Add API type and method**
+- [x] **Step 1: Add API type and method**
 
 In `frontend/src/lib/api.ts`, add next to the other exported types:
 
@@ -378,7 +378,7 @@ Add to the `api` object directly after the `billingSubscription()` method:
   },
 ```
 
-- [ ] **Step 2: Render the meter in SubscriptionSection**
+- [x] **Step 2: Render the meter in SubscriptionSection**
 
 In `frontend/src/app/settings/page.tsx`, inside `SubscriptionSection`, add state + fetch at the top of the component:
 
@@ -419,12 +419,12 @@ Extend the settings page's api import with `type RenderUsage`. Then render, at t
 
 (`Link`, `useState`, `useEffect` are already imported in this file.)
 
-- [ ] **Step 3: Typecheck**
+- [x] **Step 3: Typecheck**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/frontend && npx tsc --noEmit`
 Expected: clean.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add frontend/src/lib/api.ts frontend/src/app/settings/page.tsx
@@ -437,12 +437,12 @@ git commit -m "feat(settings): render usage meter with upgrade CTA"
 
 **Files:** none — verification only; fixes get their own commits.
 
-- [ ] **Step 1: Restart backend so new code loads**
+- [x] **Step 1: Restart backend so new code loads**
 
 Run: `cd C:/Users/Envy/Desktop/VTO && docker compose up -d db backend && sleep 8 && docker logs vto-backend-1 --tail 3`
 Expected: "Application startup complete", no tracebacks. (Backend bind-mounts `./backend`, uvicorn `--reload` picks changes automatically; the restart is belt-and-braces.)
 
-- [ ] **Step 2: Seed a free user at the limit**
+- [x] **Step 2: Seed a free user at the limit**
 
 Register `quota-test@example.com` / `Test12345!` via `POST /auth/register`, then insert a fake avatar + 5 non-failed jobs:
 
@@ -459,18 +459,18 @@ WHERE u.email='quota-test@example.com';
 
 (If `avatars` has NOT NULL columns beyond these, inspect with `\d avatars` and fill accordingly.)
 
-- [ ] **Step 3: Verify 402 + usage endpoint**
+- [x] **Step 3: Verify 402 + usage endpoint**
 
 With the user's token:
 - `GET /billing/usage` → `{"plan": "free", "limit": 5, "used": 5, "remaining": 0}`
 - `POST /tryon/url` with `{"garment_url": "https://example.com/x.jpg"}` → **402**, detail contains "used all 5".
 - Mark one job failed (`UPDATE tryon_jobs SET status='failed' WHERE ...LIMIT via ctid or id`), re-check usage → `used: 4`, and `POST /tryon/url` now passes quota (may fail later on the fake avatar — anything other than 402 proves the gate ordering).
 
-- [ ] **Step 4: Settings meter spot-check**
+- [x] **Step 4: Settings meter spot-check**
 
 `cd frontend && npm run dev` (or docker frontend), log in as the seeded user, open `/settings` → subscription card shows "5 / 5" meter and "Out of renders — upgrade →" link.
 
-- [ ] **Step 5: Clean up and commit fixes if any**
+- [x] **Step 5: Clean up and commit fixes if any**
 
 ```sql
 DELETE FROM users WHERE email='quota-test@example.com';
