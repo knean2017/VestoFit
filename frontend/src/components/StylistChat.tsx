@@ -13,9 +13,9 @@ type ChatMessage = {
   chips?: string[];
   searchTriggered?: boolean;
   shopQuery?: string;
+  results?: ShoppingResultItem[];
+  currency?: string;
 };
-
-const SHOP_KEYWORDS = /\b(buy|purchase|shop|find|where.+get|looking for|recommend.+store|price|budget|affordable|under \$)\b/i;
 
 const DEFAULT_GREETINGS = {
   stylist:
@@ -117,19 +117,30 @@ export default function StylistChat({
 
     try {
       if (mode === "stylist") {
-        const res = await api.stylistSuggest(text);
+        const res = await api.stylistChat(text);
         clearTimeout(timer);
-        const reply = res.reasoning;
-        const hasShopIntent = SHOP_KEYWORDS.test(text) || SHOP_KEYWORDS.test(reply);
         const assistantMsg: ChatMessage = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: reply,
-          shopQuery: hasShopIntent ? text : undefined,
+          content: res.reply,
+          chips: res.chips?.slice(0, 4) ?? undefined,
+          results: res.results ?? undefined,
+          currency: res.currency,
+          shopQuery: res.search_query ?? undefined,
         };
         setMessages((prev) => [...prev, assistantMsg]);
-        onSuggestion?.(reply);
-        onStylistResult?.(res);
+        onSuggestion?.(res.reply);
+        if (res.outfit_id) {
+          onStylistResult?.({
+            reasoning: res.reply,
+            item_ids: res.outfit_item_ids ?? [],
+            outfit_id: res.outfit_id,
+            decline: false,
+          });
+        }
+        if (res.results && onSearchResults) {
+          onSearchResults(res.results, res.currency, res.no_local, undefined);
+        }
       } else {
         const history = messages.slice(-10).map((m) => ({
           role: m.role,
@@ -301,6 +312,32 @@ export default function StylistChat({
                   >
                     Shop these →
                   </button>
+                )}
+                {msg.results && msg.results.length > 0 && (
+                  <div className="flex gap-2 mt-2 overflow-x-auto pb-1 max-w-md">
+                    {msg.results.slice(0, 6).map((r, i) => (
+                      <a
+                        key={i}
+                        href={r.product_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 w-28 rounded-xl3 border border-line bg-surface2 overflow-hidden hover:border-coral transition-colors"
+                      >
+                        <div className="aspect-[3/4] bg-surface2">
+                          {r.image_url && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={r.image_url} alt={r.title} className="w-full h-full object-cover" />
+                          )}
+                        </div>
+                        <div className="p-1.5">
+                          <p className="text-[10px] leading-tight line-clamp-2">{r.title}</p>
+                          <p className="text-[10px] font-bold text-coral mt-0.5">
+                            {r.price != null ? `${r.approx ? "~" : ""}${msg.currency || "USD"} ${r.price.toFixed(0)}` : r.source}
+                          </p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
                 )}
               </div>
             </motion.div>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/components/Toast";
+import StyleProfileSection from "@/components/settings/StyleProfileSection";
 import { api, type AvatarResponse, type SubscriptionStatus } from "@/lib/api";
 import { clearToken, getToken } from "@/lib/auth";
 
@@ -48,6 +49,7 @@ export default function SettingsPage() {
           <SubscriptionSection sub={sub} />
           <AvatarSection avatar={avatar} setAvatar={setAvatar} />
           <LocationSection />
+          <StyleProfileSection />
           <PasswordSection />
           <HistorySection />
           <DangerSection onDeleted={() => { clearToken(); router.replace("/login"); }} />

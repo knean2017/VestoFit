@@ -112,6 +112,30 @@ export type ShoppingSearchResponse = {
   no_local?: boolean;
 };
 
+export type StylistChatResult = {
+  reply: string;
+  chips?: string[] | null;
+  outfit_id?: string | null;
+  outfit_item_ids?: string[] | null;
+  results?: ShoppingResultItem[] | null;
+  search_query?: string | null;
+  currency?: string;
+  no_local?: boolean;
+};
+
+export type StyleProfileData = {
+  data?: {
+    undertone?: string | null;
+    contrast?: string | null;
+    best_colors?: string[];
+    avoid_colors?: string[];
+    style_notes?: string;
+    user_preferences?: string;
+  } | null;
+  preferences?: string | null;
+  updated_at?: string | null;
+};
+
 export type ShoppingHistoryItem = {
   id: string;
   query: string;
@@ -331,6 +355,27 @@ export const api = {
   },
   stylistMessages() {
     return request<StylistMessage[]>("/stylist/messages");
+  },
+  stylistChat(prompt: string) {
+    return request<StylistChatResult>("/stylist/chat", {
+      method: "POST",
+      body: JSON.stringify({ prompt }),
+    });
+  },
+  styleProfile() {
+    return request<StyleProfileData>("/stylist/profile");
+  },
+  analyzeStyleProfile() {
+    return request<StyleProfileData>("/stylist/profile/analyze", { method: "POST" });
+  },
+  updateStyleProfile(preferences: string) {
+    return request<StyleProfileData>("/stylist/profile", {
+      method: "PUT",
+      body: JSON.stringify({ preferences }),
+    });
+  },
+  deleteStyleProfile() {
+    return request<void>("/stylist/profile", { method: "DELETE" });
   },
   shoppingSearch(
     query: string,
