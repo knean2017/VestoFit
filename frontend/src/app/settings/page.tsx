@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/components/Toast";
 import StyleProfileSection from "@/components/settings/StyleProfileSection";
-import { api, type AvatarResponse, type SubscriptionStatus } from "@/lib/api";
+import { api, type AvatarResponse, type RenderUsage, type SubscriptionStatus } from "@/lib/api";
 import { clearToken, getToken } from "@/lib/auth";
 
 export default function SettingsPage() {
@@ -71,6 +71,10 @@ function SectionCard({ title, children }: { title: string; children: React.React
 }
 
 function SubscriptionSection({ sub }: { sub: SubscriptionStatus | null }) {
+  const [usage, setUsage] = useState<RenderUsage | null>(null);
+  useEffect(() => {
+    api.renderUsage().then(setUsage).catch(() => {});
+  }, []);
   if (!sub) return null;
   return (
     <SectionCard title="Subscription">
@@ -95,6 +99,29 @@ function SubscriptionSection({ sub }: { sub: SubscriptionStatus | null }) {
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted font-medium">Renews</span>
             <span className="text-sm text-ink">{new Date(sub.renews_at).toLocaleDateString()}</span>
+          </div>
+        )}
+        {usage && (
+          <div className="pt-3 border-t border-line/60 space-y-1.5">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted font-medium">Try-on renders this month</span>
+              <span className="font-bold text-ink">
+                {usage.limit === null ? `${usage.used} / ∞` : `${usage.used} / ${usage.limit}`}
+              </span>
+            </div>
+            {usage.limit !== null && (
+              <div className="h-1.5 rounded-full bg-surface2 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-coral transition-all"
+                  style={{ width: `${Math.min((usage.used / usage.limit) * 100, 100)}%` }}
+                />
+              </div>
+            )}
+            {usage.remaining === 0 && (
+              <Link href="/pricing" className="text-xs font-bold text-coral hover:text-ink transition-colors">
+                Out of renders — upgrade →
+              </Link>
+            )}
           </div>
         )}
         <div className="flex flex-wrap gap-2 mt-2">

@@ -112,6 +112,13 @@ export type ShoppingSearchResponse = {
   no_local?: boolean;
 };
 
+export type RenderUsage = {
+  plan: string;
+  limit: number | null;
+  used: number;
+  remaining: number | null;
+};
+
 export type StylistChatResult = {
   reply: string;
   chips?: string[] | null;
@@ -418,5 +425,8 @@ export const api = {
   },
   billingSubscription() {
     return request<SubscriptionStatus>("/billing/subscription");
+  },
+  renderUsage() {
+    return request<RenderUsage>("/billing/usage");
   },
 };
