@@ -30,14 +30,19 @@ def _parse_json(text: str) -> dict[str, Any]:
         raise LlmError(f"Invalid JSON from LLM: {text[:200]}") from e
 
 
-async def _gemini_generate(parts: list[dict], *, json_mode: bool = True) -> str:
+async def _gemini_generate(
+    parts: list[dict], *, json_mode: bool = True, grounded: bool = False
+) -> str:
     if not _settings.gemini_api_key:
         raise LlmError("GEMINI_API_KEY is not configured")
 
     model = _settings.llm_model
     url = f"{_GEMINI_BASE}/models/{model}:generateContent"
     body: dict[str, Any] = {"contents": [{"parts": parts}]}
-    if json_mode:
+    if grounded:
+        # google_search tool is incompatible with responseMimeType: application/json
+        body["tools"] = [{"google_search": {}}]
+    elif json_mode:
         body["generationConfig"] = {"responseMimeType": "application/json"}
 
     async with httpx.AsyncClient(timeout=60) as client:
@@ -228,3 +233,82 @@ async def shopping_ask(
         }
     except LlmError:
         return {"reply": raw, "search": None, "chips": None}
+
+
+GROUNDED_SHOPPING_SYSTEM = """You are a shopping search agent. Use Google Search to find real clothing products currently sold online and available to shoppers in the given location.
+
+Rules:
+- Prefer local retailers and marketplaces that serve the location.
+- Only include products you actually found via search, with their real listing URLs. Never invent products, stores, prices, or URLs.
+- price is the listed price as a number in {currency}. If a listing uses another currency, convert approximately and still report currency as "{currency}".
+- Respond ONLY with a JSON array, no prose:
+[{"title": "<product name>", "price": <number>, "currency": "{currency}", "store": "<retailer name>", "product_url": "<https listing url>", "image_url": "<https image url or empty string>"}]
+- Maximum 8 items. If you find nothing, respond with []."""
+
+
+def _parse_grounded_products(raw: str) -> list[dict[str, Any]]:
+    text = raw.strip()
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text)
+        text = re.sub(r"\s*```$", "", text)
+    if not text.startswith("["):
+        # model may wrap the array in prose; grab the outermost JSON array
+        m = re.search(r"\[.*\]", text, re.DOTALL)
+        if not m:
+            return []
+        text = m.group(0)
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return []
+    if isinstance(data, dict):
+        data = data.get("products", [])
+    if not isinstance(data, list):
+        return []
+
+    items: list[dict[str, Any]] = []
+    for r in data:
+        if not isinstance(r, dict):
+            continue
+        title = str(r.get("title") or "").strip()
+        url = str(r.get("product_url") or "").strip()
+        try:
+            price = float(r.get("price"))
+        except (TypeError, ValueError):
+            continue
+        if not title or price <= 0 or not url.startswith(("http://", "https://")):
+            continue
+        items.append(
+            {
+                "title": title,
+                "price": price,
+                "currency": str(r.get("currency") or "").strip() or "USD",
+                "store": str(r.get("store") or "").strip() or "Online store",
+                "product_url": url,
+                "image_url": str(r.get("image_url") or "").strip(),
+            }
+        )
+    return items[:8]
+
+
+async def grounded_product_search(
+    query: str,
+    *,
+    country: str | None = None,
+    city: str | None = None,
+    currency: str = "USD",
+    budget_max: float | None = None,
+    retailers: list[str] | None = None,
+) -> list[dict[str, Any]]:
+    location_parts = [p for p in (city, country.upper() if country else None) if p]
+    location = ", ".join(location_parts) or "the user's area"
+
+    prompt = GROUNDED_SHOPPING_SYSTEM.replace("{currency}", currency)
+    if retailers:
+        prompt += f"\nPrioritize these retailers when relevant: {', '.join(retailers)}."
+    if budget_max:
+        prompt += f"\nOnly include products priced at or below {budget_max:g} {currency}."
+    prompt += f'\n\nSearch task: find "{query}" for sale online for a shopper in {location}.'
+
+    raw = await _gemini_generate([{"text": prompt}], json_mode=False, grounded=True)
+    return _parse_grounded_products(raw)
