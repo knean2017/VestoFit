@@ -141,3 +141,15 @@ def locale_for(country: str) -> dict | None:
 def currency_for(country: str) -> str:
     """Return the ISO 4217 currency code for a country. Defaults to 'USD' if unknown."""
     return _CURRENCY_MAP.get(country, "USD")
+
+
+# Curated local retail domains for countries google_shopping does not cover.
+# Injected into the grounded-search prompt as "prefer these sites". Grow over time.
+LOCAL_RETAILERS: dict[str, list[str]] = {
+    "az": ["birmarket.az", "umico.az", "trendyol.com", "geyin.az", "ubuy.az"],
+}
+
+
+def retailers_for(country: str) -> list[str]:
+    """Return preferred local retail domains for a country, or [] if none curated."""
+    return LOCAL_RETAILERS.get(country, [])
