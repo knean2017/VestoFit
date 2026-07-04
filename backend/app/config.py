@@ -47,6 +47,12 @@ class Settings(BaseSettings):
     lemonsqueezy_webhook_secret: str = ""
     frontend_url: str = "http://localhost:3000"
 
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    email_from: str = "FitMe <no-reply@fitme.app>"
+
 
 @lru_cache
 def get_settings() -> Settings:
