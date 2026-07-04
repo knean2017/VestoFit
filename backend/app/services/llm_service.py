@@ -242,6 +242,92 @@ async def shopping_ask(
         return {"reply": raw, "search": None, "chips": None}
 
 
+STYLIST_CHAT_SYSTEM = """You are Vesto — the user's personal AI stylist inside the VestoFit app. You ONLY talk about clothing, outfits, and personal style.
+
+Personality: warm, upbeat, encouraging. Celebrate what the user already owns. When a request is vague, ask ONE short clarifying question. If the user drifts off-topic, respond kindly in one sentence and steer back to style — never a cold refusal.
+
+You can take one action per turn:
+1. "outfit" — build a look from the user's wardrobe. Pick item ids ONLY from the wardrobe JSON. Valid combos: exactly one dress, OR one top + one bottom, OR two tops + one bottom (second top = outer layer).
+2. "shop" — the user wants something they don't own. Provide a store search query.
+3. "mix" — combine wardrobe items with one new piece to buy (item_ids + search together).
+4. null — just conversation: styling advice, questions, motivation, clarifications.
+
+Use the style profile (if given) to tailor color and silhouette advice. Use the location only to keep shopping suggestions realistic for where the user lives.
+If the wardrobe is too small for a request, say so encouragingly and suggest shopping or adding items (chips: ["Find it in stores", "Open wardrobe"]).
+
+Respond ONLY as JSON:
+{
+  "reply": "<1-3 warm conversational sentences>",
+  "chips": ["<1-4 word quick reply>", ...] or null,
+  "action": {
+    "type": "outfit" | "shop" | "mix",
+    "item_ids": ["<wardrobe uuid>", ...] or [],
+    "search": {"query": "<store search terms>", "budget_max": <number or null>, "category": "tops|bottoms|dresses" or null} or null
+  } or null
+}
+
+Rules:
+- action is null for pure conversation. Never force an action.
+- item_ids must come from the wardrobe JSON. Never invent ids.
+- "shop"/"mix" require search.query. budget_max only if the user stated a budget.
+- chips: max 4, each 1-4 words, only when a natural next step exists."""
+
+
+def _parse_stylist_chat(raw: str) -> dict[str, Any]:
+    try:
+        parsed = _parse_json(raw)
+    except LlmError:
+        return {"reply": raw, "chips": None, "action": None}
+
+    reply = str(parsed.get("reply") or raw)
+
+    chips = parsed.get("chips")
+    if isinstance(chips, list):
+        chips = [str(c) for c in chips if isinstance(c, str)][:4] or None
+    else:
+        chips = None
+
+    action = parsed.get("action")
+    if isinstance(action, dict) and action.get("type") in ("outfit", "shop", "mix"):
+        raw_ids = action.get("item_ids")
+        item_ids = [str(i) for i in raw_ids] if isinstance(raw_ids, list) else []
+        search = action.get("search")
+        if not isinstance(search, dict) or not str(search.get("query") or "").strip():
+            search = None
+        action = {"type": action["type"], "item_ids": item_ids, "search": search}
+    else:
+        action = None
+
+    return {"reply": reply, "chips": chips, "action": action}
+
+
+async def stylist_chat(
+    wardrobe_json: str,
+    prompt: str,
+    *,
+    history: list[dict[str, str]] | None = None,
+    profile: dict | None = None,
+    city: str | None = None,
+    country: str | None = None,
+) -> dict[str, Any]:
+    sections = [STYLIST_CHAT_SYSTEM, f"Wardrobe:\n{wardrobe_json}"]
+    if profile:
+        sections.append(f"Style profile:\n{json.dumps(profile, ensure_ascii=False)}")
+    location = ", ".join(p for p in (city, country and country.upper()) if p)
+    if location:
+        sections.append(f"User location: {location}")
+    if history:
+        lines = []
+        for msg in history[-12:]:
+            speaker = "Stylist" if msg.get("role") == "assistant" else "User"
+            lines.append(f"{speaker}: {msg.get('content', '')}")
+        sections.append("Conversation so far:\n" + "\n".join(lines))
+    sections.append(f"User: {prompt}")
+
+    raw = await _gemini_generate([{"text": "\n\n".join(sections)}], json_mode=True)
+    return _parse_stylist_chat(raw)
+
+
 GROUNDED_SHOPPING_SYSTEM = """You are a shopping search agent. Use Google Search to find real clothing products currently sold online and available to shoppers in the given location.
 
 Rules:
