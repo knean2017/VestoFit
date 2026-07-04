@@ -100,6 +100,7 @@ export type ShoppingResultItem = {
   rating?: number | null;
   rating_count?: number | null;
   open_now?: boolean | null;
+  approx?: boolean | null;
 };
 
 export type ShoppingSearchResponse = {

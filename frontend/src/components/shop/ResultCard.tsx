@@ -27,10 +27,11 @@ export default function ResultCard({ item, displayCurrency }: Props) {
     setConverted(sync);
   }, [item.price, item.currency, displayCurrency]);
 
+  const prefix = item.approx ? "~" : "";
   const priceLabel = converted != null
-    ? `${displayCurrency} ${converted.toFixed(2)}`
+    ? `${prefix}${displayCurrency} ${converted.toFixed(2)}`
     : item.price != null
-      ? `${item.currency || "USD"} ${item.price.toFixed(2)}`
+      ? `${prefix}${item.currency || "USD"} ${item.price.toFixed(2)}`
       : "Visit store";
 
   return (
