@@ -19,11 +19,13 @@ from app.deps import get_current_user
 from app.models.avatar import Avatar
 from app.models.job import TryOnJob
 from app.models.user import User
-from app.schemas.tryon import Category, TryOnJobResponse, TryOnStatus, TryOnUrlRequest
+from app.models.wardrobe_item import WardrobeItem
+from app.schemas.tryon import Category, TryOnJobResponse, TryOnOutfitRequest, TryOnStatus, TryOnUrlRequest
 from app.services.garment_service import infer_category as _infer_category
 from app.services.garment_service import clean_garment
+from app.services.quota_service import QuotaExceededError, ensure_render_allowed
 from app.services.storage import get_storage
-from app.services.tryon_service import run_tryon_job
+from app.services.tryon_service import run_tryon_job, run_outfit_job
 
 router = APIRouter(prefix="/tryon", tags=["tryon"])
 
@@ -37,6 +39,13 @@ async def _get_avatar(db: AsyncSession, user_id: uuid.UUID) -> Avatar:
             "Please upload your avatar photos first",
         )
     return avatar
+
+
+async def _check_quota(db: AsyncSession, user_id: uuid.UUID) -> None:
+    try:
+        await ensure_render_allowed(db, user_id)
+    except QuotaExceededError as e:
+        raise HTTPException(status.HTTP_402_PAYMENT_REQUIRED, str(e)) from e
 
 
 async def _serialize(job: TryOnJob) -> TryOnStatus:
@@ -64,6 +73,7 @@ async def tryon_url(
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[User, Depends(get_current_user)],
 ):
+    await _check_quota(db, user.id)
     avatar = await _get_avatar(db, user.id)
     auto_cat = _infer_category(str(payload.garment_url), payload.description)
     job = TryOnJob(
@@ -90,6 +100,7 @@ async def tryon_upload(
     category: Annotated[Category | None, Form()] = None,
     description: Annotated[str | None, Form()] = None,
 ):
+    await _check_quota(db, user.id)
     avatar = await _get_avatar(db, user.id)
     if garment_image.content_type not in ("image/jpeg", "image/png", "image/webp"):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Only JPEG, PNG, or WebP images allowed")
@@ -117,6 +128,49 @@ async def tryon_upload(
     await db.commit()
     await db.refresh(job)
     background.add_task(run_tryon_job, job.id)
+    return TryOnJobResponse(job_id=str(job.id), status=job.status)  # type: ignore[arg-type]
+
+
+@router.post("/outfit", response_model=TryOnJobResponse)
+async def tryon_outfit(
+    payload: TryOnOutfitRequest,
+    background: BackgroundTasks,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    await _check_quota(db, user.id)
+    if not payload.item_ids:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No item IDs provided")
+    if len(payload.item_ids) > 6:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Maximum 6 items per outfit")
+    avatar = await _get_avatar(db, user.id)
+    parsed_ids = []
+    for raw in payload.item_ids:
+        try:
+            parsed_ids.append(uuid.UUID(raw))
+        except ValueError:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Invalid item ID: {raw}")
+    res = await db.execute(
+        select(WardrobeItem).where(
+            WardrobeItem.id.in_(parsed_ids),
+            WardrobeItem.user_id == user.id,
+        )
+    )
+    found = list(res.scalars().all())
+    if not found:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No matching wardrobe items")
+    validated_ids = [item.id for item in found]
+    job = TryOnJob(
+        user_id=user.id,
+        avatar_id=avatar.id,
+        category=found[0].category,
+        description=f"Full outfit: {len(found)} items",
+        status="queued",
+    )
+    db.add(job)
+    await db.commit()
+    await db.refresh(job)
+    background.add_task(run_outfit_job, job.id, validated_ids)
     return TryOnJobResponse(job_id=str(job.id), status=job.status)  # type: ignore[arg-type]
 
 
