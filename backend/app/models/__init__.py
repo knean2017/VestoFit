@@ -2,6 +2,7 @@ from app.models.avatar import Avatar
 from app.models.job import TryOnJob
 from app.models.outfit import Outfit
 from app.models.shopping import ShoppingQuery
+from app.models.style_profile import StyleProfile
 from app.models.stylist_message import StylistMessage
 from app.models.subscription import Subscription
 from app.models.user import User
@@ -14,6 +15,7 @@ __all__ = [
     "WardrobeItem",
     "Outfit",
     "StylistMessage",
+    "StyleProfile",
     "ShoppingQuery",
     "Subscription",
 ]

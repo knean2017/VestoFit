@@ -34,3 +34,13 @@ class StylistMessageResponse(BaseModel):
     content: str
     outfit_id: str | None = None
     created_at: str
+
+
+class StyleProfileResponse(BaseModel):
+    data: dict | None = None
+    preferences: str | None = None
+    updated_at: str | None = None
+
+
+class StyleProfileUpdateRequest(BaseModel):
+    preferences: str = Field(..., max_length=1000)

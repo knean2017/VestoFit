@@ -242,6 +242,33 @@ async def shopping_ask(
         return {"reply": raw, "search": None, "chips": None}
 
 
+STYLE_PROFILE_SYSTEM = """You are a professional color-and-style analyst for a fashion app. Look at the person in the photo and produce FASHION guidance only.
+
+Strict privacy rules: do NOT infer, mention, or encode age, ethnicity, gender identity, or any personal identity attribute. Only visual styling signals (coloring, contrast, proportions as they relate to clothing).
+
+Return ONLY JSON:
+{
+  "undertone": "warm" | "cool" | "neutral",
+  "contrast": "low" | "medium" | "high",
+  "best_colors": ["<color name>", ... up to 8],
+  "avoid_colors": ["<color name>", ... up to 5],
+  "style_notes": "<2-3 sentences of silhouette and styling guidance>"
+}
+If the image does not clearly show a person, return {"undertone": null}."""
+
+
+async def analyze_style_photo(
+    image_bytes: bytes, mime_type: str = "image/jpeg"
+) -> dict[str, Any]:
+    b64 = base64.standard_b64encode(image_bytes).decode("ascii")
+    parts = [
+        {"text": STYLE_PROFILE_SYSTEM},
+        {"inline_data": {"mime_type": mime_type, "data": b64}},
+    ]
+    raw = await _gemini_generate(parts, json_mode=True)
+    return _parse_json(raw)
+
+
 STYLIST_CHAT_SYSTEM = """You are Vesto — the user's personal AI stylist inside the VestoFit app. You ONLY talk about clothing, outfits, and personal style.
 
 Personality: warm, upbeat, encouraging. Celebrate what the user already owns. When a request is vague, ask ONE short clarifying question. If the user drifts off-topic, respond kindly in one sentence and steer back to style — never a cold refusal.
