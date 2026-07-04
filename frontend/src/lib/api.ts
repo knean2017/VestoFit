@@ -222,6 +222,18 @@ export const api = {
       body: JSON.stringify({ email, password }),
     });
   },
+  forgotPassword(email: string) {
+    return request<{ message: string }>("/auth/forgot", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  },
+  resetPassword(token: string, password: string) {
+    return request<{ message: string }>("/auth/reset", {
+      method: "POST",
+      body: JSON.stringify({ token, password }),
+    });
+  },
   me() {
     return request<UserMe>("/auth/me");
   },

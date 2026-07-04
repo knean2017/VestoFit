@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import { useToast } from "@/components/Toast";
 import { api } from "@/lib/api";
-import { setToken } from "@/lib/auth";
+import { setToken, getToken } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +14,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (getToken()) router.replace("/");
+  }, [router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,7 +44,7 @@ export default function LoginPage() {
             </div>
             <h1 className="heading-lg">Welcome back</h1>
             <p className="mt-2 text-sm text-muted font-medium">
-              Sign in to your FitMe account
+              Sign in to your VestoFit account
             </p>
           </div>
 
@@ -77,6 +81,14 @@ export default function LoginPage() {
             >
               {loading ? "Signing in..." : "Sign in"}
             </button>
+            <p className="text-right">
+              <Link
+                href="/forgot-password"
+                className="text-xs text-muted font-medium hover:text-coral transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </p>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted font-medium">
