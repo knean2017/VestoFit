@@ -21,3 +21,10 @@ class SubscriptionStatus(BaseModel):
     ends_at: datetime | None = None
     update_payment_url: str | None = None
     customer_portal_url: str | None = None
+
+
+class RenderUsage(BaseModel):
+    plan: str
+    limit: int | None = None
+    used: int
+    remaining: int | None = None

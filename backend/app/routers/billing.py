@@ -7,7 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.deps import get_current_user
 from app.models.user import User
-from app.schemas.subscription import CheckoutRequest, CheckoutResponse, SubscriptionStatus
+from app.schemas.subscription import (
+    CheckoutRequest,
+    CheckoutResponse,
+    RenderUsage,
+    SubscriptionStatus,
+)
+from app.services.quota_service import get_render_usage
 from app.services.payment_service import (
     create_checkout,
     get_user_subscription,
@@ -56,6 +62,14 @@ async def subscription_status(
         update_payment_url=sub.update_payment_url,
         customer_portal_url=sub.customer_portal_url,
     )
+
+
+@router.get("/usage", response_model=RenderUsage)
+async def render_usage(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    return RenderUsage(**await get_render_usage(db, user.id))
 
 
 @router.post("/webhook", status_code=200)
