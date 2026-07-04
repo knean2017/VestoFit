@@ -51,6 +51,14 @@ def used(n):
     return fake_count
 
 
+@pytest.fixture
+def no_lock(monkeypatch):
+    async def fake_lock(db, user_id):
+        return None
+
+    monkeypatch.setattr(quota_service, "_advisory_lock", fake_lock)
+
+
 async def test_get_plan_defaults_to_free(no_subscription):
     assert await get_plan(None, USER_ID) == "free"
 
@@ -85,12 +93,12 @@ async def test_usage_premium_is_unlimited(monkeypatch):
     assert usage["limit"] is None and usage["remaining"] is None
 
 
-async def test_ensure_allows_under_limit(no_subscription, monkeypatch):
+async def test_ensure_allows_under_limit(no_subscription, no_lock, monkeypatch):
     monkeypatch.setattr(quota_service, "count_renders_this_month", used(4))
     await ensure_render_allowed(None, USER_ID)  # must not raise
 
 
-async def test_ensure_blocks_at_limit(no_subscription, monkeypatch):
+async def test_ensure_blocks_at_limit(no_subscription, no_lock, monkeypatch):
     monkeypatch.setattr(quota_service, "count_renders_this_month", used(5))
     with pytest.raises(QuotaExceededError) as exc:
         await ensure_render_allowed(None, USER_ID)
@@ -98,7 +106,7 @@ async def test_ensure_blocks_at_limit(no_subscription, monkeypatch):
     assert exc.value.limit == 5
 
 
-async def test_unknown_plan_treated_as_free(monkeypatch):
+async def test_unknown_plan_treated_as_free(no_lock, monkeypatch):
     async def fake_sub(db, user_id):
         return SimpleNamespace(is_active=True, plan="enterprise")
 
@@ -107,3 +115,37 @@ async def test_unknown_plan_treated_as_free(monkeypatch):
     monkeypatch.setattr(quota_service, "count_renders_this_month", used(5))
     with pytest.raises(QuotaExceededError):
         await ensure_render_allowed(None, USER_ID)
+
+
+async def test_ensure_takes_per_user_lock_before_counting(no_subscription, monkeypatch):
+    """Concurrent requests must serialize on a per-user lock so N requests
+    can't all pass the count check before any job row is inserted."""
+    order = []
+
+    async def fake_lock(db, user_id):
+        order.append(("lock", user_id))
+
+    async def fake_count(db, user_id):
+        order.append(("count", user_id))
+        return 0
+
+    monkeypatch.setattr(quota_service, "_advisory_lock", fake_lock)
+    monkeypatch.setattr(quota_service, "count_renders_this_month", fake_count)
+    await ensure_render_allowed(None, USER_ID)
+    assert order[0] == ("lock", USER_ID)
+    assert ("count", USER_ID) in order
+
+
+async def test_advisory_lock_uses_stable_key_from_user_id():
+    captured = []
+
+    class FakeDB:
+        async def execute(self, stmt):
+            captured.append(stmt)
+
+    uid = uuid.UUID("00000000-0000-0000-0000-000000000001")
+    await quota_service._advisory_lock(FakeDB(), uid)
+    await quota_service._advisory_lock(FakeDB(), uid)
+    assert len(captured) == 2
+    assert str(captured[0]) == str(captured[1])
+    assert "pg_advisory_xact_lock" in str(captured[0])

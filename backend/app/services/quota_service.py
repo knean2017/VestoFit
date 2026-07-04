@@ -59,7 +59,15 @@ async def get_render_usage(db: AsyncSession, user_id: uuid.UUID) -> dict:
     return {"plan": plan, "limit": limit, "used": used, "remaining": remaining}
 
 
+async def _advisory_lock(db: AsyncSession, user_id: uuid.UUID) -> None:
+    # Transaction-scoped: held until the caller's commit/rollback, so the
+    # count check and the job INSERT that follows it are serialized per user.
+    key = int.from_bytes(user_id.bytes[:8], "big", signed=True)
+    await db.execute(select(func.pg_advisory_xact_lock(key)))
+
+
 async def ensure_render_allowed(db: AsyncSession, user_id: uuid.UUID) -> None:
+    await _advisory_lock(db, user_id)
     usage = await get_render_usage(db, user_id)
     if usage["limit"] is not None and usage["used"] >= usage["limit"]:
         raise QuotaExceededError(usage["plan"], usage["limit"])
