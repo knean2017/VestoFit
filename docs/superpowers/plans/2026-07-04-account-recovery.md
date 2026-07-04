@@ -1,6 +1,6 @@
 # Account Recovery (Password Reset + Email Foundation) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** A user who forgot their password can get back into their account without human support — via an emailed reset link — and the app gains a pluggable email service that later features (verification, notifications) can reuse.
 
@@ -32,7 +32,7 @@
 **Interfaces:**
 - Produces: `async send_email(to: str, subject: str, body: str) -> None`. Console backend logs via `logging.getLogger("fitme.email")`; SMTP backend used when `settings.smtp_host` is truthy. Task 2 calls this.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `backend/tests/test_email_service.py`:
 
@@ -70,12 +70,12 @@ async def test_smtp_backend_called_when_host_set(monkeypatch):
     assert sent["subject"] == "Hello"
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests/test_email_service.py -v`
 Expected: FAIL with `ModuleNotFoundError: No module named 'app.services.email_service'`
 
-- [ ] **Step 3: Add settings, dep, and implement**
+- [x] **Step 3: Add settings, dep, and implement**
 
 Append inside the Settings class in `backend/app/config.py`:
 
@@ -149,7 +149,7 @@ async def send_email(to: str, subject: str, body: str) -> None:
     )
 ```
 
-- [ ] **Step 4: Run tests to verify pass, then commit**
+- [x] **Step 4: Run tests to verify pass, then commit**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests/test_email_service.py -v`
 Expected: 2 PASSED.
@@ -178,7 +178,7 @@ git commit -m "feat(email): pluggable email service (console/SMTP backends)"
   - `async request_reset(db, email: str) -> None` — silent no-op for unknown email; else invalidates old tokens, creates one, emails the link
   - `async reset_password(db, token: str, new_password: str) -> None` — raises `ResetTokenError("This reset link is invalid or has expired")` for unknown/expired/used tokens
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `backend/tests/test_password_reset_service.py`:
 
@@ -300,12 +300,12 @@ async def test_reset_password_rotates_hash_and_burns_token(monkeypatch):
     assert db.committed
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests/test_password_reset_service.py -v`
 Expected: FAIL with `ModuleNotFoundError`.
 
-- [ ] **Step 3: Create the model**
+- [x] **Step 3: Create the model**
 
 `backend/app/models/password_reset.py`:
 
@@ -342,7 +342,7 @@ class PasswordResetToken(Base):
 
 In `backend/app/models/__init__.py`: add `from app.models.password_reset import PasswordResetToken` (alphabetical, after `outfit`) and `"PasswordResetToken",` to `__all__`.
 
-- [ ] **Step 4: Implement the service**
+- [x] **Step 4: Implement the service**
 
 `backend/app/services/password_reset_service.py`:
 
@@ -448,7 +448,7 @@ async def reset_password(db: AsyncSession, token: str, new_password: str) -> Non
 
 Note: check `app/models/user.py` for the actual password column name (`password_hash` assumed — if it is `hashed_password`, use that name in both service and test).
 
-- [ ] **Step 5: Run tests to verify pass, full suite, commit**
+- [x] **Step 5: Run tests to verify pass, full suite, commit**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests -v`
 Expected: all PASSED.
@@ -470,7 +470,7 @@ git commit -m "feat(auth): password reset tokens + service"
 - Consumes: `request_reset`, `reset_password`, `ResetTokenError` (Task 2); existing `rate_limit_auth` from `app.deps`.
 - Produces: `POST /auth/forgot {email}` → 202 `{"message": "If that account exists, a reset link is on its way."}` always; `POST /auth/reset {token, password}` → 200 `{"message": "Password updated — you can sign in now."}` or 400 with the ResetTokenError message.
 
-- [ ] **Step 1: Add schemas**
+- [x] **Step 1: Add schemas**
 
 Append to `backend/app/schemas/auth.py` (mirror the password constraint used by `RegisterRequest` in the same file — copy its `Field(...)` exactly):
 
@@ -490,7 +490,7 @@ class MessageResponse(BaseModel):
 
 (If `EmailStr` isn't already imported in that file, extend the pydantic import.)
 
-- [ ] **Step 2: Add endpoints**
+- [x] **Step 2: Add endpoints**
 
 Append to `backend/app/routers/auth.py` (extend schema imports with the three new classes; add `from app.services.password_reset_service import ResetTokenError, request_reset, reset_password`):
 
@@ -527,12 +527,12 @@ async def do_reset_password(
 
 (Check the top of `auth.py` — `status` and `HTTPException` are imported there already; if not, extend the fastapi import.)
 
-- [ ] **Step 3: Verify routes and suite**
+- [x] **Step 3: Verify routes and suite**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -c "from app.main import app; paths = {getattr(r, 'path', '') for r in app.routes}; assert '/auth/forgot' in paths and '/auth/reset' in paths; print('routes ok')" && python -m pytest tests -q`
 Expected: `routes ok`, all PASSED.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add backend/app/schemas/auth.py backend/app/routers/auth.py
@@ -553,7 +553,7 @@ git commit -m "feat(auth): forgot/reset password endpoints (enumeration-safe)"
 - Consumes: Task 3 endpoints.
 - Produces: `api.forgotPassword(email)`, `api.resetPassword(token, password)`.
 
-- [ ] **Step 1: API methods**
+- [x] **Step 1: API methods**
 
 In `frontend/src/lib/api.ts`, add to the `api` object next to the login/register methods:
 
@@ -572,7 +572,7 @@ In `frontend/src/lib/api.ts`, add to the `api` object next to the login/register
   },
 ```
 
-- [ ] **Step 2: Forgot-password page**
+- [x] **Step 2: Forgot-password page**
 
 `frontend/src/app/forgot-password/page.tsx` (match the card/field/btn classes used in `login/page.tsx` — read it first and reuse its layout wrapper):
 
@@ -636,7 +636,7 @@ export default function ForgotPasswordPage() {
 }
 ```
 
-- [ ] **Step 3: Reset-password page**
+- [x] **Step 3: Reset-password page**
 
 `frontend/src/app/reset-password/page.tsx`:
 
@@ -710,7 +710,7 @@ export default function ResetPasswordPage() {
 }
 ```
 
-- [ ] **Step 4: Login page link**
+- [x] **Step 4: Login page link**
 
 In `frontend/src/app/login/page.tsx`, add directly under the password input (or beside the submit button, matching the page's spacing):
 
@@ -722,7 +722,7 @@ In `frontend/src/app/login/page.tsx`, add directly under the password input (or 
 
 (Ensure `Link` is imported.) Optionally: if the page reads search params already, show a success note when `reset=1` is present; skip if it doesn't — the login form works regardless.
 
-- [ ] **Step 5: Typecheck and commit**
+- [x] **Step 5: Typecheck and commit**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/frontend && npx tsc --noEmit`
 Expected: clean.
@@ -738,11 +738,11 @@ git commit -m "feat(auth): forgot/reset password pages + login link"
 
 **Files:** none.
 
-- [ ] **Step 1: Full backend suite**
+- [x] **Step 1: Full backend suite**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests -v` — all PASSED.
 
-- [ ] **Step 2: End-to-end reset via logs**
+- [x] **Step 2: End-to-end reset via logs**
 
 With the docker stack up (`docker compose up -d db backend`):
 1. Register `reset-test@example.com` / `OldPass123!`.
@@ -753,11 +753,11 @@ With the docker stack up (`docker compose up -d db backend`):
 6. Replay the same `POST /auth/reset` → 400 (single-use).
 7. `POST /auth/forgot` with a nonsense email → still 202, and no reset link in logs.
 
-- [ ] **Step 3: UI pass**
+- [x] **Step 3: UI pass**
 
 Open `/login` → "Forgot password?" link visible → `/forgot-password` sends and shows the neutral confirmation → paste the logged link → `/reset-password` sets a new password → redirected to login.
 
-- [ ] **Step 4: Clean up and commit fixes if any**
+- [x] **Step 4: Clean up and commit fixes if any**
 
 ```sql
 DELETE FROM users WHERE email='reset-test@example.com';
