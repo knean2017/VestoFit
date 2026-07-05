@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import ActivationChecklist from "@/components/ActivationChecklist";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
@@ -145,6 +146,10 @@ function StylistHome() {
       <Header />
 
       <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-5 min-h-0">
+        <div className="shrink-0 pt-4 empty:hidden">
+          <ActivationChecklist />
+        </div>
+
         {/* Silhouette zone with choreography */}
         <div className="relative min-h-[30vh] sm:min-h-[45vh] flex items-center justify-center pt-4 shrink-0">
           <AnimatePresence mode="wait">
@@ -237,21 +242,17 @@ function StylistHome() {
         )}
 
         {/* Chat */}
-        {hasWardrobe ? (
-          <StylistChat
-            mode="stylist"
-            onSend={handleSend}
-            onStylistResult={handleStylistResult}
-            className="flex-1 min-h-0"
-          />
-        ) : (
-          <div className="flex-1 flex items-center justify-center px-6">
-            <div className="text-center">
-              <p className="text-muted text-sm mb-3">Add at least 2 items to your wardrobe to get styled</p>
-              <Link href="/wardrobe" className="btn-primary">Open wardrobe</Link>
-            </div>
-          </div>
-        )}
+        <StylistChat
+          mode="stylist"
+          onSend={handleSend}
+          onStylistResult={handleStylistResult}
+          greeting={
+            wardrobe.length === 0
+              ? "Welcome! I'm your stylist. Add a few clothes to your closet and I can build real looks from them — or tell me what you're shopping for."
+              : undefined
+          }
+          className="flex-1 min-h-0"
+        />
       </div>
 
       <BottomNav />
