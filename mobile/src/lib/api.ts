@@ -131,6 +131,17 @@ export type ShoppingHistoryItem = {
   created_at: string;
 };
 
+export type StylistChatResponse = {
+  reply: string;
+  chips: string[] | null;
+  outfit_id: string | null;
+  outfit_item_ids: string[] | null;
+  results: ShoppingResultItem[] | null;
+  search_query: string | null;
+  currency: string;
+  no_local: boolean;
+};
+
 export type ShoppingAskResponse = {
   reply: string;
   results: ShoppingResultItem[] | null;
@@ -377,6 +388,12 @@ export const api = {
     return request<{ reply: string; chips?: string[] | null }>('/stylist/ask', {
       method: 'POST',
       body: JSON.stringify({ prompt, item_ids }),
+    });
+  },
+  stylistChat(prompt: string) {
+    return request<StylistChatResponse>('/stylist/chat', {
+      method: 'POST',
+      body: JSON.stringify({ prompt }),
     });
   },
   stylistMessages() {

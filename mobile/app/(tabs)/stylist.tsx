@@ -14,7 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Sparkles, Shirt, MessageCircle, Target, Shuffle } from 'lucide-react-native';
 
-import { api, type StylistMessage } from '../../src/lib/api';
+import { api, type StylistMessage, type StylistChatResponse } from '../../src/lib/api';
+import { OutfitSuggestionCard, ShopResultsRow } from '../../src/features/stylist/ChatActionCards';
 import { Input } from '../../src/components/ui/Input';
 import { Button } from '../../src/components/ui/Button';
 import { Chip } from '../../src/components/ui/Chip';
@@ -39,6 +40,7 @@ export default function StylistScreen() {
 
   const [prompt, setPrompt] = useState('');
   const [chips, setChips] = useState<string[]>([]);
+  const [turn, setTurn] = useState<StylistChatResponse | null>(null);
 
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ['stylist-messages'],
@@ -46,10 +48,11 @@ export default function StylistScreen() {
   });
 
   const askMutation = useMutation({
-    mutationFn: (text: string) => api.stylistAsk(text),
+    mutationFn: (text: string) => api.stylistChat(text),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ['stylist-messages'] });
       setChips(res.chips ?? []);
+      setTurn(res);
       setPrompt('');
       setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 200);
     },
@@ -155,11 +158,19 @@ export default function StylistScreen() {
           />
         )}
 
+        {/* Latest turn's action payload */}
+        {turn?.outfit_item_ids && turn.outfit_item_ids.length > 0 && (
+          <OutfitSuggestionCard itemIds={turn.outfit_item_ids} />
+        )}
+        {turn?.results && turn.results.length > 0 && (
+          <ShopResultsRow results={turn.results} currency={turn.currency} />
+        )}
+
         {/* Chips */}
         {chips.length > 0 && (
           <View style={styles.chipsRow}>
             {chips.map((c) => (
-              <Chip key={c} label={c} onPress={() => { setChips([]); send(c); }} />
+              <Chip key={c} label={c} onPress={() => { setChips([]); setTurn(null); send(c); }} />
             ))}
           </View>
         )}
