@@ -22,4 +22,12 @@ Task 9: complete (commits 6ea2268..a4d2f6d, review clean after fix — brief omi
 Task 10: complete (commits a4d2f6d..70e094a, review clean — minor: enter() helper recreated per render, plan-mandated pattern)
 Task 11: complete (commits 70e094a..6b22dba, review clean after fix — glyph stragglers fixed in 6b22dba; minors: studio steps reuse Zap icon twice, shop Star muted not gold, dead emoji/stepIcon styles in CoachingCard)
 Task 12: automated pass complete (7687d8a — lint no-var-requires errors fixed with targeted disables; tsc clean, lint 0 errors/19 pre-existing warnings, 29/29 tests). Manual QA on device pending user.
-Final whole-branch review (opus, ebf531c..7687d8a): READY TO MERGE. All ledger minors triaged ACCEPT. New minors, all non-blocking: M1 Slide3 loops gated on shown not active (runs in background; optional 2-line fix), M2 haptic fires on no-op pan end, M3 pager not screen-reader navigable (Skip is accessible escape), M4 dead emoji/stepIcon styles in CoachingCard.
+Final whole-branch review (opus, ebf531c..7687d8a): READY TO MERGE.
+
+# SDD Progress Ledger — Mobile-First Consolidation (2026-07-05)
+Plan: docs/superpowers/plans/2026-07-05-mobile-first-consolidation.md
+Task 1: complete (6c71823, committed in prior session — load-bearing outfit try-on backend + 4 tests)
+Task 2: complete (c0d59ae — reset-code email + mobile reset screen; backend 58/58, mobile clean)
+Task 3: complete (151fe97 — unified stylist chat + action cards; deviations: RNTL v14 async render/fireEvent in test, eslint no-var-requires disable, both matching repo patterns)
+Task 4: complete (26e81d2 — snapshot dirty web/doc tree, ignore .playwright-mcp; deviation: docker-compose.override.yml[.bak] gitignored instead of committed — machine-local LAN config)
+Task 5: complete (live verification — health ok/db true; reset code emailed→reset→login all pass; /stylist/chat returns reply+chips+results; mobile typecheck clean, lint 0 errors, 31/31 tests). On-device visual QA of reset screen, outfit card, shop row stays with owner. All ledger minors triaged ACCEPT. New minors, all non-blocking: M1 Slide3 loops gated on shown not active (runs in background; optional 2-line fix), M2 haptic fires on no-op pan end, M3 pager not screen-reader navigable (Skip is accessible escape), M4 dead emoji/stepIcon styles in CoachingCard.
