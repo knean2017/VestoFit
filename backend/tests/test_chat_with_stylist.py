@@ -149,3 +149,16 @@ async def test_llm_failure_returns_friendly_reply(base, monkeypatch):
     out = await chat_with_stylist(db, USER, "hi")
     assert "moment" in out["reply"]
     assert out["chips"] == ["Try again"]
+
+
+async def test_rate_limited_llm_gets_honest_fallback(base, monkeypatch):
+    from app.services.llm_service import LlmError
+
+    async def busy(catalog, prompt, **kwargs):
+        raise LlmError("Gemini error (429): quota", status_code=429)
+
+    monkeypatch.setattr(llm, "stylist_chat", busy)
+    db = FakeDB()
+    out = await chat_with_stylist(db, USER, "hi")
+    assert "a lot of requests" in out["reply"]
+    assert out["chips"] == ["Try again"]

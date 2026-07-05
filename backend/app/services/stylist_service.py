@@ -217,12 +217,16 @@ async def chat_with_stylist(db: AsyncSession, user, prompt: str) -> dict:
             city=user.city,
             country=user.country,
         )
-    except LlmError:
-        parsed = {
-            "reply": "I'm having trouble thinking right now — give me a moment and try again.",
-            "chips": ["Try again"],
-            "action": None,
-        }
+    except LlmError as e:
+        if e.status_code in (429, 503):
+            reply_text = (
+                "I'm getting a lot of requests right now — give me a minute and try again."
+            )
+        else:
+            reply_text = (
+                "I'm having trouble thinking right now — give me a moment and try again."
+            )
+        parsed = {"reply": reply_text, "chips": ["Try again"], "action": None}
 
     reply: str = parsed["reply"]
     chips = parsed["chips"]

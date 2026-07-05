@@ -19,7 +19,9 @@ _GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
 
 
 class LlmError(RuntimeError):
-    pass
+    def __init__(self, message: str, status_code: int | None = None):
+        super().__init__(message)
+        self.status_code = status_code
 
 
 def _parse_json(text: str) -> dict[str, Any]:
@@ -65,7 +67,10 @@ async def _gemini_generate(
                 "gemini call failed: status=%s model=%s grounded=%s",
                 r.status_code, model, grounded,
             )
-            raise LlmError(f"Gemini error ({r.status_code}): {r.text[:300]}")
+            raise LlmError(
+                f"Gemini error ({r.status_code}): {r.text[:300]}",
+                status_code=r.status_code,
+            )
         data = r.json()
 
     try:
