@@ -154,6 +154,13 @@ export type SubscriptionStatus = {
   customer_portal_url: string | null;
 };
 
+export type RenderUsage = {
+  plan: string;
+  limit: number | null;
+  used: number;
+  remaining: number | null;
+};
+
 // ── Native file type (replaces web File) ────────────────────────────────────
 
 export type NativeFile = {
@@ -414,5 +421,8 @@ export const api = {
   },
   billingSubscription() {
     return request<SubscriptionStatus>('/billing/subscription');
+  },
+  renderUsage() {
+    return request<RenderUsage>('/billing/usage');
   },
 };
