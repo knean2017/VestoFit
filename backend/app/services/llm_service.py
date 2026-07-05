@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
+import logging
 import re
 from typing import Any
 
@@ -13,6 +14,7 @@ import httpx
 from app.config import get_settings
 
 _settings = get_settings()
+_log = logging.getLogger("fitme.llm")
 _GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
 
 
@@ -59,6 +61,10 @@ async def _gemini_generate(
                 continue
             break
         if r.status_code >= 400:
+            _log.warning(
+                "gemini call failed: status=%s model=%s grounded=%s",
+                r.status_code, model, grounded,
+            )
             raise LlmError(f"Gemini error ({r.status_code}): {r.text[:300]}")
         data = r.json()
 

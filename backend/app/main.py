@@ -1,3 +1,5 @@
+import logging
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -12,6 +14,12 @@ from app.db_migrate import run_migrations
 from app.routers import auth, avatar, billing, files, outfits, settings, shopping, stylist, tryon, wardrobe
 
 _settings = get_settings()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+_http_log = logging.getLogger("fitme.http")
 
 
 @asynccontextmanager
@@ -31,6 +39,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def slow_request_logger(request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    elapsed_ms = (time.perf_counter() - start) * 1000
+    if elapsed_ms > 2000:
+        _http_log.warning(
+            "slow request: %s %s took %.0fms status=%s",
+            request.method, request.url.path, elapsed_ms, response.status_code,
+        )
+    return response
+
 
 app.include_router(auth.router)
 app.include_router(avatar.router)
