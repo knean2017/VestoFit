@@ -1,5 +1,7 @@
 # First-Run Activation Implementation Plan
 
+> **STATUS: COMPLETE (2026-07-05).** All tasks implemented and live-verified with a fresh account (checklist 0/4 → 1/4 after avatar, Next badge advances, empty-closet greeting, wardrobe/studio guided empty states, dismiss persists via localStorage and returns when the key is cleared). Not verified: fully-activated existing account (owner credentials unavailable); covered by the same `done → null` render path. Note: studio copy drops "paste a product link" — URL try-on mode was removed in the studio-bugfixes plan.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** A brand-new user sees a clear path to their first "wow" (avatar → 3 garments → first styled outfit → first try-on render) instead of an empty app, raising activation without any backend changes.
@@ -30,7 +32,7 @@
 - Consumes: `api.myAvatar()`, the wardrobe list method, the outfits list method, and the try-on history method from `frontend/src/lib/api.ts`. **First, open `api.ts` and copy the exact method names** (they exist — the wardrobe page, studio page, and stylist flows call them; likely candidates look like `wardrobeItems()` / `listWardrobe()`, `outfits()` / `listOutfits()`, `tryonHistory()`). Use whatever the file actually exports.
 - Produces: `useActivation() -> { loading: boolean; steps: ActivationStep[]; done: boolean }` with `ActivationStep = { key: "avatar" | "wardrobe" | "outfit" | "render"; label: string; href: string; complete: boolean }`; `<ActivationChecklist />` self-contained (renders `null` while loading, when done, or when dismissed).
 
-- [ ] **Step 1: Write the hook**
+- [x] **Step 1: Write the hook**
 
 `frontend/src/lib/useActivation.ts` (replace the four `api.*` calls with the real method names found in `api.ts`):
 
@@ -93,7 +95,7 @@ export function useActivation() {
 }
 ```
 
-- [ ] **Step 2: Write the component**
+- [x] **Step 2: Write the component**
 
 `frontend/src/components/ActivationChecklist.tsx`:
 
@@ -181,12 +183,12 @@ export default function ActivationChecklist() {
 }
 ```
 
-- [ ] **Step 3: Typecheck**
+- [x] **Step 3: Typecheck**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/frontend && npx tsc --noEmit`
 Expected: clean (fix any api method name mismatches now).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add frontend/src/lib/useActivation.ts frontend/src/components/ActivationChecklist.tsx
@@ -203,7 +205,7 @@ git commit -m "feat(activation): first-run checklist hook + card"
 **Interfaces:**
 - Consumes: `<ActivationChecklist />` (Task 1); the home page's existing authenticated layout and its `StylistChat` usage (`greeting` prop already exists on `StylistChat`).
 
-- [ ] **Step 1: Read the home page and mount the checklist**
+- [x] **Step 1: Read the home page and mount the checklist**
 
 Read `frontend/src/app/page.tsx`. It renders a landing view for signed-out users and the chat/silhouette experience for signed-in users. In the **signed-in** branch, add:
 
@@ -213,7 +215,7 @@ import ActivationChecklist from "@/components/ActivationChecklist";
 
 and render `<ActivationChecklist />` at the top of the signed-in content column (above or beside the chat, wherever the layout has a natural slot — keep it out of the chat's scroll area).
 
-- [ ] **Step 2: Wardrobe-aware greeting**
+- [x] **Step 2: Wardrobe-aware greeting**
 
 Still in `page.tsx`: where `StylistChat` is rendered, if the page already knows the wardrobe count, pass a tailored greeting; if it doesn't, fetch it once alongside existing data (reuse the same wardrobe list method from Task 1):
 
@@ -227,7 +229,7 @@ greeting={
 
 (`undefined` keeps the existing default greeting.)
 
-- [ ] **Step 3: Typecheck + commit**
+- [x] **Step 3: Typecheck + commit**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/frontend && npx tsc --noEmit`
 Expected: clean.
@@ -248,7 +250,7 @@ git commit -m "feat(home): activation checklist + empty-closet greeting"
 **Interfaces:**
 - Consumes: nothing new — each page already knows when its list is empty.
 
-- [ ] **Step 1: Wardrobe empty state**
+- [x] **Step 1: Wardrobe empty state**
 
 Read `frontend/src/app/wardrobe/page.tsx`, find where the empty item list renders (blank rack or bare "no items" text). Replace/augment with a centered guide (reuse existing classes; keep any existing upload button as the CTA target):
 
@@ -264,7 +266,7 @@ Read `frontend/src/app/wardrobe/page.tsx`, find where the empty item list render
 
 Keep the page's existing add/upload control visible directly below it. If the page already has an empty-state block, improve its copy to the above instead of adding a second block.
 
-- [ ] **Step 2: Studio empty state**
+- [x] **Step 2: Studio empty state**
 
 Read `frontend/src/app/studio/page.tsx`, find the render-history / result area's empty case, and add equivalent guidance:
 
@@ -280,7 +282,7 @@ Read `frontend/src/app/studio/page.tsx`, find the render-history / result area's
 
 Same rule: if an empty state exists, upgrade its copy; don't duplicate.
 
-- [ ] **Step 3: Typecheck + commit**
+- [x] **Step 3: Typecheck + commit**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/frontend && npx tsc --noEmit`
 Expected: clean.
@@ -296,7 +298,7 @@ git commit -m "feat(activation): guided empty states for wardrobe and studio"
 
 **Files:** none.
 
-- [ ] **Step 1: Fresh-account walkthrough**
+- [x] **Step 1: Fresh-account walkthrough**
 
 With the stack running, register a brand-new account, then:
 1. Home shows the checklist at 0/4 (avatar step incomplete because onboarding was skipped) or 1/4 after onboarding — "Next" badge on the first incomplete step.
@@ -305,7 +307,7 @@ With the stack running, register a brand-new account, then:
 4. Dismiss the checklist with × → reload → it stays hidden. Clear `localStorage` key `fitme.activation.hidden` → it returns.
 5. Existing account (the owner's real one): checklist does not appear if all steps are done.
 
-- [ ] **Step 2: Commit fixes if any**
+- [x] **Step 2: Commit fixes if any**
 
 ```bash
 git add -A frontend/src
