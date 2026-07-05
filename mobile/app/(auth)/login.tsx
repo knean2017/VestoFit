@@ -98,6 +98,17 @@ export default function LoginScreen() {
 
           <Animated.View entering={enter(5)}>
             <Text style={styles.foot}>
+              <Link
+                href="/(auth)/forgot-password"
+                style={{ color: theme.colors.accent, fontWeight: '700' }}
+              >
+                Forgot password?
+              </Link>
+            </Text>
+          </Animated.View>
+
+          <Animated.View entering={enter(6)}>
+            <Text style={styles.foot}>
               Don&apos;t have an account?{' '}
               <Link href="/(auth)/register" style={{ color: theme.colors.accent, fontWeight: '700' }}>
                 Sign up
