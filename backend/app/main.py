@@ -2,6 +2,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 import app.models  # noqa: F401 — ensure ORM mappers register
 from app.config import get_settings
@@ -42,6 +44,17 @@ app.include_router(shopping.router)
 app.include_router(billing.router)
 
 
-@app.get("/health", tags=["health"])
-async def health() -> dict[str, str]:
-    return {"status": "ok"}
+async def _db_ok() -> bool:
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        return True
+    except Exception:
+        return False
+
+
+@app.get("/health", tags=["ops"])
+async def health():
+    db_up = await _db_ok()
+    body = {"status": "ok" if db_up else "degraded", "db": db_up}
+    return JSONResponse(body, status_code=200 if db_up else 503)
