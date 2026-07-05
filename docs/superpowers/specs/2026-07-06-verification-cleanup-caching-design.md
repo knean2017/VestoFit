@@ -42,13 +42,13 @@ Batch of three backlog items from `2026-07-04-product-analysis.md` ("What should
 
 ## 3. Grounded-search TTL cache
 
-**Problem.** `_search_grounded` and `_search_local_stores` (shopping_service) burn capped Gemini quota; identical queries repeat (chips, retries, shared trending queries).
+**Problem.** `_search_grounded` (shopping_service → `llm.grounded_product_search`) burns capped Gemini quota; identical queries repeat (chips, retries, shared trending queries). It is the only Gemini shopping path — `_search_local_stores` turned out to be SerpAPI, so it is out of scope per the "SerpAPI not cached" rule.
 
 - In-process cache module-level in `shopping_service.py`: plain dict `{key: (expires_at, results)}` guarded by a lock-free single-threaded asyncio assumption (FastAPI single loop — no threading involved).
-- Key: `(fn_name, query.strip().lower(), budget_max, category, country, city)`.
+- Key: `(query.strip().lower(), budget_max, category, country, city)`.
 - TTL 12 h; max 200 entries — on insert past cap, evict expired first, then oldest.
 - Only successful non-empty results are cached (an empty/error result must retry next call).
-- Applied to both `_search_grounded` and `_search_local_stores`. SerpAPI path is not cached (paid tier, fresher-is-better).
+- Applied to `_search_grounded` only. SerpAPI paths (`_search_serpapi`, `_search_local_stores`) are not cached (paid tier, fresher-is-better).
 - Resets on deploy/restart — accepted; this is a quota shield, not a datastore.
 
 ## Testing
