@@ -21,6 +21,7 @@ import { Chip } from '../../src/components/ui/Chip';
 import { useToast } from '../../src/components/ui/Toast';
 import { StylistSkeleton } from '../../src/components/ui/Skeleton';
 import { CoachingCard } from '../../src/components/ui/CoachingCard';
+import { ActivationChecklist } from '../../src/features/activation/ActivationChecklist';
 
 const QUICK_PROMPTS = [
   'What should I wear today?',
@@ -119,6 +120,8 @@ export default function StylistScreen() {
           <Text style={styles.title}>Stylist</Text>
           <Text style={styles.subtitle}>Ask your AI fashion advisor</Text>
         </View>
+
+        <ActivationChecklist />
 
         {/* Messages */}
         {isLoading ? (
