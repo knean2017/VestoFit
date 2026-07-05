@@ -18,6 +18,10 @@ class TryOnJobResponse(BaseModel):
     status: JobStatus
 
 
+class TryOnOutfitRequest(BaseModel):
+    item_ids: list[str]
+
+
 class TryOnStatus(BaseModel):
     job_id: str
     status: JobStatus

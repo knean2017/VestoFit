@@ -25,6 +25,7 @@ from app.config import get_settings
 from app.database import AsyncSessionLocal
 from app.models.avatar import Avatar
 from app.models.job import TryOnJob
+from app.models.wardrobe_item import WardrobeItem
 from app.services.garment_service import clean_garment, infer_category
 from app.services.scraper_service import fetch_garment_image
 from app.services.storage import get_storage
@@ -293,6 +294,107 @@ async def _execute(db, job: TryOnJob) -> None:
     ext = ".png" if "png" in result_ct else ".jpg"
     result_key = f"results/{job.user_id}/{uuid.uuid4().hex}{ext}"
     await storage.save_bytes(result_key, result_bytes, result_ct)
+
+    job.result_key = result_key
+    job.status = "completed"
+    job.completed_at = datetime.now(timezone.utc)
+    await db.commit()
+
+
+# Layer order: bottoms first, then tops, then dresses/outer
+_LAYER_ORDER = {"bottoms": 0, "tops": 1, "dresses": 2}
+
+
+async def run_outfit_job(
+    job_id: uuid.UUID, item_ids: list[uuid.UUID]
+) -> None:
+    """Chain multiple garment renders onto a single avatar."""
+    async with AsyncSessionLocal() as db:
+        res = await db.execute(select(TryOnJob).where(TryOnJob.id == job_id))
+        job = res.scalar_one_or_none()
+        if not job:
+            return
+
+        try:
+            await _execute_outfit(db, job, item_ids)
+        except Exception as e:  # noqa: BLE001
+            job.status = "failed"
+            job.error_message = str(e)[:1000]
+            job.completed_at = datetime.now(timezone.utc)
+            await db.commit()
+
+
+async def _execute_outfit(
+    db, job: TryOnJob, item_ids: list[uuid.UUID]
+) -> None:
+    storage = get_storage()
+
+    avatar_res = await db.execute(select(Avatar).where(Avatar.id == job.avatar_id))
+    avatar = avatar_res.scalar_one()
+
+    items_res = await db.execute(
+        select(WardrobeItem).where(
+            WardrobeItem.id.in_(item_ids),
+            WardrobeItem.user_id == job.user_id,
+        )
+    )
+    items = list(items_res.scalars().all())
+    items.sort(key=lambda w: _LAYER_ORDER.get(w.category, 99))
+
+    if not items:
+        raise FalError("No wardrobe items found for provided IDs")
+
+    job.status = "processing"
+    await db.commit()
+
+    person_bytes = await storage.read_bytes(avatar.photo_key)
+    model = _settings.fal_tryon_model
+
+    for item in items:
+        garment_key = item.clean_image_key or item.image_key
+        garment_bytes = await storage.read_bytes(garment_key)
+
+        person_url = await _fal_upload(person_bytes, "image/jpeg", "person.jpg")
+        garment_url = await _fal_upload(garment_bytes, "image/png", "garment.png")
+
+        category = item.category or "tops"
+        payload = _payload_for_model(
+            model, person_url, garment_url, category, None
+        )
+        submit_resp = await _fal_submit(model, payload)
+        request_id = submit_resp["request_id"]
+        status_url = submit_resp.get("status_url") or (
+            f"{_FAL_BASE}/{model}/requests/{request_id}/status"
+        )
+        response_url = submit_resp.get("response_url") or (
+            f"{_FAL_BASE}/{model}/requests/{request_id}"
+        )
+
+        for _ in range(_POLL_MAX_ATTEMPTS):
+            s_resp = await _fal_get(status_url)
+            s = (s_resp.get("status") or "").upper()
+            if s == "COMPLETED":
+                break
+            if s in ("FAILED", "ERROR"):
+                raise FalError(f"FAL job failed: {s_resp}")
+            await asyncio.sleep(_POLL_INTERVAL_S)
+        else:
+            raise FalError("FAL job timed out")
+
+        result = await _fal_get(response_url)
+        image_url = _extract_image_url(result)
+        if not image_url:
+            raise FalError(f"FAL returned no image URL. Raw: {result}")
+
+        async with httpx.AsyncClient(timeout=60) as c:
+            rr = await c.get(image_url)
+            rr.raise_for_status()
+            person_bytes = rr.content
+
+    result_ct = "image/png"
+    ext = ".png"
+    result_key = f"results/{job.user_id}/{uuid.uuid4().hex}{ext}"
+    await storage.save_bytes(result_key, person_bytes, result_ct)
 
     job.result_key = result_key
     job.status = "completed"
