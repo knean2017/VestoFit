@@ -78,7 +78,8 @@ async def request_reset(db: AsyncSession, email: str) -> None:
         user.email,
         "Reset your FitMe password",
         "Someone (hopefully you) asked to reset your FitMe password.\n\n"
-        f"Reset it here (valid 30 minutes): {link}\n\n"
+        f"Reset code (paste it in the app): {raw}\n\n"
+        f"Or reset in the browser (valid 30 minutes): {link}\n\n"
         "If this wasn't you, ignore this email — your password is unchanged.",
     )
 

@@ -63,6 +63,14 @@ export default function ForgotPasswordScreen() {
                   inbox (and spam folder).
                 </Text>
               </Card>
+              <Text style={[styles.foot, { marginTop: 12 }]}>
+                <Link
+                  href="/(auth)/reset-password"
+                  style={{ color: theme.colors.accent, fontWeight: '700' }}
+                >
+                  Have the code? Reset now →
+                </Link>
+              </Text>
             </Animated.View>
           ) : (
             <>

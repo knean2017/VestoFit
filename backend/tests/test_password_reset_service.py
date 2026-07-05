@@ -82,6 +82,35 @@ async def test_request_reset_emails_link_with_token(monkeypatch):
     assert db.committed
 
 
+async def test_request_reset_email_contains_pasteable_code(monkeypatch):
+    user = SimpleNamespace(id=uuid.uuid4(), email="leyla@example.com")
+
+    async def find_user(db, email):
+        return user
+
+    bodies = []
+
+    async def fake_send(to, subject, body):
+        bodies.append(body)
+
+    monkeypatch.setattr(prs, "_get_user_by_email", find_user)
+    monkeypatch.setattr(prs, "_invalidate_tokens", _noop_async())
+    import app.services.email_service as email
+    monkeypatch.setattr(email, "send_email", fake_send)
+
+    db = FakeDB()
+    await request_reset(db, "leyla@example.com")
+
+    assert len(bodies) == 1
+    assert "Reset code (paste it in the app):" in bodies[0]
+    # the raw token appears both in the link and as the standalone code
+    # we can't read the raw token back (only its hash is stored), so instead
+    # assert the code line and the link line share the same trailing token
+    code_line = next(l for l in bodies[0].splitlines() if l.startswith("Reset code"))
+    link_line = next(l for l in bodies[0].splitlines() if "reset-password?token=" in l)
+    assert code_line.rsplit(" ", 1)[-1] == link_line.rsplit("token=", 1)[-1]
+
+
 async def test_reset_password_rejects_unknown_token(monkeypatch):
     async def no_row(db, token_hash):
         return None
