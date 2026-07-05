@@ -1,17 +1,11 @@
 "use client";
 import { useEffect, useRef } from "react";
-import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import type { WardrobeItem } from "@/lib/api";
 import HangerIcon from "./HangerIcon";
 import HangingItem from "./HangingItem";
 import MagneticButton from "@/components/MagneticButton";
 import { usePrefersReducedMotion } from "@/lib/useReducedMotion";
-
-const DotLottieReact = dynamic(
-  () => import("@lottiefiles/dotlottie-react").then((m) => m.DotLottieReact),
-  { ssr: false },
-);
 
 function Rod() {
   return <div className="sticky top-0 z-10 rod mb-3" />;
@@ -74,15 +68,12 @@ export default function HangingRack({
   if (items.length === 0) {
     return (
       <div className="py-12 grid place-items-center text-center">
-        {reduce ? (
-          <HangerIcon className="w-16 h-10 text-muted/50" />
-        ) : (
-          <div className="w-32 h-32">
-            <DotLottieReact src="/lottie/hanger-swing.lottie" loop autoplay />
-          </div>
-        )}
+        <HangerIcon className="w-16 h-10 text-muted/50" />
         <h3 className="heading-md mt-2">Your closet is empty</h3>
-        <p className="text-muted text-sm">Hang your first piece.</p>
+        <p className="text-muted text-sm max-w-sm">
+          Snap or upload photos of your clothes — we&apos;ll tag the color, style, and
+          season automatically. Three items is enough for your first styled look.
+        </p>
         <MagneticButton className="mt-4">
           <button className="btn-primary" onClick={onAdd}>
             Add photo
