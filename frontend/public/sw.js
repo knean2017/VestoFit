@@ -1,5 +1,5 @@
-const CACHE_NAME = "fitme-v1";
-const STATIC_ASSETS = ["/", "/manifest.json"];
+const CACHE_NAME = "vestofit-v2";
+const STATIC_ASSETS = ["/manifest.json"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
@@ -21,6 +21,10 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (url.pathname.startsWith("/api") || url.hostname !== location.hostname) {
     e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+    return;
+  }
+  if (e.request.mode === "navigate") {
+    e.respondWith(fetch(e.request).catch(() => caches.match("/")));
     return;
   }
   e.respondWith(

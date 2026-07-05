@@ -1,16 +1,29 @@
 # FitMe
 
-A try-on app that builds a faithful, consistent digital likeness of a user and renders any garment onto it. Upload photos once, then try on as many clothes as you want — same body, same lighting, same pose, every time.
+Your AI-powered wardrobe assistant. Upload your clothes, get outfit suggestions from a personal stylist, try on any garment virtually, and shop for new pieces — all through natural conversation.
 
 See [`FITME_PROJECT.md`](./FITME_PROJECT.md) for the full architecture and design rationale.
 
 ---
 
+## Features
+
+- **AI Stylist** — Chat with your personal stylist on the home page. Asks about your occasion, suggests outfits from your wardrobe, and guides new users to build their closet — all through free-form conversation.
+- **Virtual Try-On** — Upload a garment image or paste a product URL. The app renders it on your photo with consistent face, body, and lighting using FAL.ai try-on models.
+- **Smart Wardrobe** — Snap photos of your clothes. AI auto-tags each item (category, color, pattern, formality, season). Browse with category filters on a hanging-rack UI with 3D closet door entrance.
+- **AI-Powered Shopping** — Tell the stylist what you need ("summer dress under $80") and it searches for you. The AI decides whether to auto-search or ask follow-up questions. Manual filters available behind a toggle.
+- **Immersive UI** — 3D closet doors (wardrobe), curtain-pull reveal (shop), mirror + glint sweep (studio). GSAP animations, Lenis smooth scroll, Framer Motion transitions. All gracefully degrade with `prefers-reduced-motion`.
+
+---
+
 ## Quick start (Docker — recommended)
 
-You'll need: **Docker Desktop** (Windows/Mac) and a **FAL.ai API key**.
+You'll need: **Docker Desktop** (Windows/Mac), a **FAL.ai API key**, and a **Gemini API key**.
 
-1. Get a FAL key at https://fal.ai/dashboard/keys (free tier is enough for development).
+1. Get API keys:
+   - FAL key: https://fal.ai/dashboard/keys (free tier works for dev)
+   - Gemini key: https://aistudio.google.com/apikey (free tier works for dev)
+
 2. Copy and fill the backend env:
 
    ```powershell
@@ -22,6 +35,7 @@ You'll need: **Docker Desktop** (Windows/Mac) and a **FAL.ai API key**.
 
    ```
    FAL_KEY=<your-fal-key>
+   GEMINI_API_KEY=<your-gemini-key>
    JWT_SECRET_KEY=<any-long-random-string>
    ```
 
@@ -31,16 +45,23 @@ You'll need: **Docker Desktop** (Windows/Mac) and a **FAL.ai API key**.
    docker compose up --build
    ```
 
-4. Open the app at <http://localhost:3000>.
-   The API runs at <http://localhost:8000> with auto-generated docs at <http://localhost:8000/docs>.
+4. Open the app at http://localhost:3000.
+   The API runs at http://localhost:8000 with auto-generated docs at http://localhost:8000/docs.
 
-The first build takes a few minutes (Playwright + rembg model downloads). Subsequent starts are fast.
+The first build takes a few minutes (Playwright + model downloads). Subsequent starts are fast.
+
+**Troubleshooting:** If the frontend fails with "Module not found" errors after adding dependencies, remove the stale Docker volume:
+```powershell
+docker compose down
+docker volume rm vto_frontend_node_modules
+docker compose up --build
+```
 
 ---
 
 ## Quick start (without Docker — Windows native)
 
-If you'd rather develop without Docker, you need: **Python 3.11**, **Node 20**, **PostgreSQL 16** running locally.
+You need: **Python 3.11**, **Node 20**, **PostgreSQL 16** running locally.
 
 ### Backend
 
@@ -51,7 +72,7 @@ python -m venv .venv
 pip install -r requirements.txt
 python -m playwright install chromium
 Copy-Item .env.example .env
-# Edit .env — at minimum, FAL_KEY and DATABASE_URL pointing at your local Postgres
+# Edit .env — at minimum, FAL_KEY, GEMINI_API_KEY, and DATABASE_URL
 notepad .env
 uvicorn app.main:app --reload
 ```
@@ -63,43 +84,108 @@ In a separate terminal:
 ```powershell
 cd frontend
 npm install
-Copy-Item .env.local.example .env.local
 npm run dev
 ```
 
 ---
 
+## Pages
+
+| Route | Name | Description |
+|-------|------|-------------|
+| `/` | Home | AI stylist conversation + outfit silhouette preview. Landing page for unauthenticated users. |
+| `/wardrobe` | The Closet | 3D closet door entrance. Hanging-rack wardrobe with category tabs, add/edit/delete items. |
+| `/shop` | The Boutique | Curtain-pull entrance. AI-driven shopping assistant with manual filter toggle. |
+| `/studio` | The Dressing Room | Mirror reveal entrance. Virtual try-on via URL or upload. Polaroid render history. |
+| `/stylist` | Stylist | Direct stylist conversation page. |
+| `/onboard` | Onboard | Upload 3–8 photos to create your avatar. |
+| `/settings` | Settings | Account preferences. |
+| `/login` | Login | Sign in. |
+| `/register` | Register | Create account. |
+
+---
+
 ## How it works
 
-1. **Sign up** at `/register`, then upload **3–8 photographs** of yourself at `/onboard`.
+1. **Sign up** at `/register`, then upload **3–8 photographs** at `/onboard`.
 2. The backend scores each photo for **frontality** (face size + centeredness) using OpenCV and promotes the strongest frame to your **canonical avatar**.
-3. In the **Studio** (`/studio`), paste a product URL or upload a garment image.
-4. The backend scrapes the page (Playwright + BeautifulSoup), removes the background (`rembg`), uploads both the avatar and garment to FAL's CDN, then submits a try-on request to **`fal-ai/idm-vton`** (swappable via env var).
-5. The job runs as a FastAPI background task that polls FAL's queue API. The frontend polls our API every 2 s for status.
-6. When done, the resulting image is downloaded and stored in our object storage, and the studio reveals the result.
+3. In the **Wardrobe** (`/wardrobe`), upload clothing photos. The AI (Gemini) auto-tags each item with category, color, pattern, formality, and season.
+4. On the **Home** page (`/`), chat with the AI stylist. It knows your wardrobe and suggests outfits for any occasion.
+5. In the **Studio** (`/studio`), paste a product URL or upload a garment image. The backend scrapes the page, removes the background, and submits a try-on request to FAL.ai.
+6. In the **Shop** (`/shop`), tell the AI what you're looking for. It searches and shows results, or asks clarifying questions first.
 
-Because we always use the **same base photo** and modern try-on models only modify the garment region, the user's face, body, hair, skin tone, lighting, and background remain consistent across every try-on.
+---
+
+## API endpoints
+
+### Auth
+- `POST /auth/register` — Create account
+- `POST /auth/login` — Sign in, returns JWT
+
+### Wardrobe
+- `GET /wardrobe` — List items
+- `POST /wardrobe` — Upload item (image + category)
+- `PATCH /wardrobe/{id}` — Update item metadata
+- `DELETE /wardrobe/{id}` — Delete item
+
+### Stylist
+- `POST /stylist/suggest` — AI outfit suggestion from wardrobe
+- `POST /stylist/reroll` — Re-roll suggestion
+- `POST /stylist/ask` — Free-form chat (returns reply + quick-reply chips)
+- `GET /stylist/messages` — Chat history
+
+### Shopping
+- `POST /shopping/search` — Manual product search with filters
+- `POST /shopping/ask` — AI-driven shopping chat (returns reply + optional auto-search results)
+- `GET /shopping/history` — Search history
+
+### Try-On
+- `POST /tryon/url` — Try on from product URL
+- `POST /tryon/upload` — Try on from uploaded image
+- `GET /tryon/status/{job_id}` — Job status
+- `GET /tryon/history` — Render history
+
+### Avatar
+- `POST /onboard/upload` — Upload avatar photos
+- `GET /avatar/me` — Current avatar
 
 ---
 
 ## Storage modes
 
-The backend has a pluggable storage layer. Set `STORAGE_BACKEND`:
+Set `STORAGE_BACKEND` in `.env`:
 
-- **`local`** (default) — files are written to `backend/.storage` and served by the API at `/files/<key>`. Best for development.
-- **`r2`** — Cloudflare R2 (S3-compatible). Set `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, and either `R2_PUBLIC_URL` (a custom domain) or rely on presigned URLs.
+- **`local`** (default) — Files in `backend/.storage`, served at `/files/<key>`. Best for development.
+- **`r2`** — Cloudflare R2 (S3-compatible). Set `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`.
 
 ---
 
-## Swapping the try-on model
+## AI models
 
-Change `FAL_TRYON_MODEL` in `backend/.env`. The backend already knows the payload shapes for:
+### Try-on (FAL.ai)
 
-- `fal-ai/idm-vton` — default; strong identity preservation
-- `fal-ai/leffa` — newer, very fast, often more natural
-- `fal-ai/cat-vton` — efficient, good for tops
+Set `FAL_TRYON_MODEL` in `.env`:
 
-For models with different payload shapes, edit `_payload_for_model()` in `backend/app/services/tryon_service.py`.
+- `fal-ai/kling/v1-5/kolors-virtual-try-on` — default, best identity preservation
+- `fal-ai/fashn/tryon/v1.6` — best for complex fabrics
+- `fal-ai/cat-vton` — good for non-standard poses
+- `fal-ai/idm-vton` — legacy
+- `fal-ai/leffa` — fast
+
+### LLM (Gemini)
+
+Set `LLM_MODEL` in `.env`. Default: `gemini-2.5-flash-lite`. Used for wardrobe auto-tagging, stylist chat, and shopping intent parsing.
+
+---
+
+## Tech stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 14, TypeScript, Tailwind 3, Framer Motion, GSAP, React Three Fiber, Lenis |
+| Backend | FastAPI, SQLAlchemy (async), PostgreSQL 16, Pydantic |
+| AI | Gemini 2.5 Flash-Lite (tagging + chat), FAL.ai (try-on + avatar editing) |
+| Infra | Docker Compose, Cloudflare R2 (optional) |
 
 ---
 
@@ -109,31 +195,21 @@ For models with different payload shapes, edit `_payload_for_model()` in `backen
 VTO/
 ├── backend/                FastAPI + SQLAlchemy + FAL integration
 │   ├── app/
-│   │   ├── routers/        HTTP endpoints
-│   │   ├── services/       business logic (auth, storage, scraper, tryon, …)
-│   │   └── models/         SQLAlchemy ORM models
+│   │   ├── routers/        HTTP endpoints (auth, wardrobe, stylist, shopping, tryon)
+│   │   ├── services/       Business logic (LLM, shopping, stylist, tryon, storage)
+│   │   ├── models/         SQLAlchemy ORM models
+│   │   └── schemas/        Pydantic request/response schemas
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/               Next.js 14 + TypeScript + Tailwind
 │   └── src/
-│       ├── app/            App Router pages (/, /login, /register, /onboard, /studio)
-│       ├── components/
-│       └── lib/
+│       ├── app/            App Router pages
+│       ├── components/     UI components (StylistChat, wardrobe/*, shop/*, studio/*)
+│       └── lib/            API client, auth, GSAP setup, hooks
 ├── docker-compose.yml
 ├── FITME_PROJECT.md        Architecture & design doc
 └── README.md
 ```
-
----
-
-## What's NOT in the MVP
-
-- Social/sharing features
-- Style recommendations
-- Store browsing/search
-- Multiple avatars per user
-- Subscriptions
-- Avatar normalization (re-rendering you into neutral clothes) — planned v1.1 with Flux Kontext
 
 ---
 

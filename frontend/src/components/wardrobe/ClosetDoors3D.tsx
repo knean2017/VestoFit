@@ -99,7 +99,9 @@ export default function ClosetDoors3D({
       finish();
       return;
     }
-    setSupported(webglOK());
+    const ok = webglOK();
+    setSupported(ok);
+    if (!ok) finish();
   }, [reduce, finish]);
 
   if (reduce || supported === false) return null;
@@ -107,10 +109,7 @@ export default function ClosetDoors3D({
 
   return (
     <div className="absolute inset-0 z-40" aria-hidden="true">
-      <Canvas
-        onError={finish}
-        gl={{ antialias: true }}
-      >
+      <Canvas gl={{ antialias: true }}>
         <Doors onComplete={finish} />
       </Canvas>
     </div>

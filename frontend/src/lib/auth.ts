@@ -1,4 +1,4 @@
-const TOKEN_KEY = "fitme.token";
+const TOKEN_KEY = "vestofit.token";
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;

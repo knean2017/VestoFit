@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 const QUERY = "(prefers-reduced-motion: reduce)";
 
 export function usePrefersReducedMotion(): boolean {
-  // Default true during SSR/first paint to avoid flashing motion, then correct on mount.
-  const [reduced, setReduced] = useState(true);
+  const [reduced, setReduced] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia(QUERY).matches;
+  });
 
   useEffect(() => {
     const mql = window.matchMedia(QUERY);

@@ -32,10 +32,10 @@ export default function Header() {
       <div className="container-app h-16 flex items-center justify-between">
         <Link href={authed ? "/" : "/"} className="flex items-center gap-2.5 group">
           <span className="w-8 h-8 rounded-xl bg-coral text-white grid place-items-center text-sm font-extrabold shadow-glow group-hover:scale-105 transition-transform">
-            F
+            V
           </span>
           <span className="font-extrabold tracking-tight text-lg text-ink">
-            FitMe
+            VestoFit
           </span>
         </Link>
 

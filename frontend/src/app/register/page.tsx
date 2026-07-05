@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import { useToast } from "@/components/Toast";
 import { api } from "@/lib/api";
-import { setToken } from "@/lib/auth";
+import { setToken, getToken } from "@/lib/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -14,6 +14,10 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (getToken()) router.replace("/");
+  }, [router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

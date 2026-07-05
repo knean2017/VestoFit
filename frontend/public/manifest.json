@@ -1,6 +1,6 @@
 {
-  "name": "FitMe",
-  "short_name": "FitMe",
+  "name": "VestoFit",
+  "short_name": "VestoFit",
   "description": "Your AI-powered wardrobe assistant",
   "start_url": "/",
   "display": "standalone",

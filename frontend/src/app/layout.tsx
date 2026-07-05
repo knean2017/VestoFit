@@ -4,10 +4,14 @@ import { ToastProvider } from "@/components/Toast";
 import PageTransition from "@/components/PageTransition";
 
 export const metadata: Metadata = {
-  title: "FitMe — your personal stylist",
+  title: "VestoFit — your personal stylist",
   description:
     "Your AI-powered wardrobe assistant. Get outfit suggestions, try on clothes virtually, and shop within your budget.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/icon-192.png",
+  },
 };
 
 export const viewport: Viewport = {
