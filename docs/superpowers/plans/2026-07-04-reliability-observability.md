@@ -1,5 +1,7 @@
 # Reliability & Observability Implementation Plan
 
+> **STATUS: COMPLETE (2026-07-05).** All tasks implemented TDD-first, 53/53 backend tests pass. Live-verified: /health 200 `{"status":"ok","db":true}` → 503 `{"status":"degraded","db":false}` with db stopped → 200 after restart; real Gemini 400 (bogus key, one-off container run) produced `WARNING fitme.llm gemini call failed: status=400 model=gemini-2.5-flash-lite grounded=False` and `LlmError.status_code=400`. 429/503 fallback copy covered by unit test (live rate-limit not forceable on demand). Note: /health pre-existed as a static route; upgraded in place with the db ping.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** The owner can tell "outage vs quota vs bug" from logs and a health check, and users get honest messaging when the AI is rate-limited instead of a generic "trouble thinking".
@@ -29,7 +31,7 @@
 - Consumes: `engine` from `app.database`.
 - Produces: `GET /health` as specified in Global Constraints; helper `async _db_ok() -> bool` in `main.py`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `backend/tests/test_health.py`:
 
@@ -52,12 +54,12 @@ async def test_db_ok_false_when_engine_unreachable(monkeypatch):
     assert await _db_ok() is False
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests/test_health.py -v`
 Expected: FAIL with `ImportError: cannot import name '_db_ok'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `backend/app/main.py` (after the FastAPI app is created and routers included; `engine` is already imported, extend imports with `text` from sqlalchemy and `JSONResponse` from fastapi.responses):
 
@@ -78,7 +80,7 @@ async def health():
     return JSONResponse(body, status_code=200 if db_up else 503)
 ```
 
-- [ ] **Step 4: Run tests, commit**
+- [x] **Step 4: Run tests, commit**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests -q`
 Expected: all PASSED.
@@ -100,7 +102,7 @@ git commit -m "feat(ops): unauthenticated /health with db ping"
 **Interfaces:**
 - Produces: loggers `fitme.llm` (LLM failures: status, model) and `fitme.http` (requests slower than 2000 ms: method, path, duration). Task 3 relies on the same `_gemini_generate` error path.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `backend/tests/test_llm_logging.py`:
 
@@ -149,12 +151,12 @@ async def test_gemini_failure_is_logged_with_status_and_model(monkeypatch, caplo
     assert llm_service._settings.llm_model in joined
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests/test_llm_logging.py -v`
 Expected: FAIL (no log records captured).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `backend/app/services/llm_service.py`: add `import logging` to the stdlib imports and `_log = logging.getLogger("fitme.llm")` next to `_settings`. In `_gemini_generate`, directly before the existing `raise LlmError(f"Gemini error ...")` line, add:
 
@@ -198,7 +200,7 @@ async def slow_request_logger(request, call_next):
     return response
 ```
 
-- [ ] **Step 4: Run tests, commit**
+- [x] **Step 4: Run tests, commit**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests -q`
 Expected: all PASSED.
@@ -220,7 +222,7 @@ git commit -m "feat(ops): fitme loggers — LLM failure logs + slow-request midd
 **Interfaces:**
 - Produces: `LlmError.status_code: int | None` (constructor: `LlmError(message, status_code=None)`); rate-limited fallback copy from Global Constraints.
 
-- [ ] **Step 1: Append the failing test**
+- [x] **Step 1: Append the failing test**
 
 Append to `backend/tests/test_chat_with_stylist.py`:
 
@@ -241,7 +243,7 @@ async def test_rate_limited_llm_gets_honest_fallback(base, monkeypatch):
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests/test_chat_with_stylist.py -v`
 Expected: new test FAILS (`TypeError` on status_code kwarg).
 
-- [ ] **Step 2: Extend LlmError and the raise site**
+- [x] **Step 2: Extend LlmError and the raise site**
 
 In `backend/app/services/llm_service.py`, replace the `LlmError` class:
 
@@ -261,7 +263,7 @@ At the `_gemini_generate` raise site (from Task 2's block), pass the status:
             )
 ```
 
-- [ ] **Step 3: Branch the chat fallback**
+- [x] **Step 3: Branch the chat fallback**
 
 In `backend/app/services/stylist_service.py`, in `chat_with_stylist`, replace the `except LlmError:` block with:
 
@@ -278,7 +280,7 @@ In `backend/app/services/stylist_service.py`, in `chat_with_stylist`, replace th
         parsed = {"reply": reply_text, "chips": ["Try again"], "action": None}
 ```
 
-- [ ] **Step 4: Full suite, commit**
+- [x] **Step 4: Full suite, commit**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests -v`
 Expected: all PASSED (including the five pre-existing chat tests — the generic message is unchanged for `status_code=None`).
@@ -294,15 +296,15 @@ git commit -m "feat(stylist): honest rate-limit fallback + LlmError status_code"
 
 **Files:** none.
 
-- [ ] **Step 1: Health check**
+- [x] **Step 1: Health check**
 
 `docker compose up -d db backend`, then `curl http://localhost:8000/health` → `{"status":"ok","db":true}`. Stop the db (`docker compose stop db`) → `/health` returns 503 with `"db": false` (backend may need a few seconds to notice). Start db again.
 
-- [ ] **Step 2: Log evidence**
+- [x] **Step 2: Log evidence**
 
 Trigger one stylist chat while Gemini is rate-limited (or temporarily set an invalid `GEMINI_API_KEY` in the container env) → `docker logs vto-backend-1` shows a `fitme.llm` warning with status + model, and the chat API returns the appropriate fallback copy.
 
-- [ ] **Step 3: Commit fixes if any**
+- [x] **Step 3: Commit fixes if any**
 
 ```bash
 git add -A backend/app
