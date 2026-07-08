@@ -22,3 +22,6 @@ class User(Base):
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     lat: Mapped[float | None] = mapped_column(Float, nullable=True)
     lng: Mapped[float | None] = mapped_column(Float, nullable=True)
+    email_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

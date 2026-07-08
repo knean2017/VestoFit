@@ -1,4 +1,5 @@
 from app.models.avatar import Avatar
+from app.models.email_verification import EmailVerificationToken
 from app.models.job import TryOnJob
 from app.models.outfit import Outfit
 from app.models.password_reset import PasswordResetToken
@@ -20,4 +21,5 @@ __all__ = [
     "ShoppingQuery",
     "Subscription",
     "PasswordResetToken",
+    "EmailVerificationToken",
 ]
