@@ -38,7 +38,7 @@
 - Consumes: `app.services.email_service.send_email(to, subject, body)`; `User` model; `Base` from `app.database`.
 - Produces: `EmailVerificationToken` model (table `email_verification_tokens`); `VerificationCodeError(RuntimeError)`; `async request_verification(db, user: User) -> None`; `async verify_email(db, user: User, code: str) -> None`; `_hash_code(raw: str) -> str` (sha256 hex, test-visible). Task 2 imports the service functions; `users.email_verified_at` column exists after migration.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `backend/tests/test_email_verification_service.py` (FakeDB/monkeypatch pattern copied from `test_password_reset_service.py`):
 
@@ -153,12 +153,12 @@ async def test_verify_rejects_unknown_code(monkeypatch):
         await verify_email(FakeDB(), _user(), "000000")
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests/test_email_verification_service.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'app.services.email_verification_service'`.
 
-- [ ] **Step 3: Model + registration + migration**
+- [x] **Step 3: Model + registration + migration**
 
 Create `backend/app/models/email_verification.py`:
 
@@ -233,7 +233,7 @@ Append to `backend/app/db_migrate.py`, at the end of `run_migrations`:
     )
 ```
 
-- [ ] **Step 4: Service**
+- [x] **Step 4: Service**
 
 Create `backend/app/services/email_verification_service.py`:
 
@@ -325,12 +325,12 @@ async def verify_email(db: AsyncSession, user: User, code: str) -> None:
     await db.commit()
 ```
 
-- [ ] **Step 5: Run the new tests**
+- [x] **Step 5: Run the new tests**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests/test_email_verification_service.py -v`
 Expected: 4 PASSED.
 
-- [ ] **Step 6: Full suite + commit**
+- [x] **Step 6: Full suite + commit**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests -q`
 Expected: 62 passed.
@@ -360,7 +360,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: Task 1's `request_verification`, `verify_email`, `VerificationCodeError`; existing `rate_limit_auth`, `get_current_user`.
 - Produces: `POST /auth/verify/request` → 202 `{message}`; `POST /auth/verify {code}` → 200 `{message}` / 400; `UserMe.email_verified: bool`; `_check_verified(user)` in tryon router raising 403 `detail="email_unverified"`. Task 5 (mobile) consumes all of these.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `backend/tests/test_email_verification_api.py`:
 
@@ -408,12 +408,12 @@ def test_user_me_schema_has_verified_flag():
     assert me.email_verified is False
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests/test_email_verification_api.py -v`
 Expected: FAIL — `ImportError: cannot import name '_check_verified'`.
 
-- [ ] **Step 3: Schemas**
+- [x] **Step 3: Schemas**
 
 In `backend/app/schemas/auth.py`, add `email_verified: bool = False` to `UserMe` (after `lng`), and append at the end of the file:
 
@@ -422,7 +422,7 @@ class VerifyEmailRequest(BaseModel):
     code: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
 ```
 
-- [ ] **Step 4: Auth router**
+- [x] **Step 4: Auth router**
 
 In `backend/app/routers/auth.py`:
 
@@ -489,7 +489,7 @@ async def do_verify_email(
         email_verified=user.email_verified_at is not None,
 ```
 
-- [ ] **Step 5: Render gate**
+- [x] **Step 5: Render gate**
 
 In `backend/app/routers/tryon.py`, add after `_check_quota`:
 
@@ -501,7 +501,7 @@ def _check_verified(user: User) -> None:
 
 In each of `tryon_url`, `tryon_upload`, `tryon_outfit`, insert `_check_verified(user)` on the line directly before the existing `await _check_quota(db, user.id)`.
 
-- [ ] **Step 6: Run tests, full suite, commit**
+- [x] **Step 6: Run tests, full suite, commit**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests/test_email_verification_api.py -v`
 Expected: 4 PASSED.
@@ -532,7 +532,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: existing `_search_grounded(query, budget_max, category, country, city)` (renamed to `_search_grounded_uncached`).
 - Produces: `_search_grounded` same signature, now cache-wrapped; module constants `_GROUNDED_TTL = 12 * 3600`, `_GROUNDED_CACHE_MAX = 200`; dict `_GROUNDED_CACHE`. Nothing outside the module changes.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `backend/tests/test_grounded_cache.py`:
 
@@ -598,12 +598,12 @@ async def test_cap_evicts_oldest(monkeypatch):
     assert "a" not in keys  # oldest evicted
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests/test_grounded_cache.py -v`
 Expected: FAIL — `AttributeError: ... has no attribute '_GROUNDED_CACHE'`.
 
-- [ ] **Step 3: Implement the cache**
+- [x] **Step 3: Implement the cache**
 
 In `backend/app/services/shopping_service.py`:
 
@@ -650,12 +650,12 @@ async def _search_grounded(
 
 3. Ensure `import time` exists in the module's import block (add it if missing).
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests/test_grounded_cache.py -v`
 Expected: 4 PASSED.
 
-- [ ] **Step 5: Full suite + commit**
+- [x] **Step 5: Full suite + commit**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests -q`
 Expected: 70 passed (existing `test_grounded_search.py` must stay green — it targets `llm_service` parsing, not this wrapper).
@@ -686,7 +686,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: nothing.
 - Produces: `/stylist/ask` gone from `app.routes`. `/suggest`, `/reroll`, `/chat`, `/messages` untouched.
 
-- [ ] **Step 1: Append the failing test**
+- [x] **Step 1: Append the failing test**
 
 Append to `backend/tests/test_email_verification_api.py`:
 
@@ -701,20 +701,20 @@ def test_legacy_ask_route_removed():
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests/test_email_verification_api.py::test_legacy_ask_route_removed -v`
 Expected: FAIL — route still present.
 
-- [ ] **Step 2: Delete backend pieces**
+- [x] **Step 2: Delete backend pieces**
 
 1. `backend/app/routers/stylist.py`: delete the whole `@router.post("/ask", ...)` block (lines ~101-112); remove `StylistAskRequest` and `StylistAskResponse` from the schema import; change the service import to `from app.services.stylist_service import chat_with_stylist, suggest_outfit`.
 2. `backend/app/services/stylist_service.py`: delete the whole `async def ask_stylist(...)` function; remove `stylist_ask_structured` from the `llm_service` import line (keep `LlmError`, `stylist_suggest`).
 3. `backend/app/services/llm_service.py`: delete the `STYLIST_ASK_STRUCTURED = """..."""` constant and the whole `async def stylist_ask_structured(...)` function.
 4. `backend/app/schemas/stylist.py`: delete the `StylistAskRequest` and `StylistAskResponse` classes.
 
-- [ ] **Step 3: Delete client methods + README line**
+- [x] **Step 3: Delete client methods + README line**
 
 1. `mobile/src/lib/api.ts`: delete the `stylistAsk(...)` method (the `request<{ reply: string; chips?: string[] | null }>('/stylist/ask', ...)` block).
 2. `frontend/src/lib/api.ts`: delete the equivalent `stylistAsk` method.
 3. `README.md`: delete the line `` - `POST /stylist/ask` — Free-form chat (returns reply + quick-reply chips) ``.
 
-- [ ] **Step 4: Verify everything, commit**
+- [x] **Step 4: Verify everything, commit**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests -q`
 Expected: 71 passed.
@@ -753,7 +753,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: backend `POST /auth/verify/request`, `POST /auth/verify {code}`, `UserMe.email_verified`, 403 `detail="email_unverified"` (surfaced as `Error.message` by the api client's `request()`).
 - Produces: `api.requestVerification() -> Promise<{message}>`; `api.verifyEmail(code: string) -> Promise<{message}>`; route `/verify-email`.
 
-- [ ] **Step 1: api client**
+- [x] **Step 1: api client**
 
 In `mobile/src/lib/api.ts`:
 
@@ -772,7 +772,7 @@ In `mobile/src/lib/api.ts`:
   },
 ```
 
-- [ ] **Step 2: Write the failing screen test**
+- [x] **Step 2: Write the failing screen test**
 
 Create `mobile/__tests__/verifyEmail.test.tsx`:
 
@@ -825,7 +825,7 @@ describe('VerifyEmailScreen', () => {
 Run: `cd C:/Users/Envy/Desktop/VTO/mobile && npx jest __tests__/verifyEmail.test.tsx --ci`
 Expected: FAIL — `Cannot find module '../app/verify-email'`.
 
-- [ ] **Step 3: Screen**
+- [x] **Step 3: Screen**
 
 Create `mobile/app/verify-email.tsx`:
 
@@ -950,7 +950,7 @@ const stylesheet = createStyleSheet((theme) => ({
 Run: `cd C:/Users/Envy/Desktop/VTO/mobile && npx jest __tests__/verifyEmail.test.tsx --ci`
 Expected: 2 PASSED.
 
-- [ ] **Step 4: Settings row**
+- [x] **Step 4: Settings row**
 
 In `mobile/app/settings/index.tsx`:
 
@@ -983,7 +983,7 @@ function EmailSection() {
 }
 ```
 
-- [ ] **Step 5: 403 handling at the two render call sites**
+- [x] **Step 5: 403 handling at the two render call sites**
 
 1. `mobile/app/(tabs)/studio.tsx`: add `import { useRouter } from 'expo-router';` to the imports, `const router = useRouter();` next to the other hooks in the component, and replace `submitMutation`'s `onError` line with:
 
@@ -1011,7 +1011,7 @@ function EmailSection() {
     },
 ```
 
-- [ ] **Step 6: Typed routes, full check, commit**
+- [x] **Step 6: Typed routes, full check, commit**
 
 Regenerate typed routes (see Global Constraints — new route `verify-email` must appear in `mobile/.expo/types/router.d.ts`).
 
@@ -1037,12 +1037,12 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 **Files:** none.
 
-- [ ] **Step 1: Suite + boot**
+- [x] **Step 1: Suite + boot**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/backend && python -m pytest tests -q` → 71 passed.
 Stack up (`docker compose up -d`), then: `curl -s http://localhost:8000/health` → `{"status":"ok","db":true}`.
 
-- [ ] **Step 2: Verification gate end-to-end (console email backend)**
+- [x] **Step 2: Verification gate end-to-end (console email backend)**
 
 ```bash
 # fresh account
@@ -1070,7 +1070,7 @@ curl -s -X POST http://localhost:8000/tryon/outfit -H "Authorization: Bearer $T"
 # Expected: no longer 403 email_unverified (a 4xx about empty item_ids/avatar is fine — gate passed)
 ```
 
-- [ ] **Step 3: /stylist/ask is gone; cache logs one Gemini call**
+- [x] **Step 3: /stylist/ask is gone; cache logs one Gemini call**
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8000/stylist/ask \
@@ -1087,14 +1087,14 @@ docker logs vto-backend-1 --tail 40
 # when the grounded path actually ran; if SerpAPI served both, note it and rely on Task 3 tests.
 ```
 
-- [ ] **Step 4: Mobile static checks**
+- [x] **Step 4: Mobile static checks**
 
 Run: `cd C:/Users/Envy/Desktop/VTO/mobile && npm run typecheck && npm run lint && npx jest --ci`
 Expected: clean / 0 errors / 33 pass.
 
 On-device visual QA (verify-email screen, settings row, studio 403 redirect) stays with the owner — note in the completion report, do not block on it.
 
-- [ ] **Step 5: Commit fixes if any**
+- [x] **Step 5: Commit fixes if any**
 
 ```bash
 git add -A backend mobile
