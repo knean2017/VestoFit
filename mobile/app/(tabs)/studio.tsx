@@ -8,6 +8,7 @@ import {
   FlatList,
 } from 'react-native';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -33,6 +34,7 @@ export default function StudioScreen() {
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();
+  const router = useRouter();
 
   const [file, setFile] = useState<{ uri: string; native: NativeFile } | null>(null);
   const [description, setDescription] = useState('');
@@ -80,7 +82,14 @@ export default function StudioScreen() {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       toast('info', 'Render started — ~15-30 seconds');
     },
-    onError: (e: Error) => toast('error', e.message),
+    onError: (e: Error) => {
+      if (e.message === 'email_unverified') {
+        toast('error', 'Verify your email to render');
+        router.push('/verify-email');
+      } else {
+        toast('error', e.message);
+      }
+    },
   });
 
   async function pickGarment() {

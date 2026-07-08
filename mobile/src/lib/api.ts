@@ -95,6 +95,7 @@ export type UserMe = {
   city?: string | null;
   lat?: number | null;
   lng?: number | null;
+  email_verified?: boolean;
 };
 
 export type ShoppingResultItem = {
@@ -254,6 +255,15 @@ export const api = {
     return request<{ message: string }>('/auth/reset', {
       method: 'POST',
       body: JSON.stringify({ token, password }),
+    });
+  },
+  requestVerification() {
+    return request<{ message: string }>('/auth/verify/request', { method: 'POST' });
+  },
+  verifyEmail(code: string) {
+    return request<{ message: string }>('/auth/verify', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
     });
   },
   me() {

@@ -6,6 +6,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useStyles, createStyleSheet } from 'react-native-unistyles';
 
 import { api, type ShoppingResultItem } from '../../lib/api';
+import { useToast } from '../../components/ui/Toast';
 
 function formatPrice(price: number | null, currency: string): string {
   if (price == null) return '';
@@ -16,6 +17,7 @@ function formatPrice(price: number | null, currency: string): string {
 export function OutfitSuggestionCard({ itemIds }: { itemIds: string[] }) {
   const { styles } = useStyles(stylesheet);
   const router = useRouter();
+  const toast = useToast();
 
   const { data: wardrobe = [] } = useQuery({
     queryKey: ['wardrobe', 'all'],
@@ -28,6 +30,14 @@ export function OutfitSuggestionCard({ itemIds }: { itemIds: string[] }) {
   const tryOn = useMutation({
     mutationFn: () => api.tryOnOutfit(itemIds),
     onSuccess: () => router.push('/(tabs)/studio'),
+    onError: (e: Error) => {
+      if (e.message === 'email_unverified') {
+        toast('error', 'Verify your email to render');
+        router.push('/verify-email');
+      } else {
+        toast('error', e.message);
+      }
+    },
   });
 
   if (items.length === 0) return null;

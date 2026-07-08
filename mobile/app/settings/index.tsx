@@ -40,6 +40,7 @@ export default function SettingsScreen() {
       style={styles.scroll}
       contentContainerStyle={[styles.container, { paddingBottom: insets.bottom + 40 }]}
     >
+      <EmailSection />
       <UsageSection />
 
       <Card style={styles.section}>
@@ -90,6 +91,29 @@ function UsageSection() {
           Out of renders — upgrade →
         </Link>
       )}
+    </Card>
+  );
+}
+
+function EmailSection() {
+  const { styles, theme } = useStyles(stylesheet);
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: api.me });
+
+  if (!user) return null;
+
+  return (
+    <Card style={styles.section}>
+      <Text style={styles.sectionTitle}>Email</Text>
+      <View style={styles.usageRow}>
+        <Text style={styles.usageLabel} numberOfLines={1}>{user.email}</Text>
+        {user.email_verified ? (
+          <Text style={styles.usageValue}>Verified ✓</Text>
+        ) : (
+          <Link href="/verify-email" style={{ color: theme.colors.accent, fontWeight: '700', fontSize: 13 }}>
+            Verify email →
+          </Link>
+        )}
+      </View>
     </Card>
   );
 }
