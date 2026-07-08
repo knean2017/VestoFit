@@ -131,7 +131,6 @@ npm run dev
 ### Stylist
 - `POST /stylist/suggest` — AI outfit suggestion from wardrobe
 - `POST /stylist/reroll` — Re-roll suggestion
-- `POST /stylist/ask` — Free-form chat (returns reply + quick-reply chips)
 - `GET /stylist/messages` — Chat history
 
 ### Shopping

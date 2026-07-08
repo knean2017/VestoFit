@@ -39,3 +39,10 @@ def test_user_me_schema_has_verified_flag():
 
     me = UserMe(id="x", email="a@b.co")
     assert me.email_verified is False
+
+
+def test_legacy_ask_route_removed():
+    from app.main import app
+
+    paths = {getattr(r, "path", "") for r in app.routes}
+    assert "/stylist/ask" not in paths

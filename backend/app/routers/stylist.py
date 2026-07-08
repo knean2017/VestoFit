@@ -12,10 +12,8 @@ from app.models.user import User
 from app.schemas.stylist import (
     StyleProfileResponse,
     StyleProfileUpdateRequest,
-    StylistAskRequest,
     StylistChatRequest,
     StylistChatResponse,
-    StylistAskResponse,
     StylistMessageResponse,
     StylistRerollRequest,
     StylistSuggestRequest,
@@ -29,7 +27,7 @@ from app.services.style_profile_service import (
     get_profile,
     update_preferences,
 )
-from app.services.stylist_service import ask_stylist, chat_with_stylist, suggest_outfit
+from app.services.stylist_service import chat_with_stylist, suggest_outfit
 
 router = APIRouter(prefix="/stylist", tags=["stylist"])
 
@@ -96,20 +94,6 @@ async def reroll(
         reasoning=reasoning,
         decline=False,
     )
-
-
-@router.post("/ask", response_model=StylistAskResponse)
-async def ask(
-    payload: StylistAskRequest,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[User, Depends(get_current_user)],
-):
-    try:
-        item_ids = [uuid.UUID(i) for i in payload.item_ids] if payload.item_ids else None
-        result = await ask_stylist(db, user.id, payload.prompt, item_ids)
-    except ValueError as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid item id") from e
-    return StylistAskResponse(reply=result["reply"], chips=result.get("chips"))
 
 
 @router.get("/messages", response_model=list[StylistMessageResponse])

@@ -13,21 +13,11 @@ class StylistRerollRequest(BaseModel):
     locked_item_ids: list[str] = Field(default_factory=list, max_length=2)
 
 
-class StylistAskRequest(BaseModel):
-    prompt: str = Field(..., min_length=1, max_length=2000)
-    item_ids: list[str] = Field(default_factory=list, max_length=3)
-
-
 class StylistSuggestResponse(BaseModel):
     outfit_id: str
     item_ids: list[str]
     reasoning: str
     decline: bool = False
-
-
-class StylistAskResponse(BaseModel):
-    reply: str
-    chips: list[str] | None = None
 
 
 class StylistMessageResponse(BaseModel):

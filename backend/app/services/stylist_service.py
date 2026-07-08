@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.stylist_message import StylistMessage
 from app.models.wardrobe_item import WardrobeItem
-from app.services.llm_service import LlmError, stylist_ask_structured, stylist_suggest
+from app.services.llm_service import LlmError, stylist_suggest
 from app.services.outfit_service import (
     OutfitValidationError,
     create_outfit,
@@ -153,31 +153,6 @@ async def suggest_outfit(
         reasoning=reasoning,
     )
     return outfit, ids, reasoning, False
-
-
-async def ask_stylist(
-    db: AsyncSession,
-    user_id: uuid.UUID,
-    prompt: str,
-    item_ids: list[uuid.UUID] | None = None,
-) -> dict:
-    wardrobe = await _load_wardrobe(db, user_id)
-    catalog = wardrobe_catalog_json(wardrobe)
-    id_strs = [str(i) for i in item_ids] if item_ids else None
-
-    try:
-        result = await stylist_ask_structured(catalog, prompt, item_ids=id_strs)
-    except LlmError as e:
-        result = {"reply": str(e), "chips": None}
-
-    db.add(
-        StylistMessage(user_id=user_id, role="user", content=prompt)
-    )
-    db.add(
-        StylistMessage(user_id=user_id, role="assistant", content=result["reply"])
-    )
-    await db.commit()
-    return result
 
 
 async def _recent_history(

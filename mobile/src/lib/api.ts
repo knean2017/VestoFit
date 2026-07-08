@@ -384,12 +384,6 @@ export const api = {
       body: JSON.stringify({ prompt, locked_item_ids }),
     });
   },
-  stylistAsk(prompt: string, item_ids: string[] = []) {
-    return request<{ reply: string; chips?: string[] | null }>('/stylist/ask', {
-      method: 'POST',
-      body: JSON.stringify({ prompt, item_ids }),
-    });
-  },
   stylistChat(prompt: string) {
     return request<StylistChatResponse>('/stylist/chat', {
       method: 'POST',
