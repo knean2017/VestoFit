@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 from app.config import get_settings
 from app.schemas.shopping import ShoppingResultItem
@@ -199,7 +200,43 @@ async def _search_serpapi(
     return items
 
 
+_GROUNDED_TTL = 12 * 3600  # seconds — quota shield, not a datastore
+_GROUNDED_CACHE_MAX = 200
+_GROUNDED_CACHE: dict[tuple, tuple[float, list]] = {}
+
+
+def _cache_now() -> float:
+    return time.time()
+
+
 async def _search_grounded(
+    query: str,
+    budget_max: float | None,
+    category: str | None,
+    country: str | None,
+    city: str | None,
+) -> list[ShoppingResultItem]:
+    key = (query.strip().lower(), budget_max, category, country, city)
+    hit = _GROUNDED_CACHE.get(key)
+    if hit is not None:
+        expires_at, items = hit
+        if expires_at > _cache_now():
+            return list(items)
+        del _GROUNDED_CACHE[key]
+
+    items = await _search_grounded_uncached(query, budget_max, category, country, city)
+    if items:  # never cache empty/error results
+        now = _cache_now()
+        expired = [k for k, (exp, _) in _GROUNDED_CACHE.items() if exp <= now]
+        for k in expired:
+            del _GROUNDED_CACHE[k]
+        while len(_GROUNDED_CACHE) >= _GROUNDED_CACHE_MAX:
+            del _GROUNDED_CACHE[next(iter(_GROUNDED_CACHE))]  # oldest insert
+        _GROUNDED_CACHE[key] = (now + _GROUNDED_TTL, list(items))
+    return items
+
+
+async def _search_grounded_uncached(
     query: str,
     budget_max: float | None,
     category: str | None,
