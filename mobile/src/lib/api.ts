@@ -200,19 +200,25 @@ async function request<T>(
   });
 
   if (!res.ok) {
-    if (res.status === 401 || res.status === 403) {
-      await clearToken();
-      // Navigate to login via navigation ref (avoids window.location)
-      if (navigationRef.isReady()) {
-        navigationRef.navigate('/(auth)/login' as never);
-      }
-    }
     let detail = 'Request failed';
     try {
       const body = (await res.json()) as { detail?: string; message?: string };
       detail = body.detail ?? body.message ?? 'Request failed';
     } catch {
       /* swallow parse errors */
+    }
+
+    // A 403 with detail "email_unverified" means the user IS authenticated
+    // but hasn't verified their email yet — the render gate on the backend.
+    // That must not be treated as an auth failure: don't clear the token or
+    // navigate to login, so the caller's onError can route to /verify-email.
+    const isEmailUnverified = res.status === 403 && detail === 'email_unverified';
+    if (!isEmailUnverified && (res.status === 401 || res.status === 403)) {
+      await clearToken();
+      // Navigate to login via navigation ref (avoids window.location)
+      if (navigationRef.isReady()) {
+        navigationRef.navigate('/(auth)/login' as never);
+      }
     }
     throw new Error(detail);
   }
