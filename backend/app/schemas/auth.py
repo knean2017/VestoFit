@@ -23,6 +23,7 @@ class UserMe(BaseModel):
     city: str | None = None
     lat: float | None = None
     lng: float | None = None
+    email_verified: bool = False
 
 
 class UserUpdateRequest(BaseModel):
@@ -43,3 +44,7 @@ class ResetPasswordRequest(BaseModel):
 
 class MessageResponse(BaseModel):
     message: str
+
+
+class VerifyEmailRequest(BaseModel):
+    code: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")

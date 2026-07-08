@@ -48,6 +48,11 @@ async def _check_quota(db: AsyncSession, user_id: uuid.UUID) -> None:
         raise HTTPException(status.HTTP_402_PAYMENT_REQUIRED, str(e)) from e
 
 
+def _check_verified(user: User) -> None:
+    if user.email_verified_at is None:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "email_unverified")
+
+
 async def _serialize(job: TryOnJob) -> TryOnStatus:
     storage = get_storage()
     return TryOnStatus(
@@ -73,6 +78,7 @@ async def tryon_url(
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[User, Depends(get_current_user)],
 ):
+    _check_verified(user)
     await _check_quota(db, user.id)
     avatar = await _get_avatar(db, user.id)
     auto_cat = _infer_category(str(payload.garment_url), payload.description)
@@ -100,6 +106,7 @@ async def tryon_upload(
     category: Annotated[Category | None, Form()] = None,
     description: Annotated[str | None, Form()] = None,
 ):
+    _check_verified(user)
     await _check_quota(db, user.id)
     avatar = await _get_avatar(db, user.id)
     if garment_image.content_type not in ("image/jpeg", "image/png", "image/webp"):
@@ -138,6 +145,7 @@ async def tryon_outfit(
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[User, Depends(get_current_user)],
 ):
+    _check_verified(user)
     await _check_quota(db, user.id)
     if not payload.item_ids:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "No item IDs provided")

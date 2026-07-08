@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -17,6 +18,7 @@ from app.schemas.auth import (
     TokenResponse,
     UserMe,
     UserUpdateRequest,
+    VerifyEmailRequest,
 )
 from app.services.auth_service import (
     create_access_token,
@@ -28,6 +30,13 @@ from app.services.password_reset_service import (
     request_reset,
     reset_password,
 )
+from app.services.email_verification_service import (
+    VerificationCodeError,
+    request_verification,
+    verify_email,
+)
+
+_log = logging.getLogger("fitme.auth")
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -45,6 +54,10 @@ async def register(
     db.add(user)
     await db.commit()
     await db.refresh(user)
+    try:
+        await request_verification(db, user)
+    except Exception:  # registration must never fail because email did
+        _log.warning("verification email failed for %s", user.email, exc_info=True)
     return TokenResponse(access_token=create_access_token(str(user.id)))
 
 
@@ -90,6 +103,37 @@ async def do_reset_password(
     return MessageResponse(message="Password updated — you can sign in now.")
 
 
+@router.post(
+    "/verify/request",
+    response_model=MessageResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(rate_limit_auth)],
+)
+async def verify_request(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    await request_verification(db, user)
+    return MessageResponse(message="Verification code sent — check your inbox.")
+
+
+@router.post(
+    "/verify",
+    response_model=MessageResponse,
+    dependencies=[Depends(rate_limit_auth)],
+)
+async def do_verify_email(
+    payload: VerifyEmailRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        await verify_email(db, user, payload.code)
+    except VerificationCodeError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
+    return MessageResponse(message="Email verified — renders unlocked.")
+
+
 @router.get("/me", response_model=UserMe)
 async def me(user: Annotated[User, Depends(get_current_user)]):
     return UserMe(
@@ -99,6 +143,7 @@ async def me(user: Annotated[User, Depends(get_current_user)]):
         city=user.city,
         lat=user.lat,
         lng=user.lng,
+        email_verified=user.email_verified_at is not None,
     )
 
 
@@ -126,4 +171,5 @@ async def update_me(
         city=user.city,
         lat=user.lat,
         lng=user.lng,
+        email_verified=user.email_verified_at is not None,
     )
