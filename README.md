@@ -1,15 +1,26 @@
-# VestoFit — AI Stylist & Virtual Try-On
+<h1 align="center">VestoFit</h1>
 
-VestoFit is a fashion-tech app that combines an AI stylist, a virtual wardrobe, photorealistic virtual try-on, and AI-assisted shopping — all driven by natural conversation.
+<p align="center"><b>Get dressed from the closet you already own.</b><br/>
+An AI stylist, virtual wardrobe, virtual try-on and shopping assistant in one app.</p>
+
+<p align="center">
+  <img alt="Expo" src="https://img.shields.io/badge/Expo-54-1E2230?logo=expo&logoColor=white" />
+  <img alt="React Native" src="https://img.shields.io/badge/React_Native-0.81-3F51C7?logo=react&logoColor=white" />
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.115-46654A?logo=fastapi&logoColor=white" />
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-36628F?logo=postgresql&logoColor=white" />
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-14-5E4E92?logo=nextdotjs&logoColor=white" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3F51C7?logo=typescript&logoColor=white" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/landing.png" alt="VestoFit landing page with an example stylist reply over a photo of a knit sweater" />
+</p>
+
+VestoFit learns your wardrobe from photos, puts outfits together for wherever you're going, and shows them on you before you change.
 
 - **Mobile app** (`mobile/`) — Expo / React Native. **This is the production surface.**
 - **Backend API** (`backend/`) — FastAPI + PostgreSQL, serves the mobile app (and the web demo).
 - **Web demo** (`frontend/`) — Next.js. Development/demo surface only; it does not ship to production.
-
-<p align="center">
-  <img src="docs/screenshots/home-auth.png" width="48%" alt="AI stylist home" />
-  <img src="docs/screenshots/studio.png" width="48%" alt="Try-on studio" />
-</p>
 
 ---
 
@@ -181,7 +192,7 @@ Full, live schema at `/docs` when the backend is running.
 ## Project layout
 
 ```
-VTO/
+VestoFit/
 ├── backend/            FastAPI app
 │   ├── app/
 │   │   ├── routers/    HTTP endpoints
@@ -202,6 +213,21 @@ VTO/
 
 ## Screenshots (web demo)
 
-| Wardrobe | Shop | Pricing |
-|---|---|---|
-| ![Wardrobe](docs/screenshots/wardrobe-final.png) | ![Shop](docs/screenshots/shop.png) | ![Pricing](docs/screenshots/pricing.png) |
+| Stylist home | Closet |
+|---|---|
+| ![Stylist home with today's look and chat](docs/screenshots/stylist.png) | ![Closet empty state](docs/screenshots/closet.png) |
+| **Shop** | **Sign in** |
+| ![Shop with idea tiles and stylist chat](docs/screenshots/shop.png) | ![Sign-in page](docs/screenshots/sign-in.png) |
+
+<details>
+<summary>Full landing page</summary>
+
+![Full landing page](docs/screenshots/landing-full.jpg)
+
+</details>
+
+### Design
+
+The web demo uses one type family, [Archivo](https://fonts.google.com/specimen/Archivo), with its condensed width for headlines. Colours are a navy ink, a soft cobalt accent and five pastel fields (sage, sky, blush, butter, lilac) that also mark clothing categories. Tokens live in `frontend/tailwind.config.ts` and `frontend/src/app/globals.css`.
+
+Photography is from Unsplash under the Unsplash License; sources are listed in [`frontend/public/images/CREDITS.md`](frontend/public/images/CREDITS.md).
