@@ -21,16 +21,12 @@ export default function AboutPage() {
       <Header />
 
       <section className="container-app py-16 sm:py-24 max-w-3xl">
-        <motion.span className="chip-accent mb-4 inline-flex" {...fade(0)}>
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent" />
-          Our story
-        </motion.span>
 
         <motion.h1
-          className="font-extrabold tracking-tightest text-3xl sm:text-4xl md:text-5xl leading-[1.08]"
+          className="text-[clamp(48px,7vw,88px)] text-ink"
           {...fade(0)}
         >
-          Fashion meets <span className="text-accent">intelligence.</span>
+          Fashion meets intelligence.
         </motion.h1>
 
         <motion.p className="mt-6 text-lg text-muted leading-relaxed max-w-xl" {...fade(1)}>
@@ -42,17 +38,16 @@ export default function AboutPage() {
 
         <div className="grid sm:grid-cols-2 gap-6 mt-12">
           {VALUES.map((v, i) => (
-            <motion.article key={v.title} className="card p-6" {...fade(i)}>
-              <span className="text-2xl">{v.icon}</span>
-              <h3 className="mt-3 text-lg font-bold tracking-tight">{v.title}</h3>
-              <p className="mt-2 text-sm text-muted leading-relaxed">{v.body}</p>
+            <motion.article key={v.title} className={"rounded-xl4 p-6 sm:p-7 " + TONES[i % TONES.length]} {...fade(i)}>
+              <h3 className="text-lg font-semibold text-ink">{v.title}</h3>
+              <p className="mt-2 text-[15px] text-ink/70 leading-relaxed">{v.body}</p>
             </motion.article>
           ))}
         </div>
 
-        <motion.div className="mt-16 card p-8 text-center" {...fade(0)}>
+        <motion.div className="mt-16 rounded-xl4 bg-lilac p-8 sm:p-10 text-center" {...fade(0)}>
           <h2 className="heading-md mb-3">Built with care</h2>
-          <p className="text-sm text-muted leading-relaxed max-w-md mx-auto">
+          <p className="text-[15px] text-ink/70 leading-relaxed max-w-md mx-auto">
             We use state-of-the-art AI for styling recommendations and
             photorealistic virtual try-on — all while keeping your data
             private and your photos secure.
@@ -66,24 +61,22 @@ export default function AboutPage() {
   );
 }
 
+const TONES = ["bg-sage", "bg-sky", "bg-blush", "bg-butter"];
+
 const VALUES = [
   {
-    icon: "✦",
     title: "Personal, not generic",
     body: "Every suggestion comes from your actual wardrobe — no random trend dumps.",
   },
   {
-    icon: "◎",
     title: "Privacy first",
     body: "Your photos stay yours. We never sell data or share images with third parties.",
   },
   {
-    icon: "⚡",
     title: "Instant try-on",
     body: "See any outfit on your body in seconds — same face, same proportions, new clothes.",
   },
   {
-    icon: "♻",
     title: "Wear what you own",
     body: "Rediscover pieces in your closet before buying new. Sustainable by default.",
   },

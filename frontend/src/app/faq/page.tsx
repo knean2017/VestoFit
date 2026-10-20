@@ -22,16 +22,12 @@ export default function FAQPage() {
       <Header />
 
       <section className="container-app py-16 sm:py-24 max-w-2xl">
-        <motion.span className="chip-accent mb-4 inline-flex" {...fade(0)}>
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent" />
-          Help center
-        </motion.span>
 
         <motion.h1
-          className="font-extrabold tracking-tightest text-3xl sm:text-4xl leading-[1.08] mb-10"
+          className="text-[clamp(48px,7vw,80px)] text-ink mb-10"
           {...fade(0)}
         >
-          Frequently asked <span className="text-accent">questions</span>
+          Frequently asked questions
         </motion.h1>
 
         <div className="space-y-3">

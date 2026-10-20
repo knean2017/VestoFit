@@ -56,9 +56,6 @@ export default function OnboardPage() {
       <section className="container-app py-8 sm:py-12">
         <div className="max-w-lg mx-auto animate-rise">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-ink text-white grid place-items-center mx-auto mb-4">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            </div>
             <h1 className="heading-lg">Upload your photo</h1>
             <p className="mt-2 text-sm text-muted font-medium max-w-sm mx-auto">
               One clear frontal photo — face the camera, decent lighting. This powers every virtual try-on.

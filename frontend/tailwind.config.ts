@@ -25,8 +25,8 @@ const config: Config = {
         sans: ['"Archivo"', "system-ui", "sans-serif"],
       },
       letterSpacing: {
-        tightest: "-0.02em",
-        tighter2: "-0.03em",
+        tightest: "-0.005em",
+        tighter2: "-0.01em",
       },
       borderRadius: {
         xl2: "12px",

@@ -48,12 +48,8 @@ export default function PricingPage() {
 
       <section className="container-app py-16 sm:py-24 max-w-4xl">
         <motion.div className="text-center mb-12" {...fade(0)}>
-          <span className="chip-accent mb-4 inline-flex">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent" />
-            Plans
-          </span>
-          <h1 className="font-extrabold tracking-tightest text-3xl sm:text-4xl md:text-5xl leading-[1.08]">
-            Pick your <span className="text-accent">plan</span>
+          <h1 className="text-[clamp(48px,7vw,88px)] text-ink">
+            Pick your plan
           </h1>
           <p className="mt-4 text-muted max-w-md mx-auto">
             Start free. Upgrade when you need more renders and features.

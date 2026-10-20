@@ -31,7 +31,6 @@
 
   /* Condensed display cut of Archivo: headlines and the wordmark. */
   h1,
-  h2,
   .display {
     font-variation-settings: "wdth" 62;
     font-weight: 700;
@@ -70,6 +69,9 @@
 
   .heading-lg {
     @apply text-4xl sm:text-5xl text-ink;
+    font-variation-settings: "wdth" 62;
+    font-weight: 700;
+    line-height: 0.95;
   }
 
   .heading-md {

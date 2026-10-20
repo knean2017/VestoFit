@@ -50,8 +50,10 @@ export default function HangingItem({
             </div>
           )}
           {item.is_favorite && (
-            <span className="absolute top-2 right-2 w-7 h-7 rounded-full bg-accentSoft grid place-items-center text-accent text-xs">
-              ♥
+            <span aria-label="Favorite" className="absolute top-2 right-2 w-7 h-7 rounded-full bg-blush grid place-items-center text-blush-ink">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.1 5.2 3 1.6-1.9 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z" />
+              </svg>
             </span>
           )}
           {pending && (

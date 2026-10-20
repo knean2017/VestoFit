@@ -119,7 +119,7 @@ function SubscriptionSection({ sub }: { sub: SubscriptionStatus | null }) {
             )}
             {usage.remaining === 0 && (
               <Link href="/pricing" className="text-xs font-bold text-accent hover:text-ink transition-colors">
-                Out of renders — upgrade →
+                Out of renders. Upgrade your plan
               </Link>
             )}
           </div>
@@ -131,7 +131,7 @@ function SubscriptionSection({ sub }: { sub: SubscriptionStatus | null }) {
             </a>
           )}
           <Link href="/pricing" className="btn-link inline-flex items-center gap-1">
-            View plans →
+            View plans
           </Link>
         </div>
       </div>

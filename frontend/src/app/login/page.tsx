@@ -39,9 +39,6 @@ export default function LoginPage() {
       <section className="flex-1 grid place-items-center px-5 py-12">
         <div className="w-full max-w-sm animate-rise">
           <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-accent text-white grid place-items-center text-2xl font-extrabold shadow-glow mx-auto mb-4">
-              F
-            </div>
             <h1 className="heading-lg">Welcome back</h1>
             <p className="mt-2 text-sm text-muted font-medium">
               Sign in to your VestoFit account

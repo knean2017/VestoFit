@@ -271,81 +271,110 @@ function LandingPage() {
           animate: { y: "0%" },
           transition: { duration: 0.9, ease: [0.2, 0.8, 0.2, 1], delay: 0.1 + i * 0.09 },
         };
-  const after = (delay: number) =>
+  const after = (delay: number, y = 0) =>
     reduce
       ? {}
       : {
-          initial: { opacity: 0 },
-          animate: { opacity: 1 },
-          transition: { duration: 0.6, delay },
+          initial: { opacity: 0, y },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.8, ease: [0.2, 0.8, 0.2, 1], delay },
         };
 
   return (
-    <main className="min-h-screen flex flex-col bg-bg">
+    <main className="min-h-screen flex flex-col bg-bg overflow-x-hidden">
       <Header />
       <MobileTopBar />
 
-      <section className="container-app pt-10 sm:pt-16 pb-16 sm:pb-24">
-        <h1 className="text-ink text-[clamp(56px,10.5vw,152px)] leading-[0.88]">
-          {HEADLINE.map((l, i) => (
-            <span key={l} className="block overflow-hidden pb-[0.04em]">
-              <motion.span className="block" {...line(i)}>
-                {l}
-              </motion.span>
-            </span>
-          ))}
-        </h1>
+      <section className="relative">
+        {/* Soft colour wash behind the hero */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-40 right-[-10%] w-[640px] h-[640px] rounded-full bg-lilac blur-[120px] opacity-80" />
+          <div className="absolute top-[40%] right-[25%] w-[420px] h-[420px] rounded-full bg-sky blur-[110px] opacity-70" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[480px] h-[480px] rounded-full bg-blush blur-[120px] opacity-60" />
+        </div>
 
-        <div className="mt-10 sm:mt-14 grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] md:gap-16 items-start">
-          <motion.div {...after(0.55)}>
-            <p className="text-lg sm:text-xl leading-relaxed max-w-[34ch] text-ink">
-              VestoFit learns your wardrobe from photos, puts outfits together for
-              wherever you&apos;re going, and shows them on you before you change.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-5">
-              <Link href="/register" className="btn-primary btn-lg">
-                Create account
-              </Link>
-              <Link href="/login" className="btn-link">
-                Sign in
-              </Link>
-            </div>
-          </motion.div>
+        <div className="relative container-app pt-10 sm:pt-16 pb-16 sm:pb-24 grid gap-12 md:grid-cols-12 md:gap-8">
+          <div className="md:col-span-7 md:pt-6">
+            <h1 className="text-ink text-[clamp(56px,7.6vw,116px)] leading-[0.88]">
+              {HEADLINE.map((l, i) => (
+                <span key={l} className="block overflow-hidden pb-[0.04em]">
+                  <motion.span className="block" {...line(i)}>
+                    {l}
+                  </motion.span>
+                </span>
+              ))}
+            </h1>
 
-          <motion.figure {...after(0.75)} className="bg-surface border border-line rounded-xl4 overflow-hidden shadow-lifted">
-            <div className="px-5 sm:px-7 pt-6 pb-7 space-y-5">
-              <p className="ml-auto w-fit max-w-[30ch] rounded-2xl rounded-br-md bg-lilac px-4 py-2.5 text-[15px] leading-relaxed text-ink">
-                Dinner on Friday, somewhere nice. It&apos;s supposed to rain.
+            <motion.div {...after(0.55)} className="mt-8 sm:mt-10">
+              <p className="text-lg sm:text-xl leading-relaxed max-w-[36ch] text-ink/80">
+                VestoFit learns your wardrobe from photos, puts outfits together for
+                wherever you&apos;re going, and shows them on you before you change.
               </p>
-              <p className="max-w-[40ch] text-[19px] sm:text-[21px] leading-snug text-accent">
-                Go with the charcoal wool trousers and the cream cable knit. Dressy
-                enough for dinner, and wool shrugs off a little rain.
-              </p>
-              <dl className="grid gap-2">
-                {EXAMPLE_LOOK.map(([name, kind]) => (
-                  <div key={name} className="flex items-center justify-between gap-4 rounded-xl2 bg-bg px-3.5 py-2.5 text-[14px]">
-                    <dt className="text-ink">{name}</dt>
-                    <dd className={"rounded-full px-2.5 py-0.5 text-[12px] font-medium " + categoryTone(kind)}>{kind}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-            <figcaption className="px-5 sm:px-7 py-3 border-t border-line text-[13px] text-muted">
-              Example of a stylist reply built from a saved closet
-            </figcaption>
-          </motion.figure>
+              <div className="mt-8 flex flex-wrap items-center gap-5">
+                <Link href="/register" className="btn-primary btn-lg">
+                  Create account
+                </Link>
+                <Link href="/login" className="btn-link">
+                  Sign in
+                </Link>
+              </div>
+            </motion.div>
+          </div>
+
+          <div className="md:col-span-5 relative">
+            <motion.div {...after(0.3, 24)} className="relative rounded-[28px] overflow-hidden aspect-[4/5] shadow-lifted">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/sweater-hook.jpg"
+                alt="A knit sweater on a wooden hanger against a soft wall"
+                className="absolute inset-0 w-full h-full object-cover object-[50%_75%]"
+              />
+            </motion.div>
+
+            <motion.figure
+              {...after(0.9, 16)}
+              className="relative -mt-28 mx-4 sm:mx-8 md:absolute md:mx-0 md:mt-0 md:-left-28 md:-bottom-14 md:w-[340px] bg-surface/90 backdrop-blur-xl border border-white/60 rounded-xl4 shadow-lifted overflow-hidden"
+            >
+              <div className="p-5 space-y-4">
+                <p className="ml-auto w-fit max-w-[28ch] rounded-2xl rounded-br-md bg-lilac px-4 py-2.5 text-[14px] leading-relaxed text-ink">
+                  Dinner on Friday, somewhere nice. It&apos;s supposed to rain.
+                </p>
+                <p className="text-[17px] leading-snug text-accent">
+                  Go with the charcoal wool trousers and the cream cable knit. Dressy
+                  enough for dinner, and wool shrugs off a little rain.
+                </p>
+                <dl className="grid gap-2">
+                  {EXAMPLE_LOOK.map(([name, kind]) => (
+                    <div key={name} className="flex items-center justify-between gap-4 rounded-xl2 bg-bg px-3.5 py-2 text-[14px]">
+                      <dt className="text-ink">{name}</dt>
+                      <dd className={"rounded-full px-2.5 py-0.5 text-[12px] font-medium " + categoryTone(kind)}>{kind}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+              <figcaption className="px-5 py-2.5 border-t border-line text-[12px] text-muted">
+                Example stylist reply
+              </figcaption>
+            </motion.figure>
+          </div>
         </div>
       </section>
 
       <section>
         <div className="container-app py-16 sm:py-24">
-          <h2 className="text-[clamp(40px,6vw,72px)] text-ink max-w-[14ch]">How it works</h2>
+          <h2 className="display text-[clamp(40px,6vw,72px)] text-ink max-w-[14ch]">How it works</h2>
           <ol className="mt-12 grid gap-4 sm:grid-cols-3">
             {STEPS.map((s, i) => (
-              <li key={s.title} className={"rounded-xl4 p-6 sm:p-8 " + s.tone}>
-                <span className="display text-[64px] leading-none">{i + 1}</span>
-                <h3 className="mt-6 text-xl font-semibold text-ink">{s.title}</h3>
-                <p className="mt-3 text-[15px] leading-relaxed text-ink/70 max-w-[36ch]">{s.body}</p>
+              <li key={s.title} className={"rounded-xl4 p-3 pb-7 " + s.tone}>
+                <div className="relative aspect-[4/3] rounded-xl3 overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={s.image} alt={s.alt} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+                </div>
+                <div className="px-3 sm:px-4">
+                  <span className="mt-6 block display text-[48px] leading-none">{i + 1}</span>
+                  <h3 className="mt-4 text-xl font-semibold text-ink">{s.title}</h3>
+                  <p className="mt-2 text-[15px] leading-relaxed text-ink/70 max-w-[36ch]">{s.body}</p>
+                </div>
               </li>
             ))}
           </ol>
@@ -353,21 +382,28 @@ function LandingPage() {
       </section>
 
       <section className="container-app pb-16 sm:pb-24">
-        <div className="rounded-[28px] bg-lilac px-6 sm:px-12 py-14 sm:py-20 grid gap-10 md:grid-cols-[1.4fr_1fr] md:items-end">
-          <h2 className="text-[clamp(44px,7vw,104px)] leading-[0.9] text-ink">
-            Same face, same body. Only the clothes change.
-          </h2>
-          <div>
-            <p className="text-lg leading-relaxed text-ink/75 max-w-[38ch]">
+        <div className="relative overflow-hidden rounded-[28px] bg-lilac grid md:grid-cols-[1.25fr_1fr]">
+          <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-24 w-[420px] h-[420px] rounded-full bg-sky blur-[100px] opacity-80" />
+          <div className="relative px-6 sm:px-12 py-14 sm:py-20 flex flex-col justify-end">
+            <h2 className="display text-[clamp(44px,6.4vw,96px)] !leading-[0.9] text-ink">
+              Same face, same body. Only the clothes change.
+            </h2>
+            <p className="mt-8 text-lg leading-relaxed text-ink/75 max-w-[40ch]">
               Try-on renders start from your own photos, so you judge the fit and colour on
               you, not on a model. Your photos stay private to your account.
             </p>
-            <Link
-              href="/register"
-              className="btn-primary btn-lg mt-8"
-            >
+            <Link href="/register" className="btn-primary btn-lg mt-8 self-start">
               Create account
             </Link>
+          </div>
+          <div className="relative min-h-[320px]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/three-knits.jpg"
+              alt="Three knit sweaters in mustard, cream and brown laid side by side"
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
           </div>
         </div>
       </section>
@@ -379,7 +415,7 @@ function LandingPage() {
 
 function MobileTopBar() {
   return (
-    <div className="md:hidden container-app h-14 flex items-center justify-between border-b border-line">
+    <div className="md:hidden container-app w-full h-14 flex items-center justify-between border-b border-line">
       <span className="display text-[26px] leading-none">VestoFit</span>
       <Link href="/login" className="text-[15px] text-ink">
         Sign in
@@ -398,15 +434,21 @@ const STEPS = [
     title: "Photograph your clothes",
     body: "Snap each piece once. VestoFit tags the category, colour, pattern, formality, and season for you.",
     tone: "bg-sage text-sage-ink",
+    image: "/images/folded-knits.jpg",
+    alt: "Folded knitwear stacked on a shelf",
   },
   {
     title: "Ask for an outfit",
     body: "Tell the stylist where you're going. It builds looks from what you own and says when something is missing.",
     tone: "bg-sky text-sky-ink",
+    image: "/images/flat-lay.jpg",
+    alt: "An outfit laid flat: jeans, shirt and tie, blazer and brown shoes",
   },
   {
     title: "Try it on",
     body: "Upload a few photos of yourself once. Then see any outfit, or a piece from a shop, on your own body.",
     tone: "bg-blush text-blush-ink",
+    image: "/images/rack.jpg",
+    alt: "Shirts and knits in soft colours on a clothing rail",
   },
 ];
