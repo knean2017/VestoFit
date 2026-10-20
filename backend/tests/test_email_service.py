@@ -6,7 +6,7 @@ from app.services.email_service import send_email
 
 async def test_console_backend_logs_when_no_smtp_host(monkeypatch, caplog):
     monkeypatch.setattr(email_service._settings, "smtp_host", "")
-    with caplog.at_level(logging.INFO, logger="fitme.email"):
+    with caplog.at_level(logging.INFO, logger="vestofit.email"):
         await send_email("user@example.com", "Reset your password", "click here: http://x")
     joined = " ".join(r.getMessage() for r in caplog.records)
     assert "user@example.com" in joined

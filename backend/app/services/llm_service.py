@@ -14,7 +14,7 @@ import httpx
 from app.config import get_settings
 
 _settings = get_settings()
-_log = logging.getLogger("fitme.llm")
+_log = logging.getLogger("vestofit.llm")
 _GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
 
 

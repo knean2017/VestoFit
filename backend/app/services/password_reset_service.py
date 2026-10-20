@@ -76,8 +76,8 @@ async def request_reset(db: AsyncSession, email: str) -> None:
     link = f"{get_settings().frontend_url}/reset-password?token={raw}"
     await email_svc.send_email(
         user.email,
-        "Reset your FitMe password",
-        "Someone (hopefully you) asked to reset your FitMe password.\n\n"
+        "Reset your VestoFit password",
+        "Someone (hopefully you) asked to reset your VestoFit password.\n\n"
         f"Reset code (paste it in the app): {raw}\n\n"
         f"Or reset in the browser (valid 30 minutes): {link}\n\n"
         "If this wasn't you, ignore this email — your password is unchanged.",

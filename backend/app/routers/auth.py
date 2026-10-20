@@ -36,7 +36,7 @@ from app.services.email_verification_service import (
     verify_email,
 )
 
-_log = logging.getLogger("fitme.auth")
+_log = logging.getLogger("vestofit.auth")
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

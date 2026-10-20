@@ -19,7 +19,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
 )
-_http_log = logging.getLogger("fitme.http")
+_http_log = logging.getLogger("vestofit.http")
 
 
 @asynccontextmanager
@@ -30,7 +30,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="FitMe API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="VestoFit API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

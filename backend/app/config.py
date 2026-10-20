@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str = ""
     smtp_password: str = ""
-    email_from: str = "FitMe <no-reply@fitme.app>"
+    email_from: str = "VestoFit <no-reply@vestofit.app>"
 
 
 @lru_cache

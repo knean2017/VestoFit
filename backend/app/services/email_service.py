@@ -8,7 +8,7 @@ from email.message import EmailMessage
 from app.config import get_settings
 
 _settings = get_settings()
-_log = logging.getLogger("fitme.email")
+_log = logging.getLogger("vestofit.email")
 # Uvicorn only configures its own loggers; without this the console backend's
 # INFO lines (the reset links in dev) never reach stdout.
 if not _log.handlers:

@@ -36,7 +36,7 @@ async def test_gemini_failure_is_logged_with_status_and_model(monkeypatch, caplo
 
     monkeypatch.setattr(llm_service.asyncio, "sleep", no_sleep)
 
-    with caplog.at_level(logging.WARNING, logger="fitme.llm"):
+    with caplog.at_level(logging.WARNING, logger="vestofit.llm"):
         with pytest.raises(LlmError):
             await llm_service._gemini_generate([{"text": "hi"}], json_mode=False)
 

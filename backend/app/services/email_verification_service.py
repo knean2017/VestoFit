@@ -68,8 +68,8 @@ async def request_verification(db: AsyncSession, user: User) -> None:
 
     await email_svc.send_email(
         user.email,
-        "Verify your FitMe email",
-        "Welcome to FitMe! Confirm this email address to unlock try-on renders.\n\n"
+        "Verify your VestoFit email",
+        "Welcome to VestoFit! Confirm this email address to unlock try-on renders.\n\n"
         f"Verification code (paste it in the app): {code}\n\n"
         "The code is valid for 24 hours. If you didn't sign up, ignore this email.",
     )
