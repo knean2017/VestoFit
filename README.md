@@ -1,87 +1,127 @@
-# FitMe
+# VestoFit — AI Stylist & Virtual Try-On
 
-Your AI-powered wardrobe assistant. Upload your clothes, get outfit suggestions from a personal stylist, try on any garment virtually, and shop for new pieces — all through natural conversation.
+VestoFit is a fashion-tech app that combines an AI stylist, a virtual wardrobe, photorealistic virtual try-on, and AI-assisted shopping — all driven by natural conversation.
 
-See [`FITME_PROJECT.md`](./FITME_PROJECT.md) for the full architecture and design rationale.
+- **Mobile app** (`mobile/`) — Expo / React Native. **This is the production surface.**
+- **Backend API** (`backend/`) — FastAPI + PostgreSQL, serves the mobile app (and the web demo).
+- **Web demo** (`frontend/`) — Next.js. Development/demo surface only; it does not ship to production.
+
+<p align="center">
+  <img src="docs/screenshots/home-auth.png" width="48%" alt="AI stylist home" />
+  <img src="docs/screenshots/studio.png" width="48%" alt="Try-on studio" />
+</p>
 
 ---
 
 ## Features
 
-- **AI Stylist** — Chat with your personal stylist on the home page. Asks about your occasion, suggests outfits from your wardrobe, and guides new users to build their closet — all through free-form conversation.
-- **Virtual Try-On** — Upload a garment image or paste a product URL. The app renders it on your photo with consistent face, body, and lighting using FAL.ai try-on models.
-- **Smart Wardrobe** — Snap photos of your clothes. AI auto-tags each item (category, color, pattern, formality, season). Browse with category filters on a hanging-rack UI with 3D closet door entrance.
-- **AI-Powered Shopping** — Tell the stylist what you need ("summer dress under $80") and it searches for you. The AI decides whether to auto-search or ask follow-up questions. Manual filters available behind a toggle.
-- **Immersive UI** — 3D closet doors (wardrobe), curtain-pull reveal (shop), mirror + glint sweep (studio). GSAP animations, Lenis smooth scroll, Framer Motion transitions. All gracefully degrade with `prefers-reduced-motion`.
+- **AI Stylist** — Chat about an occasion or your style. The stylist knows your wardrobe, suggests complete outfits, builds a style profile, and can re-roll suggestions.
+- **Virtual Try-On** — Try a garment from a product URL or an uploaded photo, or render a full outfit, on your own avatar. Powered by FAL.ai try-on models (Kling Kolors by default).
+- **Smart Wardrobe** — Photograph your clothes; the AI auto-tags category, color, pattern, formality, and season. Backgrounds are removed automatically.
+- **AI Shopping** — Describe what you need ("summer dress under $80"). The assistant runs a grounded search (location-aware, cached) or asks clarifying questions first.
+- **Accounts** — JWT auth, email verification, password reset, account deletion, rate limiting.
+- **Plans & quotas** — Render quotas per plan, LemonSqueezy checkout and webhooks.
 
 ---
 
-## Quick start (Docker — recommended)
+## Architecture
 
-You'll need: **Docker Desktop** (Windows/Mac), a **FAL.ai API key**, and a **Gemini API key**.
+```
+┌──────────────────────┐        ┌───────────────────────────┐
+│ mobile/ (Expo, RN)   │──HTTP──▶                           │──▶ PostgreSQL 16
+│ production client    │        │  backend/ (FastAPI)       │
+└──────────────────────┘        │  auth · wardrobe · stylist│──▶ Gemini (LLM: tagging, stylist, shopping)
+┌──────────────────────┐        │  tryon · outfits · shop   │──▶ FAL.ai (try-on, avatar editing)
+│ frontend/ (Next.js)  │──HTTP──▶  billing · settings       │──▶ Local disk or Cloudflare R2
+│ web demo only        │        │                           │──▶ LemonSqueezy, SMTP (optional)
+└──────────────────────┘        └───────────────────────────┘
+```
 
-1. Get API keys:
-   - FAL key: https://fal.ai/dashboard/keys (free tier works for dev)
-   - Gemini key: https://aistudio.google.com/apikey (free tier works for dev)
+| Layer | Technology |
+|-------|-----------|
+| Mobile | Expo SDK 54, React Native 0.81, Expo Router, TanStack Query, Reanimated 4, Unistyles |
+| Backend | FastAPI, SQLAlchemy 2 (async), asyncpg, Pydantic 2 |
+| AI | Gemini 2.5 Flash-Lite (tagging, stylist, shopping), FAL.ai (try-on, Flux Kontext avatar edits), rembg, OpenCV |
+| Web demo | Next.js 14, React 18, Tailwind, Framer Motion, GSAP, React Three Fiber, Lenis |
+| Infra | Docker Compose, PostgreSQL 16, Cloudflare R2 (optional) |
 
-2. Copy and fill the backend env:
+---
 
-   ```powershell
-   Copy-Item backend\.env.example backend\.env
-   notepad backend\.env
-   ```
+## Getting started
 
-   At minimum set:
+### Prerequisites
 
-   ```
-   FAL_KEY=<your-fal-key>
-   GEMINI_API_KEY=<your-gemini-key>
-   JWT_SECRET_KEY=<any-long-random-string>
-   ```
+- Docker Desktop (recommended), or Python 3.11 + Node 20 + PostgreSQL 16
+- API keys:
+  - **FAL.ai** — https://fal.ai/dashboard/keys
+  - **Gemini** — https://aistudio.google.com/apikey
 
-3. Start everything:
+### 1. Configure the backend
 
-   ```powershell
-   docker compose up --build
-   ```
+```bash
+cp backend/.env.example backend/.env
+```
 
-4. Open the app at http://localhost:3000.
-   The API runs at http://localhost:8000 with auto-generated docs at http://localhost:8000/docs.
+Set at least:
 
-The first build takes a few minutes (Playwright + model downloads). Subsequent starts are fast.
+```
+FAL_KEY=<your-fal-key>
+GEMINI_API_KEY=<your-gemini-key>
+JWT_SECRET_KEY=<any-long-random-string>
+```
 
-**Troubleshooting:** If the frontend fails with "Module not found" errors after adding dependencies, remove the stale Docker volume:
-```powershell
-docker compose down
-docker volume rm vto_frontend_node_modules
+All other options (storage, billing, SMTP, model choices) are documented inline in [`backend/.env.example`](backend/.env.example).
+
+### 2. Run the backend (Docker)
+
+```bash
 docker compose up --build
 ```
 
----
+- API: http://localhost:8000
+- Interactive docs: http://localhost:8000/docs
+- Web demo: http://localhost:3000
 
-## Quick start (without Docker — Windows native)
+The first build takes a few minutes (Playwright and model downloads).
 
-You need: **Python 3.11**, **Node 20**, **PostgreSQL 16** running locally.
+<details>
+<summary>Run without Docker</summary>
 
-### Backend
-
-```powershell
+```bash
 cd backend
 python -m venv .venv
-.venv\Scripts\Activate.ps1
+source .venv/bin/activate        # Windows: .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 python -m playwright install chromium
-Copy-Item .env.example .env
-# Edit .env — at minimum, FAL_KEY, GEMINI_API_KEY, and DATABASE_URL
-notepad .env
 uvicorn app.main:app --reload
 ```
 
-### Frontend
+Point `DATABASE_URL` in `backend/.env` at your local PostgreSQL.
 
-In a separate terminal:
+</details>
 
-```powershell
+### 3. Run the mobile app
+
+The app uses native modules (Unistyles), so it needs a **development build** — Expo Go will not work.
+
+```bash
+cd mobile
+npm install
+cp .env.example .env
+npm run android      # or: npm run ios
+```
+
+Set `API_URL` in `mobile/.env` to a backend address reachable from the device:
+
+| Target | `API_URL` |
+|--------|-----------|
+| iOS simulator | `http://localhost:8000` |
+| Android emulator | `http://10.0.2.2:8000` |
+| Physical device | `http://<your-LAN-IP>:8000` |
+
+### 4. Run the web demo (optional)
+
+```bash
 cd frontend
 npm install
 npm run dev
@@ -89,102 +129,52 @@ npm run dev
 
 ---
 
-## Pages
+## Testing
 
-| Route | Name | Description |
-|-------|------|-------------|
-| `/` | Home | AI stylist conversation + outfit silhouette preview. Landing page for unauthenticated users. |
-| `/wardrobe` | The Closet | 3D closet door entrance. Hanging-rack wardrobe with category tabs, add/edit/delete items. |
-| `/shop` | The Boutique | Curtain-pull entrance. AI-driven shopping assistant with manual filter toggle. |
-| `/studio` | The Dressing Room | Mirror reveal entrance. Virtual try-on via URL or upload. Polaroid render history. |
-| `/stylist` | Stylist | Direct stylist conversation page. |
-| `/onboard` | Onboard | Upload 3–8 photos to create your avatar. |
-| `/settings` | Settings | Account preferences. |
-| `/login` | Login | Sign in. |
-| `/register` | Register | Create account. |
+```bash
+# Backend
+cd backend && pip install -r requirements-dev.txt && pytest
+
+# Mobile
+cd mobile && npm test && npm run typecheck && npm run lint
+```
 
 ---
 
-## How it works
+## API overview
 
-1. **Sign up** at `/register`, then upload **3–8 photographs** at `/onboard`.
-2. The backend scores each photo for **frontality** (face size + centeredness) using OpenCV and promotes the strongest frame to your **canonical avatar**.
-3. In the **Wardrobe** (`/wardrobe`), upload clothing photos. The AI (Gemini) auto-tags each item with category, color, pattern, formality, and season.
-4. On the **Home** page (`/`), chat with the AI stylist. It knows your wardrobe and suggests outfits for any occasion.
-5. In the **Studio** (`/studio`), paste a product URL or upload a garment image. The backend scrapes the page, removes the background, and submits a try-on request to FAL.ai.
-6. In the **Shop** (`/shop`), tell the AI what you're looking for. It searches and shows results, or asks clarifying questions first.
+Full, live schema at `/docs` when the backend is running.
 
----
-
-## API endpoints
-
-### Auth
-- `POST /auth/register` — Create account
-- `POST /auth/login` — Sign in, returns JWT
-
-### Wardrobe
-- `GET /wardrobe` — List items
-- `POST /wardrobe` — Upload item (image + category)
-- `PATCH /wardrobe/{id}` — Update item metadata
-- `DELETE /wardrobe/{id}` — Delete item
-
-### Stylist
-- `POST /stylist/suggest` — AI outfit suggestion from wardrobe
-- `POST /stylist/reroll` — Re-roll suggestion
-- `GET /stylist/messages` — Chat history
-
-### Shopping
-- `POST /shopping/search` — Manual product search with filters
-- `POST /shopping/ask` — AI-driven shopping chat (returns reply + optional auto-search results)
-- `GET /shopping/history` — Search history
-
-### Try-On
-- `POST /tryon/url` — Try on from product URL
-- `POST /tryon/upload` — Try on from uploaded image
-- `GET /tryon/status/{job_id}` — Job status
-- `GET /tryon/history` — Render history
-
-### Avatar
-- `POST /onboard/upload` — Upload avatar photos
-- `GET /avatar/me` — Current avatar
+| Area | Endpoints |
+|------|-----------|
+| Auth | `POST /auth/register`, `/auth/login`, `/auth/forgot`, `/auth/reset`, `/auth/verify/request`, `/auth/verify` · `GET/PATCH /auth/me` |
+| Avatar | `POST /avatar/upload` · `GET/DELETE /avatar/me` |
+| Wardrobe | `GET/POST /wardrobe/items` · `GET/PATCH/DELETE /wardrobe/items/{id}` · `POST /wardrobe/items/{id}/retag` |
+| Stylist | `POST /stylist/chat`, `/stylist/suggest`, `/stylist/reroll` · `GET /stylist/messages` · `GET/PUT/DELETE /stylist/profile` · `POST /stylist/profile/analyze` |
+| Outfits | `GET/POST /outfits` · `GET /outfits/{id}` · `POST /outfits/{id}/render` |
+| Try-on | `POST /tryon/url`, `/tryon/upload`, `/tryon/outfit` · `GET /tryon/{job_id}`, `/tryon/history` |
+| Shopping | `POST /shopping/search`, `/shopping/ask` · `GET /shopping/history` |
+| Billing | `POST /billing/checkout`, `/billing/webhook` · `GET /billing/subscription`, `/billing/usage` |
+| Settings | `PUT /settings/password` · `DELETE /settings/history`, `/settings/account` |
+| Files | `GET /files/{key}` (local storage mode) |
 
 ---
 
-## Storage modes
+## Configuration notes
 
-Set `STORAGE_BACKEND` in `.env`:
+**Storage** — `STORAGE_BACKEND=local` (default) stores files in `backend/.storage` and serves them at `/files/<key>`. Set `STORAGE_BACKEND=r2` plus the `R2_*` variables to use Cloudflare R2.
 
-- **`local`** (default) — Files in `backend/.storage`, served at `/files/<key>`. Best for development.
-- **`r2`** — Cloudflare R2 (S3-compatible). Set `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`.
-
----
-
-## AI models
-
-### Try-on (FAL.ai)
-
-Set `FAL_TRYON_MODEL` in `.env`:
+**Try-on model** — `FAL_TRYON_MODEL` selects the FAL model:
 
 - `fal-ai/kling/v1-5/kolors-virtual-try-on` — default, best identity preservation
-- `fal-ai/fashn/tryon/v1.6` — best for complex fabrics
-- `fal-ai/cat-vton` — good for non-standard poses
-- `fal-ai/idm-vton` — legacy
+- `fal-ai/fashn/tryon/v1.6` — complex fabrics
+- `fal-ai/cat-vton` — non-standard poses
+- `fal-ai/image-apps-v2/virtual-try-on` — cheaper, 4K output
 - `fal-ai/leffa` — fast
 
-### LLM (Gemini)
+**LLM** — `LLM_MODEL` defaults to `gemini-2.5-flash-lite`.
 
-Set `LLM_MODEL` in `.env`. Default: `gemini-2.5-flash-lite`. Used for wardrobe auto-tagging, stylist chat, and shopping intent parsing.
-
----
-
-## Tech stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 14, TypeScript, Tailwind 3, Framer Motion, GSAP, React Three Fiber, Lenis |
-| Backend | FastAPI, SQLAlchemy (async), PostgreSQL 16, Pydantic |
-| AI | Gemini 2.5 Flash-Lite (tagging + chat), FAL.ai (try-on + avatar editing) |
-| Infra | Docker Compose, Cloudflare R2 (optional) |
+**Email** — Without SMTP settings, verification and reset links are logged to the backend console.
 
 ---
 
@@ -192,26 +182,26 @@ Set `LLM_MODEL` in `.env`. Default: `gemini-2.5-flash-lite`. Used for wardrobe a
 
 ```
 VTO/
-├── backend/                FastAPI + SQLAlchemy + FAL integration
+├── backend/            FastAPI app
 │   ├── app/
-│   │   ├── routers/        HTTP endpoints (auth, wardrobe, stylist, shopping, tryon)
-│   │   ├── services/       Business logic (LLM, shopping, stylist, tryon, storage)
-│   │   ├── models/         SQLAlchemy ORM models
-│   │   └── schemas/        Pydantic request/response schemas
-│   ├── Dockerfile
-│   └── requirements.txt
-├── frontend/               Next.js 14 + TypeScript + Tailwind
-│   └── src/
-│       ├── app/            App Router pages
-│       ├── components/     UI components (StylistChat, wardrobe/*, shop/*, studio/*)
-│       └── lib/            API client, auth, GSAP setup, hooks
-├── docker-compose.yml
-├── FITME_PROJECT.md        Architecture & design doc
-└── README.md
+│   │   ├── routers/    HTTP endpoints
+│   │   ├── services/   Business logic (LLM, try-on, shopping, quotas, storage, email)
+│   │   ├── models/     SQLAlchemy models
+│   │   └── schemas/    Pydantic schemas
+│   └── tests/          pytest suite
+├── mobile/             Expo app (production client)
+│   ├── app/            Expo Router screens: (auth), (onboard), (tabs), settings, pricing…
+│   ├── src/            features, components, lib, theme
+│   └── __tests__/      Jest tests
+├── frontend/           Next.js web demo
+├── docs/               Design specs, implementation plans, screenshots
+└── docker-compose.yml  Postgres + backend + web demo
 ```
 
 ---
 
-## License
+## Screenshots (web demo)
 
-This repo is yours. Do what you want with it.
+| Wardrobe | Shop | Pricing |
+|---|---|---|
+| ![Wardrobe](docs/screenshots/wardrobe-final.png) | ![Shop](docs/screenshots/shop.png) | ![Pricing](docs/screenshots/pricing.png) |
