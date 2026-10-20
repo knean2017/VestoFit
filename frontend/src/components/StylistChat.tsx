@@ -196,11 +196,11 @@ export default function StylistChat({
     <div className={"flex flex-col " + className}>
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0"
+        className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 space-y-5 min-h-0"
       >
         {/* Greeting + history toggle */}
         <div className="flex justify-start">
-          <div className="max-w-md rounded-xl3 px-4 py-2.5 text-sm bg-surface2 text-ink rounded-bl-lg">
+          <div className="max-w-[44ch] text-[17px] leading-snug text-accent">
             {greetingText}
           </div>
         </div>
@@ -210,7 +210,7 @@ export default function StylistChat({
             type="button"
             onClick={loadHistory}
             disabled={historyLoading}
-            className="text-xs text-muted/60 hover:text-coral transition-colors px-1 flex items-center gap-1"
+            className="text-[13px] text-muted hover:text-ink transition-colors flex items-center gap-1.5"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
@@ -224,11 +224,11 @@ export default function StylistChat({
         {showHistory && historyMessages.length > 0 && (
           <div className="space-y-2 border-b border-line/40 pb-3 mb-2">
             <div className="flex items-center justify-between px-1">
-              <span className="text-[10px] font-medium text-muted/50 uppercase tracking-wider">Past messages</span>
+              <span className="text-[13px] text-muted">Past messages</span>
               <button
                 type="button"
                 onClick={() => setShowHistory(false)}
-                className="text-[10px] text-muted/50 hover:text-coral transition-colors"
+                className="text-[13px] text-muted hover:text-ink transition-colors underline underline-offset-4"
               >
                 Hide
               </button>
@@ -240,10 +240,10 @@ export default function StylistChat({
               >
                 <div
                   className={
-                    "max-w-md rounded-xl3 px-4 py-2.5 text-sm opacity-50 " +
+                    "opacity-60 " +
                     (msg.role === "user"
-                      ? "bg-coral text-white rounded-br-lg"
-                      : "bg-surface2 text-ink rounded-bl-lg")
+                      ? "max-w-[34ch] px-4 py-2.5 text-[15px] rounded-2xl rounded-br-md bg-lilac text-ink"
+                      : "max-w-[44ch] text-[16px] leading-snug text-accent")
                   }
                 >
                   {msg.content}
@@ -253,13 +253,13 @@ export default function StylistChat({
           </div>
         )}
         {showHistory && historyMessages.length === 0 && !historyLoading && (
-          <p className="text-xs text-muted/40 px-1 italic">No past conversations yet</p>
+          <p className="text-[13px] text-muted">No past conversations yet</p>
         )}
 
         {/* Example prompts */}
         {showExamples && (
-          <p className="text-xs text-muted/50 px-1 italic">
-            Try: {EXAMPLE_PROMPTS[mode]}
+          <p className="text-[13px] text-muted">
+            Try {EXAMPLE_PROMPTS[mode]}
           </p>
         )}
 
@@ -276,16 +276,15 @@ export default function StylistChat({
               <div>
                 <div
                   className={
-                    "max-w-md rounded-xl3 px-4 py-2.5 text-sm " +
                     (msg.role === "user"
-                      ? "bg-coral text-white rounded-br-lg"
-                      : "bg-surface2 text-ink rounded-bl-lg")
+                      ? "ml-auto max-w-[34ch] px-4 py-2.5 text-[15px] rounded-2xl rounded-br-md bg-lilac text-ink"
+                      : "max-w-[44ch] text-[17px] leading-snug text-accent")
                   }
                 >
                   {msg.content}
                   {msg.searchTriggered && (
-                    <span className="block mt-1 text-[10px] text-muted">
-                      ↓ Results below
+                    <span className="block mt-1 text-[13px] text-muted">
+                      Results are below
                     </span>
                   )}
                 </div>
@@ -297,7 +296,7 @@ export default function StylistChat({
                         key={chip}
                         type="button"
                         onClick={() => handleChip(chip)}
-                        className="chip text-xs hover:bg-coralSoft hover:text-coral transition-colors"
+                        className="chip hover:border-ink transition-colors"
                       >
                         {chip}
                       </button>
@@ -308,9 +307,9 @@ export default function StylistChat({
                   <button
                     type="button"
                     onClick={() => router.push(`/shop?q=${encodeURIComponent(msg.shopQuery!)}&from=stylist`)}
-                    className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-coral hover:text-ink transition-colors"
+                    className="mt-3 btn-link"
                   >
-                    Shop these →
+                    Shop these
                   </button>
                 )}
                 {msg.results && msg.results.length > 0 && (
@@ -321,7 +320,7 @@ export default function StylistChat({
                         href={r.product_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="shrink-0 w-28 rounded-xl3 border border-line bg-surface2 overflow-hidden hover:border-coral transition-colors"
+                        className="shrink-0 w-28 rounded-xl2 overflow-hidden border border-line bg-surface hover:border-accent transition-colors"
                       >
                         <div className="aspect-[3/4] bg-surface2">
                           {r.image_url && (
@@ -330,8 +329,8 @@ export default function StylistChat({
                           )}
                         </div>
                         <div className="p-1.5">
-                          <p className="text-[10px] leading-tight line-clamp-2">{r.title}</p>
-                          <p className="text-[10px] font-bold text-coral mt-0.5">
+                          <p className="text-[12px] leading-tight line-clamp-2">{r.title}</p>
+                          <p className="text-[12px] font-semibold mt-1">
                             {r.price != null ? `${r.approx ? "~" : ""}${msg.currency || "USD"} ${r.price.toFixed(0)}` : r.source}
                           </p>
                         </div>
@@ -347,12 +346,12 @@ export default function StylistChat({
         {/* Typing indicator */}
         {sending && (
           <div className="flex justify-start">
-            <div className="bg-surface2 rounded-xl3 rounded-bl-lg px-4 py-3 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-muted animate-pulse" />
-              <span className="w-1.5 h-1.5 rounded-full bg-muted animate-pulse [animation-delay:150ms]" />
-              <span className="w-1.5 h-1.5 rounded-full bg-muted animate-pulse [animation-delay:300ms]" />
+            <div className="py-2 flex items-center gap-1.5" role="status" aria-label="Stylist is replying">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse [animation-delay:150ms]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse [animation-delay:300ms]" />
               {slowTimer && (
-                <span className="text-xs text-muted ml-2">Still thinking...</span>
+                <span className="text-[13px] text-muted ml-2">Still working on it</span>
               )}
             </div>
           </div>
@@ -362,7 +361,7 @@ export default function StylistChat({
       {/* Input bar */}
       <form
         onSubmit={handleSend}
-        className="flex gap-2 px-4 py-3 border-t border-line bg-bg"
+        className="flex gap-2 px-4 sm:px-6 py-4 border-t border-line"
       >
         <input
           ref={inputRef}
@@ -370,12 +369,12 @@ export default function StylistChat({
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask your stylist..."
           disabled={sending}
-          className="field-sm flex-1"
+          className="field flex-1 h-11 py-0"
         />
         <button
           type="submit"
           disabled={!input.trim() || sending}
-          className="btn-primary px-4 py-2 text-sm"
+          className="btn-primary"
         >
           Send
         </button>

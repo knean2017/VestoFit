@@ -24,7 +24,7 @@ export default function GarmentInput({
     <div className="rounded-2xl bg-surface p-5 space-y-5 shadow-soft">
       <div
         onClick={() => fileInput.current?.click()}
-        className="border-2 border-dashed border-line rounded-xl p-6 text-center cursor-pointer hover:border-coral transition-colors"
+        className="border-2 border-dashed border-line rounded-xl p-6 text-center cursor-pointer hover:border-accent transition-colors"
       >
         {filePreview ? (
           // eslint-disable-next-line @next/next/no-img-element

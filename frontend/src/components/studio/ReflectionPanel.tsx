@@ -59,7 +59,7 @@ export default function ReflectionPanel({
             <>
               <div className="glass-shimmer" />
               <div className="absolute inset-x-0 bottom-0 z-20">
-                <div className="h-[2px] bg-coral/60 animate-pulse" />
+                <div className="h-[2px] bg-accent/60 animate-pulse" />
                 <p className="text-center text-xs text-ink/80 py-2">
                   Rendering your look…
                 </p>

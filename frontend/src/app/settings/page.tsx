@@ -32,12 +32,12 @@ export default function SettingsPage() {
         <div className="max-w-xl mx-auto space-y-6">
           {/* Profile header */}
           <div className="card p-6 flex items-center gap-5 animate-rise">
-            <div className="w-16 h-16 rounded-full bg-coralSoft grid place-items-center text-2xl shrink-0 avatar-ring">
+            <div className="w-16 h-16 rounded-full bg-accentSoft grid place-items-center text-2xl shrink-0 avatar-ring">
               {avatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={avatar.photo_url} alt="avatar" className="w-full h-full rounded-full object-cover" />
               ) : (
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF6B5E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               )}
             </div>
             <div>
@@ -112,13 +112,13 @@ function SubscriptionSection({ sub }: { sub: SubscriptionStatus | null }) {
             {usage.limit !== null && (
               <div className="h-1.5 rounded-full bg-surface2 overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-coral transition-all"
+                  className="h-full rounded-full bg-accent transition-all"
                   style={{ width: `${Math.min((usage.used / usage.limit) * 100, 100)}%` }}
                 />
               </div>
             )}
             {usage.remaining === 0 && (
-              <Link href="/pricing" className="text-xs font-bold text-coral hover:text-ink transition-colors">
+              <Link href="/pricing" className="text-xs font-bold text-accent hover:text-ink transition-colors">
                 Out of renders — upgrade →
               </Link>
             )}

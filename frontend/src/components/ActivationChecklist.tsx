@@ -24,16 +24,11 @@ export default function ActivationChecklist() {
   const next = steps.find((s) => !s.complete);
 
   return (
-    <div className="card p-5 space-y-3" data-activation-checklist>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="font-bold text-ink">
-            Get set up ({completed}/{steps.length})
-          </h2>
-          <p className="text-xs text-muted mt-0.5">
-            Four quick steps to your first try-on.
-          </p>
-        </div>
+    <section className="rounded-xl4 bg-butter/70 overflow-hidden" data-activation-checklist>
+      <div className="flex items-center justify-between gap-3 px-4 sm:px-5 pt-3 pb-1">
+        <h2 className="text-[15px] font-semibold text-ink" style={{ fontVariationSettings: '"wdth" 100', letterSpacing: 0, lineHeight: 1.3 }}>
+          Get set up <span className="text-muted font-normal">{completed} of {steps.length} done</span>
+        </h2>
         <button
           type="button"
           aria-label="Dismiss setup checklist"
@@ -41,49 +36,31 @@ export default function ActivationChecklist() {
             window.localStorage.setItem(HIDE_KEY, "1");
             setHidden(true);
           }}
-          className="text-muted hover:text-ink transition-colors text-lg leading-none"
+          className="w-8 h-8 -mr-2 grid place-items-center text-muted hover:text-ink transition-colors text-xl leading-none"
         >
           ×
         </button>
       </div>
 
-      <div className="h-1.5 rounded-full bg-surface2 overflow-hidden">
-        <div
-          className="h-full rounded-full bg-coral transition-all"
-          style={{ width: `${(completed / steps.length) * 100}%` }}
-        />
-      </div>
-
-      <ul className="space-y-1.5">
-        {steps.map((s) => (
+      <ol className="grid sm:grid-cols-4 gap-2 p-2">
+        {steps.map((s, i) => (
           <li key={s.key}>
             <Link
               href={s.href}
               className={
-                "flex items-center gap-2.5 text-sm rounded-lg px-2 py-1.5 transition-colors " +
-                (s.complete ? "text-muted line-through" : "text-ink hover:bg-surface2")
+                "flex sm:flex-col gap-3 sm:gap-2 rounded-xl2 px-4 py-3 h-full text-[14px] transition-colors " +
+                (s.complete ? "text-butter-ink/70" : "text-ink hover:bg-white") +
+                (s === next ? " bg-white" : " bg-white/40")
               }
             >
-              <span
-                className={
-                  "w-4 h-4 rounded-full grid place-items-center text-[10px] font-bold shrink-0 " +
-                  (s.complete
-                    ? "bg-coral text-white"
-                    : "border border-line text-transparent")
-                }
-              >
-                ✓
+              <span className={"tabular-nums " + (s.complete ? "text-sage-ink" : "text-butter-ink")}>
+                {s.complete ? "✓" : i + 1}
               </span>
-              {s.label}
-              {s === next && (
-                <span className="ml-auto text-[10px] font-bold text-coral uppercase tracking-wide">
-                  Next
-                </span>
-              )}
+              <span className={s.complete ? "line-through" : ""}>{s.label}</span>
             </Link>
           </li>
         ))}
-      </ul>
-    </div>
+      </ol>
+    </section>
   );
 }

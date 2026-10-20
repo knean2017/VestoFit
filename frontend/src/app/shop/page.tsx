@@ -162,7 +162,7 @@ function ShopContent() {
           {/* Chat + Filters toggle */}
           <div className="mt-6">
             {fromStylist && seedQuery && (
-              <div className="mb-3 px-3 py-2 bg-coralSoft/50 rounded-xl text-xs text-coral font-semibold">
+              <div className="mb-3 px-3 py-2 bg-accentSoft/50 rounded-xl text-xs text-accent font-semibold">
                 From your stylist: &ldquo;{seedQuery}&rdquo;
               </div>
             )}
@@ -171,7 +171,7 @@ function ShopContent() {
               <button
                 type="button"
                 onClick={() => setShowFilters((o) => !o)}
-                className={"chip text-xs " + (showFilters ? "chip-coral" : "")}
+                className={"chip text-xs " + (showFilters ? "chip-accent" : "")}
               >
                 Filters
               </button>

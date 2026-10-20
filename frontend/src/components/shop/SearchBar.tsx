@@ -65,7 +65,7 @@ export default function SearchBar({
                   key={b.value}
                   type="button"
                   onClick={() => setBudgetMax(budgetMax === b.value ? null : b.value)}
-                  className={"chip " + (budgetMax === b.value ? "chip-coral" : "")}
+                  className={"chip " + (budgetMax === b.value ? "chip-accent" : "")}
                 >
                   {b.label}
                 </button>

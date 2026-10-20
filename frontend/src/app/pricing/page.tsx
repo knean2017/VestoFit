@@ -48,12 +48,12 @@ export default function PricingPage() {
 
       <section className="container-app py-16 sm:py-24 max-w-4xl">
         <motion.div className="text-center mb-12" {...fade(0)}>
-          <span className="chip-coral mb-4 inline-flex">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-coral" />
+          <span className="chip-accent mb-4 inline-flex">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent" />
             Plans
           </span>
           <h1 className="font-extrabold tracking-tightest text-3xl sm:text-4xl md:text-5xl leading-[1.08]">
-            Pick your <span className="text-coral">plan</span>
+            Pick your <span className="text-accent">plan</span>
           </h1>
           <p className="mt-4 text-muted max-w-md mx-auto">
             Start free. Upgrade when you need more renders and features.
@@ -69,13 +69,13 @@ export default function PricingPage() {
                 className={
                   "card p-6 flex flex-col " +
                   (plan.highlight
-                    ? "ring-2 ring-coral/30 shadow-lifted"
+                    ? "ring-2 ring-accent/30 shadow-lifted"
                     : "")
                 }
                 {...fade(i)}
               >
                 {plan.highlight && (
-                  <span className="chip-coral text-[10px] self-start mb-3">Most popular</span>
+                  <span className="chip-accent text-[10px] self-start mb-3">Most popular</span>
                 )}
                 <h3 className="text-xl font-bold text-ink">{plan.name}</h3>
                 <div className="mt-2 flex items-baseline gap-1">
@@ -86,7 +86,7 @@ export default function PricingPage() {
                 <ul className="mt-5 space-y-2.5 flex-1">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-sm text-ink">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6B5E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                       {f}

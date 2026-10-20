@@ -72,7 +72,7 @@ export default function StoreCard({ item }: { item: ShoppingResultItem }) {
         {item.open_now != null && (
           <span className={
             "absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full " +
-            (item.open_now ? "bg-teal/90 text-white" : "bg-danger/80 text-white")
+            (item.open_now ? "bg-ink/90 text-white" : "bg-danger/80 text-white")
           }>
             {item.open_now ? "Open" : "Closed"}
           </span>
@@ -98,7 +98,7 @@ export default function StoreCard({ item }: { item: ShoppingResultItem }) {
         )}
 
         {item.phone && (
-          <a href={`tel:${item.phone}`} className="text-xs text-coral hover:underline">
+          <a href={`tel:${item.phone}`} className="text-xs text-accent hover:underline">
             {item.phone}
           </a>
         )}
@@ -117,7 +117,7 @@ export default function StoreCard({ item }: { item: ShoppingResultItem }) {
             href={safeHref(item.product_url)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-coral text-white hover:bg-coral/90 transition-colors"
+            className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-accent text-white hover:bg-accent/90 transition-colors"
           >
             Website
           </a>

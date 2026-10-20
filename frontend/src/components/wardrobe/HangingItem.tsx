@@ -50,12 +50,12 @@ export default function HangingItem({
             </div>
           )}
           {item.is_favorite && (
-            <span className="absolute top-2 right-2 w-7 h-7 rounded-full bg-coralSoft grid place-items-center text-coral text-xs">
+            <span className="absolute top-2 right-2 w-7 h-7 rounded-full bg-accentSoft grid place-items-center text-accent text-xs">
               ♥
             </span>
           )}
           {pending && (
-            <span className="absolute bottom-2 left-2 chip-coral text-[10px]">
+            <span className="absolute bottom-2 left-2 chip-accent text-[10px]">
               Tagging...
             </span>
           )}
@@ -80,7 +80,7 @@ export default function HangingItem({
                 .map((c) => (
                   <span
                     key={c}
-                    className="text-[10px] font-bold text-coral bg-coralSoft px-1.5 py-0.5 rounded-full"
+                    className="text-[10px] font-bold text-accent bg-accentSoft px-1.5 py-0.5 rounded-full"
                   >
                     {c}
                   </span>

@@ -91,7 +91,7 @@ export default function StyleProfileSection() {
           Save preferences
         </button>
         {(d?.undertone || profile?.preferences) && (
-          <button type="button" onClick={remove} disabled={busy} className="text-sm text-muted hover:text-coral transition-colors px-2">
+          <button type="button" onClick={remove} disabled={busy} className="text-sm text-muted hover:text-accent transition-colors px-2">
             Delete
           </button>
         )}

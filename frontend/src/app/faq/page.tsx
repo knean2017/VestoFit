@@ -22,8 +22,8 @@ export default function FAQPage() {
       <Header />
 
       <section className="container-app py-16 sm:py-24 max-w-2xl">
-        <motion.span className="chip-coral mb-4 inline-flex" {...fade(0)}>
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-coral" />
+        <motion.span className="chip-accent mb-4 inline-flex" {...fade(0)}>
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent" />
           Help center
         </motion.span>
 
@@ -31,7 +31,7 @@ export default function FAQPage() {
           className="font-extrabold tracking-tightest text-3xl sm:text-4xl leading-[1.08] mb-10"
           {...fade(0)}
         >
-          Frequently asked <span className="text-coral">questions</span>
+          Frequently asked <span className="text-accent">questions</span>
         </motion.h1>
 
         <div className="space-y-3">
@@ -45,7 +45,7 @@ export default function FAQPage() {
         <motion.div className="mt-12 card p-6 text-center" {...fade(0)}>
           <p className="text-sm text-muted">
             Still have questions?{" "}
-            <a href="mailto:support@vestofit.app" className="text-coral font-semibold hover:underline">
+            <a href="mailto:support@vestofit.app" className="text-accent font-semibold hover:underline">
               Reach out
             </a>
           </p>

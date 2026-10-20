@@ -107,7 +107,7 @@ export default function HangingRack({
             </div>
             <button
               onClick={onAdd}
-              className="card w-full aspect-[3/4] grid place-items-center border-2 border-dashed border-line hover:border-coral transition-colors"
+              className="card w-full aspect-[3/4] grid place-items-center border-2 border-dashed border-line hover:border-accent transition-colors"
             >
               <div className="text-center text-muted">
                 <div className="text-3xl leading-none">+</div>

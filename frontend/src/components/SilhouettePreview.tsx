@@ -61,23 +61,6 @@ export default function SilhouettePreview({
         "relative mx-auto aspect-[3/5] w-full max-w-[280px] " + className
       }
     >
-      <svg
-        viewBox="0 0 200 340"
-        className="absolute inset-0 h-full w-full text-line"
-        aria-hidden
-      >
-        <ellipse cx="100" cy="28" rx="22" ry="26" fill="currentColor" opacity="0.35" />
-        <path
-          d="M72 52 Q58 68 52 92 L48 130 Q46 150 52 168 L56 200 Q58 230 54 260 L52 310 Q52 322 62 328 L138 328 Q148 322 148 310 L146 260 Q142 230 144 200 L148 168 Q154 150 152 130 L148 92 Q142 68 128 52 Z"
-          fill="currentColor"
-          opacity="0.2"
-        />
-        <path
-          d="M72 52 L128 52 L118 88 L82 88 Z"
-          fill="currentColor"
-          opacity="0.08"
-        />
-      </svg>
 
       <AnimatePresence>
         {ordered.map((item, idx) => {
@@ -110,13 +93,13 @@ export default function SilhouettePreview({
               <img
                 src={img}
                 alt=""
-                className="h-full w-full object-contain drop-shadow-sm pointer-events-none"
+                className="h-full w-full object-contain pointer-events-none"
               />
               {editable && onRemove && (
                 <button
                   type="button"
                   onClick={() => onRemove(item.id)}
-                  className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-ink/70 text-white text-[10px] grid place-items-center hover:bg-coral transition-colors z-10"
+                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-ink text-white text-xs grid place-items-center hover:bg-accent transition-colors z-10"
                   aria-label="Remove item"
                 >
                   ×
@@ -128,11 +111,21 @@ export default function SilhouettePreview({
       </AnimatePresence>
 
       {ordered.length === 0 && (
-        <div className="absolute inset-0 grid place-items-center px-6 text-center">
-          <p className="text-sm text-muted italic">
-            Tell me the occasion — I&apos;ll dress this up
+        <>
+          {(["tops", "bottoms"] as const).map((k) => (
+            <div
+              key={k}
+              aria-hidden
+              className="absolute rounded-xl2 border border-dashed border-sky-ink/30 grid place-items-center text-[13px] text-muted/70"
+              style={{ top: LAYER_STYLE[k].top, left: LAYER_STYLE[k].left, width: LAYER_STYLE[k].width, height: LAYER_STYLE[k].height }}
+            >
+              {k === "tops" ? "Top" : "Bottom"}
+            </div>
+          ))}
+          <p className="absolute inset-x-0 -bottom-2 text-center text-[14px] text-muted">
+            Tell the stylist the occasion and the look appears here
           </p>
-        </div>
+        </>
       )}
     </div>
   );

@@ -55,7 +55,7 @@ function ResetForm() {
           onChange={(e) => setPassword(e.target.value)}
         />
       </label>
-      {error && <p className="text-sm text-coral font-medium">{error}</p>}
+      {error && <p className="text-sm text-accent font-medium">{error}</p>}
       <button
         type="submit"
         disabled={busy || password.length < 8}

@@ -39,7 +39,7 @@ export default function ResultCard({ item, displayCurrency }: Props) {
       href={safeHref(item.product_url)}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block rounded-xl3 overflow-hidden bg-surface2 border border-line hover:border-coral transition-colors"
+      className="group block rounded-xl3 overflow-hidden bg-surface2 border border-line hover:border-accent transition-colors"
       data-result-card
     >
       {/* Image */}
@@ -62,7 +62,7 @@ export default function ResultCard({ item, displayCurrency }: Props) {
           <span className="text-white font-semibold text-sm leading-tight line-clamp-2">
             {item.source}
           </span>
-          <span className="text-coral font-bold text-base">{priceLabel}</span>
+          <span className="text-accent font-bold text-base">{priceLabel}</span>
         </div>
       </div>
     </a>

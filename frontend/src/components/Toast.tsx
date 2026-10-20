@@ -40,17 +40,17 @@ function ToastItem({ toast }: { toast: Toast }) {
 
   const styles =
     toast.kind === "success"
-      ? "bg-tealSoft border-teal/30"
+      ? "bg-surface2 border-ink/30"
       : toast.kind === "error"
         ? "bg-red-50 border-danger/30"
-        : "bg-coralSoft border-coral/30";
+        : "bg-accentSoft border-accent/30";
 
   const icon =
     toast.kind === "success"
-      ? "text-teal"
+      ? "text-ink"
       : toast.kind === "error"
         ? "text-danger"
-        : "text-coral";
+        : "text-accent";
 
   return (
     <div

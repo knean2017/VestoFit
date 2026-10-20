@@ -21,8 +21,8 @@ export default function AboutPage() {
       <Header />
 
       <section className="container-app py-16 sm:py-24 max-w-3xl">
-        <motion.span className="chip-coral mb-4 inline-flex" {...fade(0)}>
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-coral" />
+        <motion.span className="chip-accent mb-4 inline-flex" {...fade(0)}>
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent" />
           Our story
         </motion.span>
 
@@ -30,7 +30,7 @@ export default function AboutPage() {
           className="font-extrabold tracking-tightest text-3xl sm:text-4xl md:text-5xl leading-[1.08]"
           {...fade(0)}
         >
-          Fashion meets <span className="text-coral">intelligence.</span>
+          Fashion meets <span className="text-accent">intelligence.</span>
         </motion.h1>
 
         <motion.p className="mt-6 text-lg text-muted leading-relaxed max-w-xl" {...fade(1)}>

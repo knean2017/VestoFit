@@ -162,7 +162,7 @@ export default function WardrobePage() {
                     className={
                       "px-3 py-1.5 rounded-full text-sm font-semibold " +
                       (addCategory === c.id
-                        ? "bg-teal text-surface"
+                        ? "bg-ink text-surface"
                         : "bg-surface2 text-muted")
                     }
                   >
@@ -280,12 +280,12 @@ function EditModal({
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {item.color && <span className="chip">{item.color}</span>}
                 {item.pattern && <span className="chip">{item.pattern}</span>}
-                {item.formality && <span className="chip-teal">{item.formality}</span>}
+                {item.formality && <span className="chip-ink">{item.formality}</span>}
                 {item.season && <span className="chip">{item.season}</span>}
                 {item.warmth != null && <span className="chip">Warmth {item.warmth}/5</span>}
               </div>
             )}
-            {item.tagging_status === "pending" && <p className="text-xs text-coral mt-1 font-semibold">AI tagging in progress...</p>}
+            {item.tagging_status === "pending" && <p className="text-xs text-accent mt-1 font-semibold">AI tagging in progress...</p>}
           </div>
         </div>
 
@@ -315,7 +315,7 @@ function EditModal({
                   className={
                     "px-3 py-1.5 rounded-full text-xs font-bold transition-all " +
                     (selectedConditions.includes(cond)
-                      ? "bg-coral text-white shadow-glow"
+                      ? "bg-accent text-white shadow-glow"
                       : "bg-surface2 text-muted hover:text-ink")
                   }
                 >
@@ -325,7 +325,7 @@ function EditModal({
             </div>
           </div>
           <label className="flex items-center gap-2.5 cursor-pointer">
-            <input type="checkbox" checked={favorite} onChange={(e) => setFavorite(e.target.checked)} className="w-5 h-5 rounded-lg border-line accent-coral" />
+            <input type="checkbox" checked={favorite} onChange={(e) => setFavorite(e.target.checked)} className="w-5 h-5 rounded-lg border-line accent-accent" />
             <span className="text-sm font-semibold">Favorite</span>
           </label>
         </div>

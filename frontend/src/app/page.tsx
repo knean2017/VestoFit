@@ -12,6 +12,7 @@ import SilhouettePreview from "@/components/SilhouettePreview";
 import StylistChat from "@/components/StylistChat";
 import { getToken } from "@/lib/auth";
 import { api, WardrobeItem } from "@/lib/api";
+import { categoryTone } from "@/lib/categoryTone";
 
 export default function HomePage() {
   const [authed, setAuthed] = useState<boolean | null>(null);
@@ -132,9 +133,9 @@ function StylistHome() {
     return (
       <main className="min-h-screen bg-bg pb-nav md:pb-0 flex flex-col">
         <Header />
-        <div className="flex-1 flex flex-col items-center justify-center px-6 max-w-2xl mx-auto w-full">
-          <div className="aspect-[3/5] w-full max-w-[280px] skeleton" />
-          <div className="mt-6 h-10 w-40 skeleton" />
+        <div className="container-app flex-1 w-full py-6 grid gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+          <div className="aspect-[3/4] md:aspect-auto md:min-h-[560px] skeleton" />
+          <div className="hidden md:block skeleton" />
         </div>
         <BottomNav />
       </main>
@@ -142,117 +143,113 @@ function StylistHome() {
   }
 
   return (
-    <main className="min-h-screen bg-bg pb-nav md:pb-0 flex flex-col">
+    <main className="min-h-screen md:h-screen bg-bg pb-nav md:pb-0 flex flex-col">
       <Header />
 
-      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-5 min-h-0">
-        <div className="shrink-0 pt-4 empty:hidden">
+      <div className="container-app w-full flex-1 min-h-0 flex flex-col gap-4 py-4 md:py-6">
+        <div className="shrink-0 empty:hidden">
           <ActivationChecklist />
         </div>
 
-        {/* Silhouette zone with choreography */}
-        <div className="relative min-h-[30vh] sm:min-h-[45vh] flex items-center justify-center pt-4 shrink-0">
-          <AnimatePresence mode="wait">
-            {stage === "idle" && (
-              <motion.div
-                key="idle"
-                initial={reduce ? { opacity: 0 } : { opacity: 0 }}
-                animate={reduce ? { opacity: 1 } : { opacity: 1, scale: [1, 1.015, 1] }}
-                exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96, filter: "blur(6px)" }}
-                transition={
-                  reduce
-                    ? { duration: 0.2 }
-                    : { opacity: { duration: 0.45 }, scale: { duration: 3.2, repeat: Infinity, ease: "easeInOut" }, exit: { duration: 0.45 } }
-                }
-                className="w-full flex items-center justify-center"
-              >
-                <SilhouettePreview items={[]} className={hasWardrobe ? "" : "opacity-60"} />
-              </motion.div>
-            )}
+        <div className="flex-1 min-h-0 grid gap-4 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+          {/* The look */}
+          <section aria-label="Current look" className="relative rounded-xl4 bg-sky/60 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-4 sm:px-5 h-12 text-[14px] text-sky-ink">
+              <span className="font-semibold">Today&apos;s look</span>
+              <span className="text-sky-ink/70">
+                {suggestion.length > 0 ? `${suggestion.length} ${suggestion.length === 1 ? "piece" : "pieces"}` : `${wardrobe.length} in your closet`}
+              </span>
+            </div>
 
-            {stage === "thinking" && (
-              <motion.div
-                key="thinking"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="w-full flex items-center justify-center"
-              >
-                <div className="w-16 h-16 rounded-full bg-coralSoft/40 animate-pulse" />
-              </motion.div>
-            )}
+            <div className="relative flex-1 min-h-[300px] flex items-center justify-center p-6">
+              <AnimatePresence mode="wait">
+                {stage === "idle" && (
+                  <motion.div
+                    key="idle"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: reduce ? 0.01 : 0.3 }}
+                    className="w-full flex items-center justify-center"
+                  >
+                    <SilhouettePreview items={[]} />
+                  </motion.div>
+                )}
+
+                {stage === "thinking" && (
+                  <motion.div
+                    key="thinking"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full flex flex-col items-center justify-center gap-3 text-[14px] text-muted"
+                  >
+                    <span className="block w-24 h-0.5 rounded-full bg-accent animate-pulse" />
+                    Putting a look together
+                  </motion.div>
+                )}
+
+                {stage === "dressed" && (
+                  <motion.div
+                    key={"dressed-" + outfitId}
+                    initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={reduce ? { duration: 0.01 } : { duration: 0.45, ease: [0.2, 0.8, 0.2, 1] }}
+                    className="w-full flex items-center justify-center"
+                  >
+                    <SilhouettePreview
+                      items={suggestion}
+                      startDelay={0.2}
+                      editable
+                      onRemove={handleRemoveItem}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {stage === "dressed" && (
-              <motion.div
-                key={"dressed-" + outfitId}
-                initial={reduce ? { opacity: 0 } : { opacity: 0, x: "60%", scale: 0.95 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
-                transition={
-                  reduce
-                    ? { duration: 0.2 }
-                    : { type: "spring", stiffness: 90, damping: 18, mass: 1.1 }
-                }
-                className="w-full flex items-center justify-center"
-              >
-                <SilhouettePreview
-                  items={suggestion}
-                  startDelay={0.5}
-                  editable
-                  onRemove={handleRemoveItem}
-                />
-              </motion.div>
+              <div className="flex justify-center gap-3 px-4 pb-5">
+                <button
+                  type="button"
+                  onClick={handleShuffle}
+                  disabled={shuffling || !hasWardrobe}
+                  className="btn bg-surface text-ink hover:bg-white/70"
+                >
+                  Shuffle
+                </button>
+                <button
+                  type="button"
+                  onClick={handleTryOn}
+                  disabled={currentItemIds.length === 0}
+                  className="btn-primary"
+                >
+                  Try it on
+                </button>
+              </div>
             )}
-          </AnimatePresence>
+          </section>
+
+          {/* The conversation */}
+          <section aria-label="Stylist" className="rounded-xl4 bg-surface border border-line flex flex-col min-h-[420px] md:min-h-0 overflow-hidden">
+            <div className="flex items-center px-4 sm:px-6 h-12 border-b border-line text-[14px] font-semibold">
+              Stylist
+            </div>
+            <StylistChat
+              mode="stylist"
+              onSend={handleSend}
+              onStylistResult={handleStylistResult}
+              greeting={
+                wardrobe.length === 0
+                  ? "Welcome! I'm your stylist. Add a few clothes to your closet and I can build real looks from them — or tell me what you're shopping for."
+                  : undefined
+              }
+              className="flex-1 min-h-0"
+            />
+          </section>
         </div>
-
-        {/* Action buttons */}
-        {stage === "dressed" && (
-          <div className="flex items-center justify-center gap-3 py-3 shrink-0">
-            <motion.button
-              type="button"
-              onClick={handleShuffle}
-              disabled={shuffling || !hasWardrobe}
-              aria-label="Shuffle outfit"
-              className="w-12 h-12 rounded-full bg-coralSoft text-coral grid place-items-center shadow-soft disabled:opacity-40"
-              animate={shuffling && !reduce ? { rotate: 360 } : { rotate: 0 }}
-              transition={{ type: "spring", stiffness: 200, damping: 18 }}
-              whileTap={reduce ? undefined : { scale: 0.92 }}
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16 3h5v5" />
-                <path d="M4 20L21 3" />
-                <path d="M21 16v5h-5" />
-                <path d="M15 15l6 6" />
-                <path d="M4 4l5 5" />
-              </svg>
-            </motion.button>
-
-            <motion.button
-              type="button"
-              onClick={handleTryOn}
-              disabled={currentItemIds.length === 0}
-              className="btn-primary px-6"
-              whileTap={reduce ? undefined : { scale: 0.96 }}
-            >
-              Try On
-            </motion.button>
-          </div>
-        )}
-
-        {/* Chat */}
-        <StylistChat
-          mode="stylist"
-          onSend={handleSend}
-          onStylistResult={handleStylistResult}
-          greeting={
-            wardrobe.length === 0
-              ? "Welcome! I'm your stylist. Add a few clothes to your closet and I can build real looks from them — or tell me what you're shopping for."
-              : undefined
-          }
-          className="flex-1 min-h-0"
-        />
       </div>
 
       <BottomNav />
@@ -262,83 +259,115 @@ function StylistHome() {
 
 /* ─── Unauthenticated: Landing page ─── */
 
+const HEADLINE = ["Get dressed from", "the closet you", "already own."];
+
 function LandingPage() {
   const reduce = useReducedMotion();
-  const reveal = (i = 0) => ({
-    initial: reduce ? { opacity: 0 } : { opacity: 0, y: 16 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: "-60px" },
-    transition: reduce
-      ? { duration: 0.01 }
-      : { type: "spring", stiffness: 260, damping: 24, delay: i * 0.08 },
-  });
+  const line = (i: number) =>
+    reduce
+      ? {}
+      : {
+          initial: { y: "105%" },
+          animate: { y: "0%" },
+          transition: { duration: 0.9, ease: [0.2, 0.8, 0.2, 1], delay: 0.1 + i * 0.09 },
+        };
+  const after = (delay: number) =>
+    reduce
+      ? {}
+      : {
+          initial: { opacity: 0 },
+          animate: { opacity: 1 },
+          transition: { duration: 0.6, delay },
+        };
 
   return (
     <main className="min-h-screen flex flex-col bg-bg">
       <Header />
+      <MobileTopBar />
 
-      <section className="container-app pt-16 sm:pt-24 pb-16">
-        <div className="max-w-3xl">
-          <motion.span className="chip-coral mb-6 inline-flex" {...reveal(0)}>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-coral" />
-            Your personal stylist
-          </motion.span>
-
-          <motion.h1
-            className="font-extrabold tracking-tightest text-4xl sm:text-5xl md:text-6xl leading-[1.05]"
-            {...reveal(0)}
-          >
-            Your closet, <span className="text-coral">smarter.</span>
-          </motion.h1>
-
-          <motion.p
-            className="mt-6 text-lg text-muted max-w-xl leading-relaxed font-medium"
-            {...reveal(1)}
-          >
-            VestoFit knows your wardrobe, suggests daily outfits, and lets you try on
-            any clothes virtually — all powered by AI that actually understands your style.
-          </motion.p>
-
-          <motion.div className="mt-8 flex flex-wrap items-center gap-3" {...reveal(2)}>
-            <Link href="/register" className="btn-primary btn-lg">
-              Get started free
-            </Link>
-            <Link href="/login" className="btn-ghost btn-lg">
-              Sign in
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-
-      <section className="container-app pb-24">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {STEPS.map((s, i) => (
-            <motion.article key={s.title} className="card p-6" {...reveal(i)}>
-              <span className={"w-8 h-8 rounded-full grid place-items-center text-sm font-bold text-white " + s.color}>
-                {i + 1}
-              </span>
-              <h3 className="mt-4 text-lg font-bold tracking-tight">{s.title}</h3>
-              <p className="mt-2 text-sm text-muted leading-relaxed">{s.body}</p>
-            </motion.article>
+      <section className="container-app pt-10 sm:pt-16 pb-16 sm:pb-24">
+        <h1 className="text-ink text-[clamp(56px,10.5vw,152px)] leading-[0.88]">
+          {HEADLINE.map((l, i) => (
+            <span key={l} className="block overflow-hidden pb-[0.04em]">
+              <motion.span className="block" {...line(i)}>
+                {l}
+              </motion.span>
+            </span>
           ))}
+        </h1>
+
+        <div className="mt-10 sm:mt-14 grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] md:gap-16 items-start">
+          <motion.div {...after(0.55)}>
+            <p className="text-lg sm:text-xl leading-relaxed max-w-[34ch] text-ink">
+              VestoFit learns your wardrobe from photos, puts outfits together for
+              wherever you&apos;re going, and shows them on you before you change.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-5">
+              <Link href="/register" className="btn-primary btn-lg">
+                Create account
+              </Link>
+              <Link href="/login" className="btn-link">
+                Sign in
+              </Link>
+            </div>
+          </motion.div>
+
+          <motion.figure {...after(0.75)} className="bg-surface border border-line rounded-xl4 overflow-hidden shadow-lifted">
+            <div className="px-5 sm:px-7 pt-6 pb-7 space-y-5">
+              <p className="ml-auto w-fit max-w-[30ch] rounded-2xl rounded-br-md bg-lilac px-4 py-2.5 text-[15px] leading-relaxed text-ink">
+                Dinner on Friday, somewhere nice. It&apos;s supposed to rain.
+              </p>
+              <p className="max-w-[40ch] text-[19px] sm:text-[21px] leading-snug text-accent">
+                Go with the charcoal wool trousers and the cream cable knit. Dressy
+                enough for dinner, and wool shrugs off a little rain.
+              </p>
+              <dl className="grid gap-2">
+                {EXAMPLE_LOOK.map(([name, kind]) => (
+                  <div key={name} className="flex items-center justify-between gap-4 rounded-xl2 bg-bg px-3.5 py-2.5 text-[14px]">
+                    <dt className="text-ink">{name}</dt>
+                    <dd className={"rounded-full px-2.5 py-0.5 text-[12px] font-medium " + categoryTone(kind)}>{kind}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+            <figcaption className="px-5 sm:px-7 py-3 border-t border-line text-[13px] text-muted">
+              Example of a stylist reply built from a saved closet
+            </figcaption>
+          </motion.figure>
         </div>
       </section>
 
-      <section className="container-app pb-24">
-        <div className="card p-8 sm:p-10">
-          <h2 className="heading-lg text-center mb-8">Why VestoFit?</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {FEATURES.map((f, i) => (
-              <motion.div key={f.t} className="flex gap-3" {...reveal(i)}>
-                <span className="w-10 h-10 rounded-xl bg-coralSoft text-coral grid place-items-center text-lg shrink-0">
-                  {f.icon}
-                </span>
-                <div>
-                  <p className="font-bold">{f.t}</p>
-                  <p className="text-sm text-muted leading-relaxed mt-0.5">{f.d}</p>
-                </div>
-              </motion.div>
+      <section>
+        <div className="container-app py-16 sm:py-24">
+          <h2 className="text-[clamp(40px,6vw,72px)] text-ink max-w-[14ch]">How it works</h2>
+          <ol className="mt-12 grid gap-4 sm:grid-cols-3">
+            {STEPS.map((s, i) => (
+              <li key={s.title} className={"rounded-xl4 p-6 sm:p-8 " + s.tone}>
+                <span className="display text-[64px] leading-none">{i + 1}</span>
+                <h3 className="mt-6 text-xl font-semibold text-ink">{s.title}</h3>
+                <p className="mt-3 text-[15px] leading-relaxed text-ink/70 max-w-[36ch]">{s.body}</p>
+              </li>
             ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className="container-app pb-16 sm:pb-24">
+        <div className="rounded-[28px] bg-lilac px-6 sm:px-12 py-14 sm:py-20 grid gap-10 md:grid-cols-[1.4fr_1fr] md:items-end">
+          <h2 className="text-[clamp(44px,7vw,104px)] leading-[0.9] text-ink">
+            Same face, same body. Only the clothes change.
+          </h2>
+          <div>
+            <p className="text-lg leading-relaxed text-ink/75 max-w-[38ch]">
+              Try-on renders start from your own photos, so you judge the fit and colour on
+              you, not on a model. Your photos stay private to your account.
+            </p>
+            <Link
+              href="/register"
+              className="btn-primary btn-lg mt-8"
+            >
+              Create account
+            </Link>
           </div>
         </div>
       </section>
@@ -348,43 +377,36 @@ function LandingPage() {
   );
 }
 
+function MobileTopBar() {
+  return (
+    <div className="md:hidden container-app h-14 flex items-center justify-between border-b border-line">
+      <span className="display text-[26px] leading-none">VestoFit</span>
+      <Link href="/login" className="text-[15px] text-ink">
+        Sign in
+      </Link>
+    </div>
+  );
+}
+
+const EXAMPLE_LOOK: [string, string][] = [
+  ["Charcoal wool trousers", "Bottoms"],
+  ["Cream cable knit", "Tops"],
+];
+
 const STEPS = [
   {
-    title: "Build your closet",
-    body: "Snap photos of your clothes. Our AI tags each item with color, style, and season automatically.",
-    color: "bg-coral",
+    title: "Photograph your clothes",
+    body: "Snap each piece once. VestoFit tags the category, colour, pattern, formality, and season for you.",
+    tone: "bg-sage text-sage-ink",
   },
   {
-    title: "Get styled",
-    body: "Tell your stylist what you need — date night, work, casual — and get instant outfit combos.",
-    color: "bg-teal",
+    title: "Ask for an outfit",
+    body: "Tell the stylist where you're going. It builds looks from what you own and says when something is missing.",
+    tone: "bg-sky text-sky-ink",
   },
   {
     title: "Try it on",
-    body: "See any outfit rendered on your photo. Same face, same body — only the clothes change.",
-    color: "bg-ink",
-  },
-];
-
-const FEATURES: { icon: React.ReactNode; t: string; d: string }[] = [
-  {
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.5 5.5H19l-4.5 3.5 1.5 5.5L12 14l-4.5 3.5 1.5-5.5L4.5 8.5H10z"/></svg>,
-    t: "AI Stylist",
-    d: "Knows your wardrobe and suggests outfits for any occasion.",
-  },
-  {
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>,
-    t: "Shop smart",
-    d: "Find clothes from real stores within your budget.",
-  },
-  {
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-    t: "Virtual try-on",
-    d: "Photorealistic rendering on your actual body.",
-  },
-  {
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>,
-    t: "Private",
-    d: "Your photos stay private. Your data stays yours.",
+    body: "Upload a few photos of yourself once. Then see any outfit, or a piece from a shop, on your own body.",
+    tone: "bg-blush text-blush-ink",
   },
 ];

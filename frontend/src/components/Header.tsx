@@ -28,56 +28,48 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-30 backdrop-blur-lg bg-surface/80 border-b border-line hidden md:block">
+    <header className="sticky top-0 z-30 bg-bg/90 backdrop-blur-md border-b border-line hidden md:block">
       <div className="container-app h-16 flex items-center justify-between">
-        <Link href={authed ? "/" : "/"} className="flex items-center gap-2.5 group">
-          <span className="w-8 h-8 rounded-xl bg-coral text-white grid place-items-center text-sm font-extrabold shadow-glow group-hover:scale-105 transition-transform">
-            V
-          </span>
-          <span className="font-extrabold tracking-tight text-lg text-ink">
-            VestoFit
-          </span>
+        <Link href="/" className="display text-[28px] leading-none text-ink hover:text-accent transition-colors">
+          VestoFit
         </Link>
 
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-7 text-[15px]">
           {authed ? (
             <>
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
+                  aria-current={isActive(link.href) ? "page" : undefined}
                   className={
-                    "px-4 py-2 text-sm font-semibold rounded-full transition-all duration-200 " +
+                    "relative py-5 transition-colors " +
                     (isActive(link.href)
-                      ? "text-coral font-extrabold relative after:absolute after:bottom-0 after:left-2 after:right-2 after:h-0.5 after:rounded-full after:bg-gradient-to-r after:from-coral after:to-[#FF8F6B]"
-                      : "text-muted hover:text-ink hover:bg-surface2")
+                      ? "text-ink font-semibold after:absolute after:left-0 after:right-0 after:-bottom-px after:h-[2px] after:bg-accent"
+                      : "text-muted hover:text-ink")
                   }
                 >
                   {link.label}
                 </Link>
               ))}
-              <div className="w-px h-6 bg-line mx-2" />
               <button
                 type="button"
                 onClick={() => {
                   clearToken();
                   router.replace("/login");
                 }}
-                className="text-sm font-semibold text-muted hover:text-coral transition-colors px-3 py-2"
+                className="text-muted hover:text-ink transition-colors pl-7 border-l border-line"
               >
                 Sign out
               </button>
             </>
           ) : (
             <>
-              <Link
-                href="/login"
-                className="text-sm font-semibold text-muted hover:text-ink transition-colors px-4 py-2"
-              >
+              <Link href="/login" className="text-ink hover:text-accent transition-colors">
                 Sign in
               </Link>
-              <Link href="/register" className="btn-primary text-sm px-5 py-2.5">
-                Get started
+              <Link href="/register" className="btn-primary h-10 px-4">
+                Create account
               </Link>
             </>
           )}
