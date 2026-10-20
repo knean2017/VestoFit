@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
+import AuthShell from "@/components/AuthShell";
 import { useToast } from "@/components/Toast";
 import { api } from "@/lib/api";
 import { setToken, getToken } from "@/lib/auth";
@@ -36,16 +37,15 @@ export default function RegisterPage() {
   return (
     <main className="min-h-screen flex flex-col bg-bg">
       <Header />
-      <section className="flex-1 grid place-items-center px-5 py-12">
-        <div className="w-full max-w-sm animate-rise">
-          <div className="text-center mb-8">
+      <AuthShell image="/images/knit-stack.jpg" alt="A stack of knit sweaters on a wooden chair" tone="bg-sage">
+          <div className="mb-8">
             <h1 className="heading-lg">Let's get started</h1>
             <p className="mt-2 text-sm text-muted font-medium">
               Create your account in seconds — no card required
             </p>
           </div>
 
-          <form onSubmit={onSubmit} className="card p-6 space-y-5">
+          <form onSubmit={onSubmit} className="space-y-5">
             <label className="block">
               <span className="label">Email</span>
               <input
@@ -62,11 +62,11 @@ export default function RegisterPage() {
               <span className="label">Password</span>
               <input
                 required
-                minLength={6}
+                minLength={8}
                 type="password"
                 autoComplete="new-password"
                 className="field mt-2"
-                placeholder="At least 6 characters"
+                placeholder="At least 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -86,8 +86,7 @@ export default function RegisterPage() {
               Sign in
             </Link>
           </p>
-        </div>
-      </section>
+      </AuthShell>
     </main>
   );
 }

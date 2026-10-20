@@ -8,7 +8,7 @@ import type { Group } from "three";
 
 export function DoorsFallback() {
   return (
-    <div className="absolute inset-0 z-40 grid place-items-center bg-surface2">
+    <div className="absolute inset-0 z-40 grid place-items-center bg-lilac">
       <svg
         viewBox="0 0 64 64"
         className="w-20 h-20 text-muted/40"
@@ -65,14 +65,14 @@ function Doors({ onComplete }: { onComplete: () => void }) {
       <group ref={left} position={[-1.5, 0, 0]}>
         <mesh position={[0.75, 0, 0]}>
           <boxGeometry args={[1.5, 4, 0.08]} />
-          <meshStandardMaterial color="#8B6914" />
+          <meshStandardMaterial color="#E7E1F4" />
         </mesh>
       </group>
       {/* right door: hinge at its right edge (x = 1.5) */}
       <group ref={right} position={[1.5, 0, 0]}>
         <mesh position={[-0.75, 0, 0]}>
           <boxGeometry args={[1.5, 4, 0.08]} />
-          <meshStandardMaterial color="#8B6914" />
+          <meshStandardMaterial color="#E7E1F4" />
         </mesh>
       </group>
     </>

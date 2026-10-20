@@ -20,7 +20,14 @@ export default function AboutPage() {
     <main className="min-h-screen flex flex-col bg-bg pb-nav md:pb-0">
       <Header />
 
-      <section className="container-app py-16 sm:py-24 max-w-3xl">
+      <section className="container-app w-full pt-6 sm:pt-10">
+        <div className="relative rounded-[28px] overflow-hidden h-[260px] sm:h-[380px] bg-butter">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/knit-stack.jpg" alt="A stack of knit sweaters on a wooden chair in soft light" className="absolute inset-0 w-full h-full object-cover object-[50%_60%]" />
+        </div>
+      </section>
+
+      <section className="container-app w-full py-12 sm:py-16 max-w-3xl">
 
         <motion.h1
           className="text-[clamp(48px,7vw,88px)] text-ink"

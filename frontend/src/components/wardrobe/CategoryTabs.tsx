@@ -11,6 +11,14 @@ const TABS: { id: Filter; label: string }[] = [
   { id: "favorites", label: "Favorites" },
 ];
 
+const TONE: Record<Filter, string> = {
+  all: "bg-ink text-white",
+  tops: "bg-sky text-sky-ink",
+  bottoms: "bg-sage text-sage-ink",
+  dresses: "bg-blush text-blush-ink",
+  favorites: "bg-butter text-butter-ink",
+};
+
 export default function CategoryTabs({
   filter,
   setFilter,
@@ -25,10 +33,10 @@ export default function CategoryTabs({
           key={t.id}
           onClick={() => setFilter(t.id)}
           className={
-            "px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors " +
+            "h-9 px-4 rounded-full text-[14px] font-medium whitespace-nowrap transition-colors " +
             (filter === t.id
-              ? "bg-ink text-surface"
-              : "bg-surface2 text-muted hover:text-ink")
+              ? TONE[t.id]
+              : "bg-surface text-muted border border-line hover:text-ink")
           }
         >
           {t.label}

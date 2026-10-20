@@ -14,13 +14,13 @@ export default function RenderHistory({
       <div className="flex items-center gap-2 mb-4">
         <h2 className="heading-md">Your renders</h2>
         {history.length > 0 && (
-          <span className="chip text-[10px]">{history.length}</span>
+          <span className="rounded-full bg-lilac text-lilac-ink px-2.5 py-0.5 text-[12px] font-medium">{history.length}</span>
         )}
       </div>
       {history.length === 0 ? (
         <div>
           <div className="text-center py-4 space-y-2 max-w-sm mx-auto">
-            <p className="font-bold text-ink">Nothing tried on yet</p>
+            <p className="font-semibold text-ink">Nothing tried on yet</p>
             <p className="text-sm text-muted">
               Pick a garment from your closet or upload one — you&apos;ll see it
               rendered on your photo in about a minute.

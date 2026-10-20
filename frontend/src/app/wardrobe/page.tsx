@@ -9,6 +9,7 @@ import { useToast } from "@/components/Toast";
 import { api, type Category, type WardrobeItem } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import CategoryTabs from "@/components/wardrobe/CategoryTabs";
+import { categoryTone } from "@/lib/categoryTone";
 import HangingRack from "@/components/wardrobe/HangingRack";
 import MagneticButton from "@/components/MagneticButton";
 
@@ -132,15 +133,52 @@ export default function WardrobePage() {
             </div>
           )}
 
-          <section className="container-app py-6 sm:py-8">
-            <header className="mb-5">
-              <h1 className="heading-lg">Your closet</h1>
-              <p className="text-muted text-sm">
-                {items.length} piece{items.length === 1 ? "" : "s"}
-              </p>
+          <section className="container-app py-6 sm:py-10">
+            <header className="mb-6 flex flex-wrap items-end justify-between gap-5">
+              <div>
+                <h1 className="text-[clamp(48px,6vw,80px)] text-ink">Your closet</h1>
+                <p className="mt-2 text-muted text-[15px]">
+                  {items.length} piece{items.length === 1 ? "" : "s"}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <div role="radiogroup" aria-label="Category for the next photo" className="flex items-center gap-1 rounded-full bg-surface border border-line p-1">
+                  <span className="pl-3 pr-1 text-[13px] text-muted">Add as</span>
+                  {CATEGORIES.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={addCategory === c.id}
+                      onClick={() => setAddCategory(c.id)}
+                      className={
+                        "h-8 px-3 rounded-full text-[13px] font-medium transition-colors " +
+                        (addCategory === c.id ? categoryTone(c.id) : "text-muted hover:text-ink")
+                      }
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={uploading}
+                  onClick={() => fileInput.current?.click()}
+                >
+                  {uploading ? "Uploading…" : "Add photo"}
+                </button>
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  hidden
+                  onChange={(e) => onAddFile(e.target.files?.[0])}
+                />
+              </div>
             </header>
 
-            <div className="mb-4">
+            <div className="mb-6">
               <CategoryTabs filter={filter} setFilter={setFilter} />
             </div>
 
@@ -152,42 +190,6 @@ export default function WardrobePage() {
               onAdd={() => fileInput.current?.click()}
             />
 
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <div className="flex gap-2">
-                {CATEGORIES.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setAddCategory(c.id)}
-                    className={
-                      "px-3 py-1.5 rounded-full text-sm font-semibold " +
-                      (addCategory === c.id
-                        ? "bg-ink text-surface"
-                        : "bg-surface2 text-muted")
-                    }
-                  >
-                    {c.label}
-                  </button>
-                ))}
-              </div>
-              <MagneticButton>
-                <button
-                  type="button"
-                  className="btn-primary"
-                  disabled={uploading}
-                  onClick={() => fileInput.current?.click()}
-                >
-                  {uploading ? "Uploading…" : "Add photo"}
-                </button>
-              </MagneticButton>
-              <input
-                ref={fileInput}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                hidden
-                onChange={(e) => onAddFile(e.target.files?.[0])}
-              />
-            </div>
           </section>
         </div>
 

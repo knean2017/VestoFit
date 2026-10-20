@@ -2,6 +2,13 @@
 import { motion, useReducedMotion } from "framer-motion";
 import type { WardrobeItem } from "@/lib/api";
 import HangerIcon from "./HangerIcon";
+import { categoryTone } from "@/lib/categoryTone";
+
+const CARD_BG: Record<string, string> = {
+  tops: "bg-sky/50",
+  bottoms: "bg-sage/50",
+  dresses: "bg-blush/50",
+};
 
 export default function HangingItem({
   item,
@@ -36,7 +43,7 @@ export default function HangingItem({
         <HangerIcon className="w-12 h-7" />
       </div>
       <div className="card card-interactive p-0 overflow-hidden">
-        <div className="relative aspect-[3/4] bg-surface2">
+        <div className={"relative aspect-[3/4] " + CARD_BG[item.category]}>
           {img ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -57,19 +64,19 @@ export default function HangingItem({
             </span>
           )}
           {pending && (
-            <span className="absolute bottom-2 left-2 chip-accent text-[10px]">
+            <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-medium text-accent">
               Tagging...
             </span>
           )}
         </div>
         <div className="p-3">
-          <p className="text-sm font-bold truncate">{label}</p>
+          <p className="text-[14px] font-semibold truncate">{label}</p>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs text-muted capitalize">
+            <span className={"text-[11px] font-medium capitalize rounded-full px-2 py-0.5 " + categoryTone(item.category)}>
               {item.category}
             </span>
             {item.color && (
-              <span className="text-xs text-muted">&middot; {item.color}</span>
+              <span className="text-[12px] text-muted capitalize">{item.color}</span>
             )}
           </div>
           {item.conditions && (
@@ -82,7 +89,7 @@ export default function HangingItem({
                 .map((c) => (
                   <span
                     key={c}
-                    className="text-[10px] font-bold text-accent bg-accentSoft px-1.5 py-0.5 rounded-full"
+                    className="text-[11px] font-medium text-lilac-ink bg-lilac px-2 py-0.5 rounded-full"
                   >
                     {c}
                   </span>

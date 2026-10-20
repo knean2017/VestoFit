@@ -55,9 +55,9 @@ export default function OnboardPage() {
       <Header />
       <section className="container-app py-8 sm:py-12">
         <div className="max-w-lg mx-auto animate-rise">
-          <div className="text-center mb-8">
-            <h1 className="heading-lg">Upload your photo</h1>
-            <p className="mt-2 text-sm text-muted font-medium max-w-sm mx-auto">
+          <div className="mb-8">
+            <h1 className="text-[clamp(48px,6vw,72px)] text-ink">Upload your photo</h1>
+            <p className="mt-3 text-[16px] text-muted max-w-sm">
               One clear frontal photo — face the camera, decent lighting. This powers every virtual try-on.
             </p>
           </div>
@@ -80,7 +80,7 @@ export default function OnboardPage() {
               onClick={() => fileInput.current?.click()}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => { e.preventDefault(); pickFile(e.dataTransfer.files); }}
-              className="rounded-xl3 border-2 border-dashed border-line hover:border-accent transition-colors p-8 cursor-pointer bg-surface2/30 text-center"
+              className="rounded-xl3 border border-dashed border-ink/20 hover:border-accent hover:bg-accentSoft transition-colors p-10 cursor-pointer bg-lilac/50 text-center"
             >
               <input
                 ref={fileInput}
@@ -96,10 +96,10 @@ export default function OnboardPage() {
                 </div>
               ) : (
                 <>
-                  <div className="mx-auto w-14 h-14 rounded-full bg-accentSoft grid place-items-center text-accent">
+                  <div className="mx-auto w-14 h-14 rounded-full bg-white grid place-items-center text-lilac-ink">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   </div>
-                  <p className="mt-4 text-sm font-bold">Drop a photo here or tap to browse</p>
+                  <p className="mt-4 text-[15px] font-medium">Drop a photo here or tap to browse</p>
                   <p className="mt-1 text-xs text-muted font-medium">JPG, PNG, WEBP</p>
                 </>
               )}

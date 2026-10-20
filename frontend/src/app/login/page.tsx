@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
+import AuthShell from "@/components/AuthShell";
 import { useToast } from "@/components/Toast";
 import { api } from "@/lib/api";
 import { setToken, getToken } from "@/lib/auth";
@@ -36,16 +37,15 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex flex-col bg-bg">
       <Header />
-      <section className="flex-1 grid place-items-center px-5 py-12">
-        <div className="w-full max-w-sm animate-rise">
-          <div className="text-center mb-8">
+      <AuthShell image="/images/sweater-hook.jpg" alt="A knit sweater on a wooden hanger against a soft wall" tone="bg-lilac">
+          <div className="mb-8">
             <h1 className="heading-lg">Welcome back</h1>
             <p className="mt-2 text-sm text-muted font-medium">
               Sign in to your VestoFit account
             </p>
           </div>
 
-          <form onSubmit={onSubmit} className="card p-6 space-y-5">
+          <form onSubmit={onSubmit} className="space-y-5">
             <label className="block">
               <span className="label">Email</span>
               <input
@@ -94,8 +94,7 @@ export default function LoginPage() {
               Create one
             </Link>
           </p>
-        </div>
-      </section>
+      </AuthShell>
     </main>
   );
 }

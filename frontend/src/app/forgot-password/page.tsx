@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import Header from "@/components/Header";
+import AuthShell from "@/components/AuthShell";
 import { api } from "@/lib/api";
 
 export default function ForgotPasswordPage() {
@@ -25,9 +26,8 @@ export default function ForgotPasswordPage() {
   return (
     <main className="min-h-screen flex flex-col bg-bg">
       <Header />
-      <section className="flex-1 grid place-items-center px-5 py-12">
-        <div className="w-full max-w-sm animate-rise">
-          <div className="text-center mb-8">
+      <AuthShell image="/images/folded-knits.jpg" alt="Folded knitwear stacked on a shelf" tone="bg-sky">
+          <div className="mb-8">
             <h1 className="heading-lg">Forgot your password?</h1>
             <p className="mt-2 text-sm text-muted font-medium">
               Enter your email and we&apos;ll send you a reset link
@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
               </p>
             </div>
           ) : (
-            <form onSubmit={onSubmit} className="card p-6 space-y-5">
+            <form onSubmit={onSubmit} className="space-y-5">
               <label className="block">
                 <span className="label">Email</span>
                 <input
@@ -70,8 +70,7 @@ export default function ForgotPasswordPage() {
               Back to sign in
             </Link>
           </p>
-        </div>
-      </section>
+      </AuthShell>
     </main>
   );
 }

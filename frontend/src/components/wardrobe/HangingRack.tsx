@@ -67,18 +67,23 @@ export default function HangingRack({
 
   if (items.length === 0) {
     return (
-      <div className="py-12 grid place-items-center text-center">
-        <HangerIcon className="w-16 h-10 text-muted/50" />
-        <h3 className="heading-md mt-2">Your closet is empty</h3>
-        <p className="text-muted text-sm max-w-sm">
+      <div className="grid md:grid-cols-2 rounded-[28px] overflow-hidden bg-butter">
+        <div className="relative min-h-[260px] md:min-h-[440px]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/hangers.jpg" alt="Empty wooden hangers on a clothing rail" className="absolute inset-0 w-full h-full object-cover" />
+        </div>
+        <div className="p-8 sm:p-12 flex flex-col justify-center">
+        <h3 className="display text-[clamp(36px,4vw,56px)] text-ink">Your closet is empty</h3>
+        <p className="mt-4 text-[16px] leading-relaxed text-ink/75 max-w-[38ch]">
           Snap or upload photos of your clothes — we&apos;ll tag the color, style, and
           season automatically. Three items is enough for your first styled look.
         </p>
-        <MagneticButton className="mt-4">
-          <button className="btn-primary" onClick={onAdd}>
+        <MagneticButton className="mt-8 self-start">
+          <button className="btn-primary btn-lg" onClick={onAdd}>
             Add photo
           </button>
         </MagneticButton>
+        </div>
       </div>
     );
   }
@@ -107,11 +112,11 @@ export default function HangingRack({
             </div>
             <button
               onClick={onAdd}
-              className="card w-full aspect-[3/4] grid place-items-center border-2 border-dashed border-line hover:border-accent transition-colors"
+              className="w-full aspect-[3/4] rounded-xl3 grid place-items-center border border-dashed border-ink/20 bg-surface/60 hover:border-accent hover:bg-accentSoft transition-colors"
             >
               <div className="text-center text-muted">
                 <div className="text-3xl leading-none">+</div>
-                <div className="text-xs mt-1">Add piece</div>
+                <div className="text-[13px] mt-1">Add piece</div>
               </div>
             </button>
           </div>

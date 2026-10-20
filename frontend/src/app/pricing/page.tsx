@@ -63,19 +63,21 @@ export default function PricingPage() {
               <motion.div
                 key={plan.id}
                 className={
-                  "card p-6 flex flex-col " +
+                  "rounded-xl4 p-6 sm:p-7 flex flex-col " +
                   (plan.highlight
-                    ? "ring-2 ring-accent/30 shadow-lifted"
-                    : "")
+                    ? "bg-lilac shadow-lifted"
+                    : i === 0
+                      ? "bg-surface border border-line"
+                      : "bg-sky/70")
                 }
                 {...fade(i)}
               >
                 {plan.highlight && (
-                  <span className="chip-accent text-[10px] self-start mb-3">Most popular</span>
+                  <span className="self-start mb-3 rounded-full bg-white px-3 py-1 text-[12px] font-medium text-lilac-ink">Most popular</span>
                 )}
-                <h3 className="text-xl font-bold text-ink">{plan.name}</h3>
+                <h3 className="text-xl font-semibold text-ink">{plan.name}</h3>
                 <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-extrabold text-ink">{plan.price}</span>
+                  <span className="display text-[56px] leading-none text-ink">{plan.price}</span>
                   <span className="text-sm text-muted">{plan.period}</span>
                 </div>
 
@@ -102,7 +104,7 @@ export default function PricingPage() {
                       className={
                         plan.highlight
                           ? "btn-primary w-full"
-                          : "btn-soft w-full"
+                          : "btn bg-white text-ink hover:bg-ink hover:text-white w-full"
                       }
                     >
                       {loading === plan.variantId ? "Redirecting…" : "Upgrade"}

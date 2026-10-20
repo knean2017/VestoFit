@@ -37,12 +37,12 @@ export default function CurtainReveal({ onComplete }: { onComplete?: () => void 
       <div
         ref={left}
         className="absolute inset-y-0 left-0 w-1/2 curtain-fold"
-        style={{ background: "linear-gradient(90deg,#FF6B5E,#E0594E)" }}
+        style={{ background: "linear-gradient(90deg,#E7E1F4,#D9E2F2)" }}
       />
       <div
         ref={right}
         className="absolute inset-y-0 right-0 w-1/2 curtain-fold"
-        style={{ background: "linear-gradient(270deg,#FF6B5E,#E0594E)" }}
+        style={{ background: "linear-gradient(270deg,#E7E1F4,#D9E2F2)" }}
       />
     </div>
   );

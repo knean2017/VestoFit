@@ -21,10 +21,10 @@ export default function GarmentInput({
   canSubmit: boolean;
 }) {
   return (
-    <div className="rounded-2xl bg-surface p-5 space-y-5 shadow-soft">
+    <div className="rounded-xl4 bg-surface border border-line p-5 sm:p-6 space-y-5">
       <div
         onClick={() => fileInput.current?.click()}
-        className="border-2 border-dashed border-line rounded-xl p-6 text-center cursor-pointer hover:border-accent transition-colors"
+        className="border border-dashed border-ink/20 bg-sky/40 rounded-xl3 p-8 text-center cursor-pointer hover:border-accent hover:bg-accentSoft transition-colors"
       >
         {filePreview ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -61,7 +61,7 @@ export default function GarmentInput({
           {submitting ? "Rendering…" : "Render"}
         </button>
       </MagneticButton>
-      <p className="text-xs text-muted">~15-30 seconds per render</p>
+      <p className="text-[13px] text-muted">About 15 to 30 seconds per render</p>
     </div>
   );
 }

@@ -15,7 +15,7 @@ export default function ReflectionPanel({
   const failed = active && active.status === "failed";
 
   return (
-    <div className="stage-plate relative aspect-[3/4] rounded-2xl overflow-hidden">
+    <div className="stage-plate relative aspect-[3/4] rounded-[28px] overflow-hidden">
       {completed && active.result_url && active.garment_url ? (
         <MirrorFlipCard garmentUrl={active.garment_url} resultUrl={active.result_url} />
       ) : completed && active.result_url ? (

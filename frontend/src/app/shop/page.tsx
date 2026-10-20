@@ -162,7 +162,7 @@ function ShopContent() {
           {/* Chat + Filters toggle */}
           <div className="mt-6">
             {fromStylist && seedQuery && (
-              <div className="mb-3 px-3 py-2 bg-accentSoft/50 rounded-xl text-xs text-accent font-semibold">
+              <div className="mb-3 px-4 py-2.5 bg-accentSoft rounded-xl2 text-[14px] text-accent">
                 From your stylist: &ldquo;{seedQuery}&rdquo;
               </div>
             )}

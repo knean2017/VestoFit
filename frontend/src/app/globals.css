@@ -42,11 +42,11 @@
 @layer components {
   /* ---------- containers ---------- */
   .container-app {
-    @apply max-w-6xl mx-auto px-4 sm:px-8;
+    @apply w-full max-w-6xl mx-auto px-4 sm:px-8;
   }
 
   .container-narrow {
-    @apply max-w-md mx-auto px-4;
+    @apply w-full max-w-md mx-auto px-4;
   }
 
   /* ---------- surfaces ---------- */
@@ -238,7 +238,7 @@
 
 /* Stage plate — seamless-paper atelier backdrop */
 .stage-plate {
-  background: linear-gradient(180deg, #f5f0e8 0%, #ebe5da 40%, #e2dbd0 100%);
+  background: linear-gradient(180deg, #eef1f8 0%, #e7e4f3 55%, #e1e6f1 100%);
   position: relative;
 }
 .stage-plate::before {
@@ -276,8 +276,8 @@
 .rod {
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #d4b896 0%, #9e7c4a 45%, #c9a47a 100%);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255,255,255,0.4);
+  background: linear-gradient(180deg, #e4e6ec 0%, #b9bdc9 50%, #d6d9e1 100%);
+  box-shadow: 0 2px 6px rgba(30, 34, 48, 0.12), inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
 /* Curtain reveal fold depth */
